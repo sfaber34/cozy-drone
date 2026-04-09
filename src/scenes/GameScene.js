@@ -11,26 +11,258 @@ export class GameScene extends Phaser.Scene {
   }
 
   create() {
-    // --- Desert ground layer ---
+    // --- Biome ground layer ---
+    // Map zones (in tile coords):
+    //   Town:  NW quadrant (0 - WORLD_W/2, 0 - WORLD_H/2)
+    //   Farm:  NE quadrant (WORLD_W/2 - WORLD_W, 0 - WORLD_H/2)
+    //   Desert: bottom half (0 - WORLD_W, WORLD_H/2 - WORLD_H) — runway area
     this.groundLayer = this.add.group();
     const rng = new Phaser.Math.RandomDataGenerator(["desert"]);
+    const halfW = WORLD_W / 2;
+    const halfH = WORLD_H / 2;
+
     for (let y = 0; y < WORLD_H; y += TILE) {
       for (let x = 0; x < WORLD_W; x += TILE) {
-        const frame = rng.between(0, 3);
-        const tile = this.add
-          .image(x, y, "desert-tiles", frame)
-          .setOrigin(0, 0)
-          .setScale(SCALE);
+        let tex, frame;
+        if (y < halfH && x < halfW) {
+          // Town — grass base
+          tex = "grass";
+          frame = undefined;
+        } else if (y < halfH && x >= halfW) {
+          // Farm — grass with crop patches
+          if ((Math.floor(x / TILE) + Math.floor(y / TILE)) % 7 < 4) {
+            tex = "crop-tiles";
+            frame = rng.between(0, 3);
+          } else {
+            tex = "grass";
+            frame = undefined;
+          }
+        } else {
+          // Desert
+          tex = "desert-tiles";
+          frame = rng.between(0, 3);
+        }
+        const tile =
+          frame !== undefined
+            ? this.add.image(x, y, tex, frame).setOrigin(0, 0).setScale(SCALE)
+            : this.add.image(x, y, tex).setOrigin(0, 0).setScale(SCALE);
         this.groundLayer.add(tile);
       }
     }
 
-    // --- Scatter rocks and brush ---
+    // --- Desert props (bottom half only) ---
     for (let i = 0; i < 200; i++) {
       const x = rng.between(0, WORLD_W * SCALE);
-      const y = rng.between(0, WORLD_H * SCALE);
+      const y = rng.between(halfH * SCALE, WORLD_H * SCALE);
       const tex = rng.pick(["rock", "brush"]);
       this.add.image(x, y, tex).setScale(SCALE).setDepth(1);
+    }
+
+    // ==========================================
+    // TOWN (NW quadrant) — large grid layout
+    // ==========================================
+    const roadTile = TILE * SCALE; // 48px per road tile
+    const townStartX = 100;
+    const townStartY = 100;
+    const blockSize = 6; // tiles between roads
+    const gridCols = 8; // number of blocks across
+    const gridRows = 8; // number of blocks down
+    const roadSpacing = blockSize + 1; // block + 1 road tile
+
+    // Lay roads
+    const townW = gridCols * roadSpacing + 1;
+    const townH = gridRows * roadSpacing + 1;
+    for (let gy = 0; gy < townH; gy++) {
+      for (let gx = 0; gx < townW; gx++) {
+        const px = townStartX + gx * roadTile;
+        const py = townStartY + gy * roadTile;
+        const isHRoad = gy % roadSpacing === 0;
+        const isVRoad = gx % roadSpacing === 0;
+        if (isHRoad && isVRoad) {
+          this.add
+            .image(px, py, "road-x")
+            .setOrigin(0, 0)
+            .setScale(SCALE)
+            .setDepth(1);
+        } else if (isHRoad) {
+          this.add
+            .image(px, py, "road-h")
+            .setOrigin(0, 0)
+            .setScale(SCALE)
+            .setDepth(1);
+        } else if (isVRoad) {
+          this.add
+            .image(px, py, "road-v")
+            .setOrigin(0, 0)
+            .setScale(SCALE)
+            .setDepth(1);
+        }
+      }
+    }
+
+    // Fill each block with buildings
+    const blockTypes = [
+      "residential",
+      "residential",
+      "residential",
+      "residential",
+      "commercial",
+      "commercial",
+      "commercial",
+      "park",
+      "parking",
+    ];
+    const houseTints = [0xddccbb, 0xccbbaa, 0xbbccdd, 0xddddcc, 0xeeddcc];
+
+    for (let by = 0; by < gridRows; by++) {
+      for (let bx = 0; bx < gridCols; bx++) {
+        // Block interior starts 1 tile after the road
+        const blkX = townStartX + (bx * roadSpacing + 1) * roadTile;
+        const blkY = townStartY + (by * roadSpacing + 1) * roadTile;
+        const blkW = blockSize * roadTile;
+        const blkH = blockSize * roadTile;
+        const cx = blkX + blkW / 2;
+        const cy = blkY + blkH / 2;
+
+        // Special placements
+        if (bx === 3 && by === 2) {
+          // Hospital block
+          this.add.image(cx, cy, "hospital").setScale(SCALE).setDepth(2);
+          // Parking around it
+          for (let pp = 0; pp < 3; pp++) {
+            this.add
+              .image(blkX + pp * roadTile, blkY, "parking")
+              .setOrigin(0, 0)
+              .setScale(SCALE)
+              .setDepth(1);
+          }
+          continue;
+        }
+        if (bx === 5 && by === 4) {
+          // Church block
+          this.add.image(cx, cy, "church").setScale(SCALE).setDepth(2);
+          // Park around church
+          for (let pp = 0; pp < 3; pp++) {
+            for (let pq = 0; pq < 3; pq++) {
+              this.add
+                .image(blkX + pp * roadTile, blkY + pq * roadTile, "park")
+                .setOrigin(0, 0)
+                .setScale(SCALE)
+                .setDepth(1);
+            }
+          }
+          continue;
+        }
+
+        const blockType = rng.pick(blockTypes);
+
+        if (blockType === "park") {
+          for (let py2 = 0; py2 < blockSize; py2++) {
+            for (let px2 = 0; px2 < blockSize; px2++) {
+              this.add
+                .image(blkX + px2 * roadTile, blkY + py2 * roadTile, "park")
+                .setOrigin(0, 0)
+                .setScale(SCALE)
+                .setDepth(1);
+            }
+          }
+        } else if (blockType === "parking") {
+          for (let py2 = 0; py2 < blockSize; py2++) {
+            for (let px2 = 0; px2 < blockSize; px2++) {
+              this.add
+                .image(blkX + px2 * roadTile, blkY + py2 * roadTile, "parking")
+                .setOrigin(0, 0)
+                .setScale(SCALE)
+                .setDepth(1);
+            }
+          }
+          // Building on one side
+          this.add
+            .image(
+              blkX + roadTile,
+              blkY + roadTile,
+              rng.pick(["building", "shop", "gas-station"]),
+            )
+            .setScale(SCALE)
+            .setDepth(2);
+        } else if (blockType === "commercial") {
+          // Mix of shops, apartments, buildings
+          const spots = [];
+          for (let sy = 0; sy < 2; sy++) {
+            for (let sx = 0; sx < 2; sx++) {
+              spots.push({
+                x: blkX + (sx * 3 + 1) * roadTile,
+                y: blkY + (sy * 3 + 1) * roadTile,
+              });
+            }
+          }
+          for (const s of spots) {
+            const tex = rng.pick([
+              "building",
+              "apartment",
+              "shop",
+              "shop",
+              "gas-station",
+            ]);
+            this.add.image(s.x, s.y, tex).setScale(SCALE).setDepth(2);
+          }
+        } else {
+          // Residential — houses in a grid
+          for (let hy = 0; hy < 3; hy++) {
+            for (let hx = 0; hx < 3; hx++) {
+              if (rng.frac() < 0.15) continue; // occasional empty lot
+              const houseX = blkX + (hx * 2 + 0.5) * roadTile;
+              const houseY = blkY + (hy * 2 + 0.5) * roadTile;
+              const h = this.add
+                .image(houseX, houseY, "house")
+                .setScale(SCALE)
+                .setDepth(2);
+              h.setTint(rng.pick(houseTints));
+            }
+          }
+        }
+      }
+    }
+
+    // ==========================================
+    // FARM (NE quadrant)
+    // ==========================================
+    const farmBaseX = halfW * SCALE + 200;
+    const farmBaseY = 200;
+
+    // Place barns and silos in a grid pattern
+    for (let fy = 0; fy < 4; fy++) {
+      for (let fx = 0; fx < 3; fx++) {
+        const cx = farmBaseX + fx * 600 + rng.between(-40, 40);
+        const cy = farmBaseY + fy * 500 + rng.between(-40, 40);
+
+        // Barn
+        this.add.image(cx, cy, "barn").setScale(SCALE).setDepth(2);
+
+        // 1-2 silos near barn
+        this.add
+          .image(cx + 100, cy - 40, "silo")
+          .setScale(SCALE)
+          .setDepth(2);
+        if (rng.frac() > 0.4) {
+          this.add
+            .image(cx + 140, cy - 20, "silo")
+            .setScale(SCALE)
+            .setDepth(2);
+        }
+
+        // Fences around fields
+        for (let f = 0; f < 4; f++) {
+          this.add
+            .image(cx - 150 + f * 80, cy - 120, "fence-h")
+            .setScale(SCALE)
+            .setDepth(1.5);
+          this.add
+            .image(cx - 150 + f * 80, cy + 120, "fence-h")
+            .setScale(SCALE)
+            .setDepth(1.5);
+        }
+      }
     }
 
     // --- Runway (6 tiles long) ---
@@ -357,25 +589,48 @@ export class GameScene extends Phaser.Scene {
           });
         }
 
-        // Speech bubble
+        // Speech bubble — cycles through lines
+        const allIntroLines = [
+          "Time to get to work!",
+          "Go get 'em!",
+          "You're my best drone!",
+          "Make me proud!",
+          "Bring everyone\npeace and love!",
+          "Have fun out there!",
+          "Don't scratch\nthe paint!",
+          "Remember your\ntraining!",
+          "You were born\nfor this!",
+          "I believe in you!",
+          "Fly high, friend!",
+          "Stay safe up there!",
+          "Show 'em what\nyou've got!",
+          "You're cleared\nfor takeoff!",
+          "The sky is yours!",
+          "Spread those wings!",
+          "I packed your\nfavorite missiles!",
+          "Knock 'em dead!\n...with love!",
+          "You're the best\nthing on this\nrunway!",
+          "Smooch! Okay\nnow go!",
+          "Watch out for\nbirds!",
+          "No pressure!\n...okay some\npressure!",
+          "Lunch is at noon!\nDon't be late!",
+          "Tell the clouds\nI said hi!",
+          "Time to hand out\nsome freedom!",
+        ];
+        const introLine = Phaser.Utils.Array.GetRandom(allIntroLines);
         const bubble = this.add
-          .text(
-            guyTargetX + 40,
-            guyTargetY - 40,
-            "I love you drone!\n    Have Fun!",
-            {
-              fontFamily: "monospace",
-              fontSize: "10px",
-              color: "#000",
-              backgroundColor: "#fff",
-              padding: { x: 8, y: 6 },
-            },
-          )
+          .text(guyTargetX + 40, guyTargetY - 40, introLine, {
+            fontFamily: "monospace",
+            fontSize: "10px",
+            color: "#000",
+            backgroundColor: "#fff",
+            padding: { x: 8, y: 6 },
+          })
           .setDepth(13)
           .setScale(SCALE * 0.6);
         this.hudCam.ignore(bubble);
 
-        // After a pause, guy walks away and scene starts
+        // After a pause, guy walks away
         this.time.delayedCall(2500, () => {
           bubble.destroy();
 
@@ -812,7 +1067,7 @@ export class GameScene extends Phaser.Scene {
     ];
 
     for (const p of this.people) {
-      if (p.state === "ghost") continue;
+      if (p.state === "ghost" || p.state === "gone") continue;
       const dist = Phaser.Math.Distance.Between(x, y, p.sprite.x, p.sprite.y);
 
       if (dist < killRadius) {
@@ -856,6 +1111,7 @@ export class GameScene extends Phaser.Scene {
     const panicSpeed = 90;
 
     for (const p of this.people) {
+      if (p.state === "gone") continue;
       const distToDrone = Phaser.Math.Distance.Between(
         ds.x,
         ds.y,

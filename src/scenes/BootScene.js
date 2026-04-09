@@ -649,5 +649,392 @@ export class BootScene extends Phaser.Scene {
     bc.fillStyle = '#4a6a1a';
     bc.fillRect(3, 5, 1, 1);
     brushCanvas.refresh();
+
+    // =============================================
+    // FARM BIOME TEXTURES
+    // =============================================
+
+    // --- Grass tile (16x16) ---
+    const grassCanvas = this.textures.createCanvas('grass', 16, 16);
+    const grc = grassCanvas.context;
+    grc.fillStyle = '#5a8a2a';
+    grc.fillRect(0, 0, 16, 16);
+    const grng = new Phaser.Math.RandomDataGenerator(['grass']);
+    for (let i = 0; i < 15; i++) {
+      grc.fillStyle = grng.pick(['#4a7a1a', '#6a9a3a', '#5a8a2a', '#3a6a0a']);
+      grc.fillRect(grng.between(0, 15), grng.between(0, 15), 1, 1);
+    }
+    grassCanvas.refresh();
+
+    // --- Crop rows (16x16, 4 variants) ---
+    const cropCanvas = this.textures.createCanvas('crop-tiles', 64, 16);
+    const crc = cropCanvas.context;
+    const cropColors = [
+      ['#8a7a2a', '#9a8a3a'], // wheat
+      ['#3a8a2a', '#2a7a1a'], // green crop
+      ['#7a9a3a', '#6a8a2a'], // light crop
+      ['#6a5a1a', '#7a6a2a'], // harvested/dirt
+    ];
+    for (let t = 0; t < 4; t++) {
+      // Dirt base
+      crc.fillStyle = '#8a6a3a';
+      crc.fillRect(t * 16, 0, 16, 16);
+      // Crop rows
+      for (let row = 0; row < 16; row += 4) {
+        crc.fillStyle = cropColors[t][0];
+        crc.fillRect(t * 16, row, 16, 2);
+        crc.fillStyle = cropColors[t][1];
+        crc.fillRect(t * 16 + 2, row, 12, 1);
+      }
+    }
+    cropCanvas.refresh();
+    for (let i = 0; i < 4; i++) {
+      this.textures.get('crop-tiles').add(i, 0, i * 16, 0, 16, 16);
+    }
+
+    // --- Barn (top-down, 24x32) ---
+    const barnCanvas = this.textures.createCanvas('barn', 24, 32);
+    const bnc = barnCanvas.context;
+    bnc.fillStyle = '#8b2a1a';
+    bnc.fillRect(0, 0, 24, 32);
+    // Roof ridge
+    bnc.fillStyle = '#6a1a0a';
+    bnc.fillRect(11, 0, 2, 32);
+    // Door
+    bnc.fillStyle = '#3a1a0a';
+    bnc.fillRect(8, 0, 8, 4);
+    // Roof edge
+    bnc.fillStyle = '#5a1a0a';
+    bnc.fillRect(0, 0, 24, 1);
+    bnc.fillRect(0, 31, 24, 1);
+    bnc.fillRect(0, 0, 1, 32);
+    bnc.fillRect(23, 0, 1, 32);
+    // Cross beams
+    bnc.fillStyle = '#7a2a1a';
+    bnc.fillRect(0, 10, 24, 1);
+    bnc.fillRect(0, 21, 24, 1);
+    barnCanvas.refresh();
+
+    // --- Silo (top-down, 10x10 circle) ---
+    const siloCanvas = this.textures.createCanvas('silo', 10, 10);
+    const slc = siloCanvas.context;
+    slc.fillStyle = '#aaa';
+    // Circle
+    for (let y = 0; y < 10; y++) {
+      for (let x = 0; x < 10; x++) {
+        if ((x - 4.5) * (x - 4.5) + (y - 4.5) * (y - 4.5) <= 20) {
+          slc.fillRect(x, y, 1, 1);
+        }
+      }
+    }
+    // Highlight
+    slc.fillStyle = '#ccc';
+    slc.fillRect(3, 2, 2, 2);
+    // Roof cap
+    slc.fillStyle = '#888';
+    for (let y = 0; y < 10; y++) {
+      for (let x = 0; x < 10; x++) {
+        if ((x - 4.5) * (x - 4.5) + (y - 4.5) * (y - 4.5) <= 8) {
+          slc.fillRect(x, y, 1, 1);
+        }
+      }
+    }
+    siloCanvas.refresh();
+
+    // --- Fence horizontal (16x4) ---
+    const fenceHCanvas = this.textures.createCanvas('fence-h', 16, 4);
+    const fhc = fenceHCanvas.context;
+    fhc.fillStyle = '#8a6a3a';
+    fhc.fillRect(0, 1, 16, 2);
+    fhc.fillStyle = '#6a4a2a';
+    fhc.fillRect(0, 0, 1, 4);
+    fhc.fillRect(5, 0, 1, 4);
+    fhc.fillRect(10, 0, 1, 4);
+    fhc.fillRect(15, 0, 1, 4);
+    fenceHCanvas.refresh();
+
+    // =============================================
+    // TOWN BIOME TEXTURES
+    // =============================================
+
+    // --- Dirt road tile (16x16, straight vertical) ---
+    const roadVCanvas = this.textures.createCanvas('road-v', 16, 16);
+    const rvc = roadVCanvas.context;
+    rvc.fillStyle = '#9a7a50';
+    rvc.fillRect(0, 0, 16, 16);
+    // Ruts/tracks
+    rvc.fillStyle = '#8a6a40';
+    rvc.fillRect(4, 0, 2, 16);
+    rvc.fillRect(10, 0, 2, 16);
+    // Edge dirt
+    rvc.fillStyle = '#aa8a60';
+    rvc.fillRect(0, 0, 1, 16);
+    rvc.fillRect(15, 0, 1, 16);
+    // Noise
+    const drvRng = new Phaser.Math.RandomDataGenerator(['drv']);
+    for (let i = 0; i < 8; i++) {
+      rvc.fillStyle = drvRng.pick(['#8a6a3a', '#aa8a55', '#b09060']);
+      rvc.fillRect(drvRng.between(0, 15), drvRng.between(0, 15), 1, 1);
+    }
+    roadVCanvas.refresh();
+
+    // --- Dirt road tile (16x16, straight horizontal) ---
+    const roadHCanvas = this.textures.createCanvas('road-h', 16, 16);
+    const rhc = roadHCanvas.context;
+    rhc.fillStyle = '#9a7a50';
+    rhc.fillRect(0, 0, 16, 16);
+    // Ruts
+    rhc.fillStyle = '#8a6a40';
+    rhc.fillRect(0, 4, 16, 2);
+    rhc.fillRect(0, 10, 16, 2);
+    // Edge
+    rhc.fillStyle = '#aa8a60';
+    rhc.fillRect(0, 0, 16, 1);
+    rhc.fillRect(0, 15, 16, 1);
+    const drhRng = new Phaser.Math.RandomDataGenerator(['drh']);
+    for (let i = 0; i < 8; i++) {
+      rhc.fillStyle = drhRng.pick(['#8a6a3a', '#aa8a55', '#b09060']);
+      rhc.fillRect(drhRng.between(0, 15), drhRng.between(0, 15), 1, 1);
+    }
+    roadHCanvas.refresh();
+
+    // --- Dirt road intersection (16x16) ---
+    const roadXCanvas = this.textures.createCanvas('road-x', 16, 16);
+    const rxc = roadXCanvas.context;
+    rxc.fillStyle = '#9a7a50';
+    rxc.fillRect(0, 0, 16, 16);
+    rxc.fillStyle = '#8a6a40';
+    // Cross ruts
+    rxc.fillRect(4, 0, 2, 16);
+    rxc.fillRect(10, 0, 2, 16);
+    rxc.fillRect(0, 4, 16, 2);
+    rxc.fillRect(0, 10, 16, 2);
+    const drxRng = new Phaser.Math.RandomDataGenerator(['drx']);
+    for (let i = 0; i < 10; i++) {
+      rxc.fillStyle = drxRng.pick(['#8a6a3a', '#aa8a55', '#b09060']);
+      rxc.fillRect(drxRng.between(0, 15), drxRng.between(0, 15), 1, 1);
+    }
+    roadXCanvas.refresh();
+
+    // --- Small house (top-down, 16x16) ---
+    const houseCanvas = this.textures.createCanvas('house', 16, 16);
+    const hoc = houseCanvas.context;
+    // Roof
+    hoc.fillStyle = '#8a3a2a';
+    hoc.fillRect(1, 1, 14, 14);
+    // Ridge
+    hoc.fillStyle = '#6a2a1a';
+    hoc.fillRect(1, 7, 14, 2);
+    // Walls visible
+    hoc.fillStyle = '#ddc';
+    hoc.fillRect(2, 2, 12, 5);
+    hoc.fillRect(2, 9, 12, 5);
+    // Door
+    hoc.fillStyle = '#5a3a1a';
+    hoc.fillRect(7, 12, 3, 3);
+    // Windows
+    hoc.fillStyle = '#8af';
+    hoc.fillRect(3, 3, 2, 2);
+    hoc.fillRect(11, 3, 2, 2);
+    houseCanvas.refresh();
+
+    // --- Large building (top-down, 32x24) ---
+    const bldgCanvas = this.textures.createCanvas('building', 32, 24);
+    const blc = bldgCanvas.context;
+    blc.fillStyle = '#778';
+    blc.fillRect(0, 0, 32, 24);
+    // Flat roof edge
+    blc.fillStyle = '#556';
+    blc.fillRect(0, 0, 32, 1);
+    blc.fillRect(0, 23, 32, 1);
+    blc.fillRect(0, 0, 1, 24);
+    blc.fillRect(31, 0, 1, 24);
+    // AC units on roof
+    blc.fillStyle = '#666';
+    blc.fillRect(3, 3, 4, 4);
+    blc.fillRect(25, 3, 4, 4);
+    blc.fillStyle = '#555';
+    blc.fillRect(4, 4, 2, 2);
+    blc.fillRect(26, 4, 2, 2);
+    // Windows (rows)
+    blc.fillStyle = '#acd';
+    for (let wy = 10; wy < 22; wy += 4) {
+      for (let wx = 3; wx < 30; wx += 5) {
+        blc.fillRect(wx, wy, 3, 2);
+      }
+    }
+    bldgCanvas.refresh();
+
+    // --- Hospital (top-down, 32x32) ---
+    const hospCanvas = this.textures.createCanvas('hospital', 32, 32);
+    const hsc = hospCanvas.context;
+    // Main building
+    hsc.fillStyle = '#eee';
+    hsc.fillRect(0, 0, 32, 32);
+    // Edge
+    hsc.fillStyle = '#ccc';
+    hsc.fillRect(0, 0, 32, 1);
+    hsc.fillRect(0, 31, 32, 1);
+    hsc.fillRect(0, 0, 1, 32);
+    hsc.fillRect(31, 0, 1, 32);
+    // Red cross on roof
+    hsc.fillStyle = '#cc0000';
+    hsc.fillRect(13, 8, 6, 16);
+    hsc.fillRect(8, 13, 16, 6);
+    // Helipad circle
+    hsc.fillStyle = '#ddd';
+    for (let y = 0; y < 32; y++) {
+      for (let x = 0; x < 32; x++) {
+        if ((x - 15.5) * (x - 15.5) + (y - 15.5) * (y - 15.5) > 144 &&
+            (x - 15.5) * (x - 15.5) + (y - 15.5) * (y - 15.5) < 169) {
+          hsc.fillRect(x, y, 1, 1);
+        }
+      }
+    }
+    // Entrance
+    hsc.fillStyle = '#88aacc';
+    hsc.fillRect(12, 28, 8, 4);
+    // Windows
+    hsc.fillStyle = '#aaccee';
+    for (let wx = 3; wx < 30; wx += 5) {
+      hsc.fillRect(wx, 2, 3, 2);
+      hsc.fillRect(wx, 28, 3, 2);
+    }
+    for (let wy = 3; wy < 30; wy += 5) {
+      hsc.fillRect(1, wy, 2, 3);
+      hsc.fillRect(29, wy, 2, 3);
+    }
+    hospCanvas.refresh();
+
+    // --- Park/green area tile (16x16) ---
+    const parkCanvas = this.textures.createCanvas('park', 16, 16);
+    const pkc = parkCanvas.context;
+    pkc.fillStyle = '#4a9a2a';
+    pkc.fillRect(0, 0, 16, 16);
+    // Trees (small circles)
+    pkc.fillStyle = '#2a6a0a';
+    pkc.fillRect(3, 3, 3, 3);
+    pkc.fillRect(10, 10, 3, 3);
+    pkc.fillStyle = '#3a7a1a';
+    pkc.fillRect(4, 4, 1, 1);
+    pkc.fillRect(11, 11, 1, 1);
+    // Path
+    pkc.fillStyle = '#bba';
+    pkc.fillRect(7, 0, 2, 16);
+    parkCanvas.refresh();
+
+    // --- Parking lot tile (16x16) ---
+    const parkingCanvas = this.textures.createCanvas('parking', 16, 16);
+    const plc = parkingCanvas.context;
+    plc.fillStyle = '#4a4a4a';
+    plc.fillRect(0, 0, 16, 16);
+    // Parking lines
+    plc.fillStyle = '#fff';
+    plc.fillRect(0, 0, 1, 8);
+    plc.fillRect(5, 0, 1, 8);
+    plc.fillRect(10, 0, 1, 8);
+    plc.fillRect(15, 0, 1, 8);
+    parkingCanvas.refresh();
+
+    // --- Shop (top-down, 16x20) ---
+    const shopCanvas = this.textures.createCanvas('shop', 16, 20);
+    const shc = shopCanvas.context;
+    shc.fillStyle = '#cc8844';
+    shc.fillRect(0, 0, 16, 20);
+    shc.fillStyle = '#aa6633';
+    shc.fillRect(0, 0, 16, 1);
+    shc.fillRect(0, 19, 16, 1);
+    shc.fillRect(0, 0, 1, 20);
+    shc.fillRect(15, 0, 1, 20);
+    // Awning
+    shc.fillStyle = '#dd4444';
+    shc.fillRect(1, 16, 14, 3);
+    shc.fillStyle = '#bb3333';
+    shc.fillRect(1, 17, 14, 1);
+    // Door
+    shc.fillStyle = '#5a3a1a';
+    shc.fillRect(6, 17, 4, 3);
+    // Windows
+    shc.fillStyle = '#8af';
+    shc.fillRect(2, 3, 4, 3);
+    shc.fillRect(10, 3, 4, 3);
+    shopCanvas.refresh();
+
+    // --- Apartment (top-down, 24x32) ---
+    const aptCanvas = this.textures.createCanvas('apartment', 24, 32);
+    const apc = aptCanvas.context;
+    apc.fillStyle = '#887766';
+    apc.fillRect(0, 0, 24, 32);
+    // Edge
+    apc.fillStyle = '#665544';
+    apc.fillRect(0, 0, 24, 1);
+    apc.fillRect(0, 31, 24, 1);
+    apc.fillRect(0, 0, 1, 32);
+    apc.fillRect(23, 0, 1, 32);
+    // Windows grid
+    apc.fillStyle = '#aaccdd';
+    for (let wy = 3; wy < 30; wy += 5) {
+      for (let wx = 3; wx < 22; wx += 6) {
+        apc.fillRect(wx, wy, 3, 3);
+      }
+    }
+    // Roof AC
+    apc.fillStyle = '#555';
+    apc.fillRect(10, 2, 4, 3);
+    aptCanvas.refresh();
+
+    // --- Church (top-down, 16x24) ---
+    const churchCanvas = this.textures.createCanvas('church', 16, 24);
+    const chc = churchCanvas.context;
+    chc.fillStyle = '#ddd';
+    chc.fillRect(2, 4, 12, 20);
+    // Steeple
+    chc.fillStyle = '#ccc';
+    chc.fillRect(5, 0, 6, 6);
+    chc.fillStyle = '#999';
+    chc.fillRect(7, 0, 2, 2);
+    // Cross on top
+    chc.fillStyle = '#aa8833';
+    chc.fillRect(7, 0, 2, 1);
+    chc.fillRect(6, 1, 4, 1);
+    // Door
+    chc.fillStyle = '#5a2a0a';
+    chc.fillRect(6, 20, 4, 4);
+    // Windows
+    chc.fillStyle = '#88aaff';
+    chc.fillRect(3, 8, 2, 4);
+    chc.fillRect(11, 8, 2, 4);
+    chc.fillRect(3, 15, 2, 4);
+    chc.fillRect(11, 15, 2, 4);
+    // Stained glass
+    chc.fillStyle = '#ff8844';
+    chc.fillRect(7, 8, 2, 2);
+    churchCanvas.refresh();
+
+    // --- Gas station (top-down, 20x16) ---
+    const gasCanvas = this.textures.createCanvas('gas-station', 20, 16);
+    const gsc = gasCanvas.context;
+    // Canopy
+    gsc.fillStyle = '#ddd';
+    gsc.fillRect(0, 0, 14, 16);
+    gsc.fillStyle = '#bbb';
+    gsc.fillRect(0, 0, 14, 1);
+    gsc.fillRect(0, 15, 14, 1);
+    // Canopy posts
+    gsc.fillStyle = '#888';
+    gsc.fillRect(1, 1, 1, 14);
+    gsc.fillRect(12, 1, 1, 14);
+    // Pumps
+    gsc.fillStyle = '#cc3333';
+    gsc.fillRect(4, 4, 2, 3);
+    gsc.fillRect(8, 4, 2, 3);
+    gsc.fillRect(4, 9, 2, 3);
+    gsc.fillRect(8, 9, 2, 3);
+    // Store
+    gsc.fillStyle = '#996633';
+    gsc.fillRect(14, 2, 6, 12);
+    gsc.fillStyle = '#8af';
+    gsc.fillRect(15, 4, 4, 3);
+    gasCanvas.refresh();
   }
 }
