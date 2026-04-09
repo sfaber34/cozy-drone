@@ -252,6 +252,149 @@ export class BootScene extends Phaser.Scene {
     rbc.fillRect(7, 7, 3, 3);
     rainbowCanvas.refresh();
 
+    // --- Little guy (10x14, side view walking) frame 1 ---
+    const guy1Canvas = this.textures.createCanvas('guy1', 10, 14);
+    const g1 = guy1Canvas.context;
+    // Head
+    g1.fillStyle = '#ffcc88';
+    g1.fillRect(3, 0, 4, 4);
+    // Hair
+    g1.fillStyle = '#553300';
+    g1.fillRect(3, 0, 4, 1);
+    // Eyes
+    g1.fillStyle = '#222';
+    g1.fillRect(4, 1, 1, 1);
+    g1.fillRect(6, 1, 1, 1);
+    // Smile
+    g1.fillStyle = '#c44';
+    g1.fillRect(4, 3, 1, 1);
+    g1.fillRect(5, 3, 1, 1);
+    g1.fillRect(6, 3, 1, 1);
+    // Body (overalls)
+    g1.fillStyle = '#3366cc';
+    g1.fillRect(3, 4, 4, 5);
+    // Arms
+    g1.fillStyle = '#ffcc88';
+    g1.fillRect(2, 5, 1, 3);
+    g1.fillRect(7, 5, 1, 3);
+    // Belt
+    g1.fillStyle = '#cc8833';
+    g1.fillRect(3, 6, 4, 1);
+    // Legs walk pose 1
+    g1.fillStyle = '#3366cc';
+    g1.fillRect(3, 9, 2, 3);
+    g1.fillRect(6, 9, 2, 2);
+    // Boots
+    g1.fillStyle = '#442200';
+    g1.fillRect(3, 12, 2, 2);
+    g1.fillRect(6, 11, 2, 2);
+    guy1Canvas.refresh();
+
+    // --- Little guy frame 2 ---
+    const guy2Canvas = this.textures.createCanvas('guy2', 10, 14);
+    const g2 = guy2Canvas.context;
+    // Head
+    g2.fillStyle = '#ffcc88';
+    g2.fillRect(3, 0, 4, 4);
+    g2.fillStyle = '#553300';
+    g2.fillRect(3, 0, 4, 1);
+    g2.fillStyle = '#222';
+    g2.fillRect(4, 1, 1, 1);
+    g2.fillRect(6, 1, 1, 1);
+    g2.fillStyle = '#c44';
+    g2.fillRect(4, 3, 1, 1);
+    g2.fillRect(5, 3, 1, 1);
+    g2.fillRect(6, 3, 1, 1);
+    // Body
+    g2.fillStyle = '#3366cc';
+    g2.fillRect(3, 4, 4, 5);
+    g2.fillStyle = '#ffcc88';
+    g2.fillRect(2, 5, 1, 3);
+    g2.fillRect(7, 5, 1, 3);
+    g2.fillStyle = '#cc8833';
+    g2.fillRect(3, 6, 4, 1);
+    // Legs walk pose 2 (swapped)
+    g2.fillStyle = '#3366cc';
+    g2.fillRect(3, 9, 2, 2);
+    g2.fillRect(6, 9, 2, 3);
+    // Boots
+    g2.fillStyle = '#442200';
+    g2.fillRect(3, 11, 2, 2);
+    g2.fillRect(6, 12, 2, 2);
+    guy2Canvas.refresh();
+
+    // --- Hangar (top-down, 48x48) ---
+    const hangarCanvas = this.textures.createCanvas('hangar', 48, 48);
+    const hgc = hangarCanvas.context;
+    // Roof (corrugated metal, top-down)
+    hgc.fillStyle = '#707070';
+    hgc.fillRect(0, 0, 48, 48);
+    // Corrugated ridges
+    hgc.fillStyle = '#808080';
+    for (let ry = 0; ry < 48; ry += 4) {
+      hgc.fillRect(0, ry, 48, 2);
+    }
+    // Roof edge/lip
+    hgc.fillStyle = '#555';
+    hgc.fillRect(0, 0, 48, 1);
+    hgc.fillRect(0, 47, 48, 1);
+    hgc.fillRect(0, 0, 1, 48);
+    hgc.fillRect(47, 0, 1, 48);
+    // Open door (left side, facing runway)
+    hgc.fillStyle = '#1a1a1a';
+    hgc.fillRect(0, 14, 4, 20);
+    // Door frame
+    hgc.fillStyle = '#606060';
+    hgc.fillRect(0, 12, 4, 2);
+    hgc.fillRect(0, 34, 4, 2);
+    // Shadow inside door
+    hgc.fillStyle = '#111';
+    hgc.fillRect(1, 16, 2, 16);
+    // Vent on roof
+    hgc.fillStyle = '#666';
+    hgc.fillRect(36, 20, 6, 8);
+    hgc.fillStyle = '#555';
+    hgc.fillRect(37, 21, 4, 6);
+    hangarCanvas.refresh();
+
+    // --- Taxiway tile (16x16) ---
+    const taxiCanvas = this.textures.createCanvas('taxiway', 16, 16);
+    const twc = taxiCanvas.context;
+    twc.fillStyle = '#555';
+    twc.fillRect(0, 0, 16, 16);
+    // Center line (yellow dashes)
+    twc.fillStyle = '#cc0';
+    twc.fillRect(7, 2, 2, 5);
+    twc.fillRect(7, 10, 2, 5);
+    // Edge markings
+    twc.fillStyle = '#666';
+    twc.fillRect(0, 0, 1, 16);
+    twc.fillRect(15, 0, 1, 16);
+    taxiCanvas.refresh();
+
+    // --- Runway (32x128 tile, drawn vertically) ---
+    const rwCanvas = this.textures.createCanvas('runway', 32, 128);
+    const rwc = rwCanvas.context;
+    // Asphalt
+    rwc.fillStyle = '#444';
+    rwc.fillRect(0, 0, 32, 128);
+    // Edge lines
+    rwc.fillStyle = '#fff';
+    rwc.fillRect(1, 0, 1, 128);
+    rwc.fillRect(30, 0, 1, 128);
+    // Center dashes
+    rwc.fillStyle = '#ff0';
+    for (let dy = 4; dy < 128; dy += 16) {
+      rwc.fillRect(15, dy, 2, 8);
+    }
+    // Threshold marks at top and bottom
+    rwc.fillStyle = '#fff';
+    for (let i = 0; i < 4; i++) {
+      rwc.fillRect(5 + i * 6, 2, 3, 10);
+      rwc.fillRect(5 + i * 6, 116, 3, 10);
+    }
+    rwCanvas.refresh();
+
     // --- Explosion spritesheet (5 frames, 24x24 each) ---
     const expCanvas = this.textures.createCanvas('explosion-sheet', 120, 24);
     const ec = expCanvas.context;

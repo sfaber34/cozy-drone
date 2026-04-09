@@ -33,6 +33,50 @@ export class GameScene extends Phaser.Scene {
       this.add.image(x, y, tex).setScale(SCALE).setDepth(1);
     }
 
+    // --- Runway (6 tiles long) ---
+    const rwX = (WORLD_W * SCALE) / 2;
+    const rwTiles = 6;
+    const rwTileH = 128 * SCALE;
+    const rwTotalH = rwTiles * rwTileH;
+    // Runway bottom edge
+    const rwBottom = (WORLD_H * SCALE) / 2 + rwTotalH / 2;
+    const rwTop = rwBottom - rwTotalH;
+    const rwCenterY = (rwTop + rwBottom) / 2;
+    for (let i = 0; i < rwTiles; i++) {
+      this.add
+        .image(rwX, rwTop + i * rwTileH + rwTileH / 2, "runway")
+        .setScale(SCALE)
+        .setDepth(1.5);
+    }
+    // Store runway bounds for collision
+    this.runway = {
+      x: rwX,
+      y: rwCenterY,
+      halfW: (32 * SCALE) / 2,
+      halfH: rwTotalH / 2,
+    };
+
+    // --- Hangar (to the right of the runway bottom) ---
+    const hangarOffset = 48 * SCALE / 2 + 32 * SCALE / 2 + 16 * SCALE * 3; // hangar half + runway half + taxiway gap
+    this.hangarX = rwX + hangarOffset;
+    this.hangarY = rwBottom - 48 * SCALE / 2;
+    this.add
+      .image(this.hangarX, this.hangarY, "hangar")
+      .setScale(SCALE)
+      .setDepth(1.5);
+
+    // --- Taxiway connecting hangar door to runway ---
+    const taxiStartX = rwX + (32 * SCALE) / 2; // right edge of runway
+    const taxiEndX = this.hangarX - (48 * SCALE) / 2; // left edge of hangar (door side)
+    const taxiY = this.hangarY;
+    for (let tx = taxiStartX; tx < taxiEndX; tx += 16 * SCALE) {
+      this.add
+        .image(tx + 8 * SCALE, taxiY, "taxiway")
+        .setScale(SCALE)
+        .setAngle(90) // rotate so center line runs horizontally
+        .setDepth(1.5);
+    }
+
     // --- Tanks ---
     this.tanks = this.physics.add.group();
     this.tankData = [];
@@ -56,9 +100,9 @@ export class GameScene extends Phaser.Scene {
       .setDepth(3)
       .setAlpha(0.3);
 
-    // --- Drone ---
+    // --- Drone (starts at bottom of runway) ---
     this.drone = this.add
-      .image((WORLD_W * SCALE) / 2, (WORLD_H * SCALE) / 2, "drone")
+      .image(rwX, rwBottom - 80, "drone")
       .setScale(SCALE)
       .setDepth(10);
 
@@ -66,16 +110,19 @@ export class GameScene extends Phaser.Scene {
     this.propFrame = 0;
     this.propTimer = 0;
 
+    // Flight state: "grounded" | "airborne" | "crashed"
+    this.flightState = "grounded";
+
     // Drone state
     this.droneState = {
       x: this.drone.x,
       y: this.drone.y,
       angle: 0, // degrees, 0 = up/north
-      speed: 80, // pixels/sec
-      altitude: 500, // feet, affects shadow offset & zoom
-      minAlt: 200,
+      speed: 0, // start stationary on runway
+      altitude: 0, // on the ground
+      minAlt: 0,
       maxAlt: 15000,
-      minSpeed: 80,
+      minSpeed: 0,
       maxSpeed: 300,
     };
 
@@ -172,11 +219,167 @@ export class GameScene extends Phaser.Scene {
 
     // Kill counter
     this.kills = 0;
+
+    // --- Intro cutscene ---
+    this.introPlaying = true;
+    this.playIntroCutscene();
+  }
+
+  playIntroCutscene() {
+    const ds = this.droneState;
+    // Little guy starts at the hangar door (left side of hangar)
+    const guyStartX = this.hangarX - (48 * SCALE) / 2;
+    const guyStartY = this.hangarY;
+    const guyTargetX = ds.x + 30; // stop near the nose
+    const guyTargetY = ds.y - 30; // nose is at the top of the drone
+
+    const guy = this.add.image(guyStartX, guyStartY, "guy1").setScale(SCALE).setDepth(10);
+    this.hudCam.ignore(guy);
+
+    // Walk animation
+    let walkFrame = 0;
+    const walkAnim = this.time.addEvent({
+      delay: 150,
+      loop: true,
+      callback: () => {
+        walkFrame = 1 - walkFrame;
+        guy.setTexture(walkFrame === 0 ? "guy1" : "guy2");
+      },
+    });
+
+    // Walk to the drone nose
+    this.tweens.add({
+      targets: guy,
+      x: guyTargetX,
+      y: guyTargetY,
+      duration: 2000,
+      ease: "Quad.easeOut",
+      onComplete: () => {
+        // Stop walking
+        walkAnim.remove();
+        guy.setTexture("guy1");
+
+        // Spawn kiss hearts
+        for (let i = 0; i < 5; i++) {
+          const heart = this.add
+            .image(guyTargetX, guyTargetY - 10, "heart")
+            .setScale(SCALE)
+            .setDepth(12);
+          this.hudCam.ignore(heart);
+          const angle = -Math.PI * 0.2 + (i / 4) * -Math.PI * 0.6 + (Math.random() - 0.5) * 0.5;
+          const dist = 80 + Math.random() * 60;
+          this.tweens.add({
+            targets: heart,
+            x: guyTargetX + Math.cos(angle) * dist,
+            y: guyTargetY + Math.sin(angle) * dist - 40,
+            scale: SCALE * (0.6 + Math.random() * 0.6),
+            alpha: 0,
+            duration: 1000 + Math.random() * 500,
+            delay: i * 200,
+            ease: "Quad.easeOut",
+            onComplete: () => heart.destroy(),
+          });
+        }
+
+        // Speech bubble
+        const bubble = this.add
+          .text(guyTargetX + 40, guyTargetY - 40, "I love you drone!\n    Have Fun!", {
+            fontFamily: "monospace",
+            fontSize: "10px",
+            color: "#000",
+            backgroundColor: "#fff",
+            padding: { x: 8, y: 6 },
+          })
+          .setDepth(13)
+          .setScale(SCALE * 0.6);
+        this.hudCam.ignore(bubble);
+
+        // After a pause, guy walks away and scene starts
+        this.time.delayedCall(2500, () => {
+          bubble.destroy();
+
+          // Walk away
+          const walkAnim2 = this.time.addEvent({
+            delay: 150,
+            loop: true,
+            callback: () => {
+              walkFrame = 1 - walkFrame;
+              guy.setTexture(walkFrame === 0 ? "guy1" : "guy2");
+            },
+          });
+
+          this.tweens.add({
+            targets: guy,
+            x: this.hangarX - (48 * SCALE) / 2,
+            y: this.hangarY,
+            duration: 2000,
+            ease: "Quad.easeIn",
+            onComplete: () => {
+              walkAnim2.remove();
+              guy.destroy();
+              this.introPlaying = false;
+            },
+          });
+        });
+      },
+    });
+  }
+
+  isOnRunway(x, y) {
+    const rw = this.runway;
+    return (
+      Math.abs(x - rw.x) < rw.halfW &&
+      Math.abs(y - rw.y) < rw.halfH
+    );
+  }
+
+  crashDrone() {
+    this.flightState = "crashed";
+    this.droneState.speed = 0;
+    this.droneState.altitude = 0;
+    this.drone.setVisible(false);
+    this.droneShadow.setVisible(false);
+
+    // Explosion at crash site
+    this.missileImpact(this.droneState.x, this.droneState.y);
+    this.cameras.main.shake(500, 0.015);
+
+    // Show crash message
+    this.crashText = this.add
+      .text(this.scale.width / 2, this.scale.height / 2, "DRONE DESTROYED\n\nPress R to restart", {
+        fontFamily: "monospace",
+        fontSize: "24px",
+        color: "#f00",
+        backgroundColor: "#000000cc",
+        padding: { x: 20, y: 16 },
+        align: "center",
+      })
+      .setOrigin(0.5)
+      .setDepth(200);
+    this.cameras.main.ignore(this.crashText);
+
+    this.restartKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
   }
 
   update(time, delta) {
     const dt = delta / 1000;
     const ds = this.droneState;
+
+    // --- Intro cutscene playing ---
+    if (this.introPlaying) return;
+
+    // --- Crashed state ---
+    if (this.flightState === "crashed") {
+      if (this.restartKey && Phaser.Input.Keyboard.JustDown(this.restartKey)) {
+        this.scene.restart();
+      }
+      this.updateMissiles(dt);
+      return;
+    }
+
+    const isGrounded = this.flightState === "grounded";
+    const isAirborne = this.flightState === "airborne";
+    const speedKnots = ds.speed * 0.5;
 
     // --- Input: turn ---
     const turnRate = 120; // degrees/sec
@@ -193,16 +396,36 @@ export class GameScene extends Phaser.Scene {
       ds.speed = Math.min(ds.maxSpeed, ds.speed + accel * dt);
     }
     if (this.cursors.down.isDown || this.arrows.down.isDown) {
-      ds.speed = Math.max(ds.minSpeed, ds.speed - accel * dt);
+      const minSpd = isAirborne ? 80 : 0; // 40 kts min when flying
+      ds.speed = Math.max(minSpd, ds.speed - accel * dt);
     }
 
     // --- Input: altitude ---
     const altRate = 300; // feet/sec
     if (this.cursors.altUp.isDown) {
-      ds.altitude = Math.min(ds.maxAlt, ds.altitude + altRate * dt);
+      // Can only gain altitude if speed >= 40 kts
+      if (speedKnots >= 40) {
+        ds.altitude = Math.min(ds.maxAlt, ds.altitude + altRate * dt);
+        if (isGrounded) {
+          this.flightState = "airborne";
+        }
+      }
     }
-    if (this.cursors.altDown.isDown) {
-      ds.altitude = Math.max(ds.minAlt, ds.altitude - altRate * dt);
+    if (this.cursors.altDown.isDown && isAirborne) {
+      ds.altitude = Math.max(0, ds.altitude - altRate * dt);
+    }
+
+    // --- Check if drone touched down ---
+    if (isAirborne && ds.altitude <= 0) {
+      ds.altitude = 0;
+      if (this.isOnRunway(ds.x, ds.y)) {
+        // Safe landing
+        this.flightState = "grounded";
+      } else {
+        // Crash!
+        this.crashDrone();
+        return;
+      }
     }
 
     // --- Move drone ---
@@ -218,56 +441,58 @@ export class GameScene extends Phaser.Scene {
     this.drone.setAngle(ds.angle);
 
     // --- Shadow (offset increases with altitude) ---
-    const shadowOffset = ds.altitude * 0.04;
-    this.droneShadow.setPosition(ds.x + shadowOffset, ds.y + shadowOffset);
-    this.droneShadow.setAngle(ds.angle);
-    // Shadow gets fainter at higher altitude
-    this.droneShadow.setAlpha(
-      Phaser.Math.Clamp(0.4 - ds.altitude * 0.0001, 0.05, 0.4),
-    );
-    // Shadow gets smaller at higher altitude
-    const shadowScale =
-      SCALE * Phaser.Math.Clamp(1.2 - ds.altitude * 0.0003, 0.6, 1.2);
-    this.droneShadow.setScale(shadowScale);
+    if (ds.altitude > 0) {
+      this.droneShadow.setVisible(true);
+      const shadowOffset = ds.altitude * 0.04;
+      this.droneShadow.setPosition(ds.x + shadowOffset, ds.y + shadowOffset);
+      this.droneShadow.setAngle(ds.angle);
+      this.droneShadow.setAlpha(
+        Phaser.Math.Clamp(0.4 - ds.altitude * 0.0001, 0.05, 0.4),
+      );
+      const shadowScale =
+        SCALE * Phaser.Math.Clamp(1.2 - ds.altitude * 0.0003, 0.6, 1.2);
+      this.droneShadow.setScale(shadowScale);
+    } else {
+      this.droneShadow.setVisible(false);
+    }
 
     // --- Camera zoom (zoom out above 2000 ft, drone compensates to stay same size) ---
     if (ds.altitude <= 2000) {
       this.cameras.main.setZoom(1);
       this.drone.setScale(SCALE);
     } else {
-      // Lerp zoom from 1.0 at 2000ft down to 0.35 at 15000ft
       const t = (ds.altitude - 2000) / (ds.maxAlt - 2000);
       const zoom = Phaser.Math.Linear(1.0, 0.35, t);
       this.cameras.main.setZoom(zoom);
-      // Scale drone up to counteract zoom so it stays the same screen size
       this.drone.setScale(SCALE / zoom);
     }
 
     // --- Propeller animation (faster spin at higher speed) ---
-    const propInterval = Math.max(30, 150 - ds.speed * 0.4);
-    this.propTimer += delta;
-    if (this.propTimer >= propInterval) {
-      this.propTimer = 0;
-      this.propFrame = 1 - this.propFrame;
-      this.drone.setTexture(this.propFrame === 0 ? "drone" : "drone2");
+    if (ds.speed > 0) {
+      const propInterval = Math.max(30, 150 - ds.speed * 0.4);
+      this.propTimer += delta;
+      if (this.propTimer >= propInterval) {
+        this.propTimer = 0;
+        this.propFrame = 1 - this.propFrame;
+        this.drone.setTexture(this.propFrame === 0 ? "drone" : "drone2");
+      }
     }
 
     // --- Laser line from drone to target ---
     this.laserLine.clear();
-    if (this.targetPos) {
+    if (this.targetPos && isAirborne) {
       this.laserLine.lineStyle(1, 0xff0000, 0.5);
       this.laserLine.beginPath();
       this.laserLine.moveTo(ds.x, ds.y);
       this.laserLine.lineTo(this.targetPos.x, this.targetPos.y);
       this.laserLine.strokePath();
 
-      // Pulse the reticle
       const pulse = 0.8 + Math.sin(time * 0.005) * 0.2;
       this.reticle.setAlpha(pulse);
     }
 
-    // --- Fire missile ---
-    if (Phaser.Input.Keyboard.JustDown(this.cursors.fire) && this.targetPos) {
+    // --- Fire missile (only when airborne) ---
+    if (Phaser.Input.Keyboard.JustDown(this.cursors.fire) && this.targetPos && isAirborne) {
       this.fireMissile();
     }
 
@@ -275,10 +500,17 @@ export class GameScene extends Phaser.Scene {
     this.updateMissiles(dt);
 
     // --- HUD ---
-    const speedKnots = Math.round(ds.speed * 0.5);
+    const spdDisplay = Math.round(speedKnots);
+    let stateLabel = "";
+    if (isGrounded) {
+      stateLabel = ds.speed === 0 ? "PARKED" : "TAXIING";
+      if (speedKnots >= 40) stateLabel = "READY (E to take off)";
+    } else {
+      stateLabel = this.targetPos ? "TGT LOCK" : "NO TGT";
+    }
     this.hudText.setText(
-      `ALT: ${Math.round(ds.altitude)} ft  SPD: ${speedKnots} kts  HDG: ${(((ds.angle % 360) + 360) % 360) | 0}°\n` +
-        `KILLS: ${this.kills}/${this.tankData.length}  MSL: ${this.targetPos ? "TGT LOCK" : "NO TGT"}`,
+      `ALT: ${Math.round(ds.altitude)} ft  SPD: ${spdDisplay} kts  HDG: ${(((ds.angle % 360) + 360) % 360) | 0}°\n` +
+        `KILLS: ${this.kills}/${this.tankData.length}  ${stateLabel}`,
     );
   }
 
