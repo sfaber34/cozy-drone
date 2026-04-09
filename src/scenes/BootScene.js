@@ -1036,5 +1036,57 @@ export class BootScene extends Phaser.Scene {
     gsc.fillStyle = '#8af';
     gsc.fillRect(15, 4, 4, 3);
     gasCanvas.refresh();
+
+    // --- Building damage cracks overlay (16x16) ---
+    const crackCanvas = this.textures.createCanvas('cracks', 16, 16);
+    const ckc = crackCanvas.context;
+    ckc.fillStyle = '#222';
+    ckc.fillRect(3, 1, 1, 4);
+    ckc.fillRect(4, 4, 1, 3);
+    ckc.fillRect(5, 6, 1, 2);
+    ckc.fillRect(10, 2, 1, 3);
+    ckc.fillRect(9, 5, 1, 2);
+    ckc.fillRect(11, 5, 1, 4);
+    ckc.fillRect(6, 10, 1, 3);
+    ckc.fillRect(7, 12, 1, 2);
+    ckc.fillRect(12, 9, 1, 3);
+    ckc.fillRect(13, 11, 1, 2);
+    crackCanvas.refresh();
+
+    // --- Fire/smoke overlay (8x8) ---
+    const fireCanvas = this.textures.createCanvas('fire', 8, 8);
+    const fic = fireCanvas.context;
+    fic.fillStyle = '#f80';
+    fic.fillRect(2, 3, 4, 4);
+    fic.fillRect(3, 2, 2, 1);
+    fic.fillStyle = '#ff0';
+    fic.fillRect(3, 4, 2, 2);
+    fic.fillStyle = '#f00';
+    fic.fillRect(1, 6, 2, 2);
+    fic.fillRect(5, 5, 2, 2);
+    fireCanvas.refresh();
+
+    // --- Smoke puff (8x8) ---
+    const smokeCanvas = this.textures.createCanvas('smoke', 8, 8);
+    const skc = smokeCanvas.context;
+    skc.fillStyle = '#666';
+    skc.fillRect(2, 2, 4, 4);
+    skc.fillRect(1, 3, 6, 2);
+    skc.fillRect(3, 1, 2, 1);
+    skc.fillStyle = '#888';
+    skc.fillRect(3, 3, 2, 2);
+    smokeCanvas.refresh();
+
+    // --- Rubble (16x16) ---
+    const rubbleCanvas = this.textures.createCanvas('rubble', 16, 16);
+    const rbl = rubbleCanvas.context;
+    const rblRng = new Phaser.Math.RandomDataGenerator(['rubble']);
+    for (let i = 0; i < 30; i++) {
+      rbl.fillStyle = rblRng.pick(['#555', '#666', '#777', '#888', '#443', '#554']);
+      const rx = rblRng.between(0, 14);
+      const ry = rblRng.between(0, 14);
+      rbl.fillRect(rx, ry, rblRng.between(1, 3), rblRng.between(1, 2));
+    }
+    rubbleCanvas.refresh();
   }
 }

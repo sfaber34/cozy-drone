@@ -59,15 +59,37 @@ export class GameScene extends Phaser.Scene {
     }
 
     // ==========================================
+    // BUILDINGS — tracked for destruction
+    // ==========================================
+    // sizes: "small"=2hp, "medium"=3hp, "large"=4hp
+    this.buildings = [];
+    const bldgHp = { small: 2, medium: 3, large: 4 };
+    const bldgRadius = { small: 30, medium: 50, large: 60 };
+
+    const addBuilding = (x, y, tex, size, tint) => {
+      const sprite = this.add.image(x, y, tex).setScale(SCALE).setDepth(2);
+      if (tint) sprite.setTint(tint);
+      const b = {
+        sprite, tex, size,
+        hp: bldgHp[size], maxHp: bldgHp[size],
+        radius: bldgRadius[size],
+        x, y, destroyed: false,
+        cracksSprite: null, fireSprites: [],
+      };
+      this.buildings.push(b);
+      return b;
+    };
+
+    // ==========================================
     // TOWN (NW quadrant) — large grid layout
     // ==========================================
-    const roadTile = TILE * SCALE; // 48px per road tile
+    const roadTile = TILE * SCALE;
     const townStartX = 100;
     const townStartY = 100;
-    const blockSize = 6; // tiles between roads
-    const gridCols = 8; // number of blocks across
-    const gridRows = 8; // number of blocks down
-    const roadSpacing = blockSize + 1; // block + 1 road tile
+    const blockSize = 6;
+    const gridCols = 8;
+    const gridRows = 8;
+    const roadSpacing = blockSize + 1;
 
     // Lay roads
     const townW = gridCols * roadSpacing + 1;
@@ -79,44 +101,24 @@ export class GameScene extends Phaser.Scene {
         const isHRoad = gy % roadSpacing === 0;
         const isVRoad = gx % roadSpacing === 0;
         if (isHRoad && isVRoad) {
-          this.add
-            .image(px, py, "road-x")
-            .setOrigin(0, 0)
-            .setScale(SCALE)
-            .setDepth(1);
+          this.add.image(px, py, "road-x").setOrigin(0, 0).setScale(SCALE).setDepth(1);
         } else if (isHRoad) {
-          this.add
-            .image(px, py, "road-h")
-            .setOrigin(0, 0)
-            .setScale(SCALE)
-            .setDepth(1);
+          this.add.image(px, py, "road-h").setOrigin(0, 0).setScale(SCALE).setDepth(1);
         } else if (isVRoad) {
-          this.add
-            .image(px, py, "road-v")
-            .setOrigin(0, 0)
-            .setScale(SCALE)
-            .setDepth(1);
+          this.add.image(px, py, "road-v").setOrigin(0, 0).setScale(SCALE).setDepth(1);
         }
       }
     }
 
     // Fill each block with buildings
     const blockTypes = [
-      "residential",
-      "residential",
-      "residential",
-      "residential",
-      "commercial",
-      "commercial",
-      "commercial",
-      "park",
-      "parking",
+      "residential", "residential", "residential", "residential",
+      "commercial", "commercial", "commercial", "park", "parking",
     ];
     const houseTints = [0xddccbb, 0xccbbaa, 0xbbccdd, 0xddddcc, 0xeeddcc];
 
     for (let by = 0; by < gridRows; by++) {
       for (let bx = 0; bx < gridCols; bx++) {
-        // Block interior starts 1 tile after the road
         const blkX = townStartX + (bx * roadSpacing + 1) * roadTile;
         const blkY = townStartY + (by * roadSpacing + 1) * roadTile;
         const blkW = blockSize * roadTile;
@@ -124,31 +126,20 @@ export class GameScene extends Phaser.Scene {
         const cx = blkX + blkW / 2;
         const cy = blkY + blkH / 2;
 
-        // Special placements
         if (bx === 3 && by === 2) {
-          // Hospital block
-          this.add.image(cx, cy, "hospital").setScale(SCALE).setDepth(2);
-          // Parking around it
+          addBuilding(cx, cy, "hospital", "large");
           for (let pp = 0; pp < 3; pp++) {
-            this.add
-              .image(blkX + pp * roadTile, blkY, "parking")
-              .setOrigin(0, 0)
-              .setScale(SCALE)
-              .setDepth(1);
+            this.add.image(blkX + pp * roadTile, blkY, "parking")
+              .setOrigin(0, 0).setScale(SCALE).setDepth(1);
           }
           continue;
         }
         if (bx === 5 && by === 4) {
-          // Church block
-          this.add.image(cx, cy, "church").setScale(SCALE).setDepth(2);
-          // Park around church
+          addBuilding(cx, cy, "church", "medium");
           for (let pp = 0; pp < 3; pp++) {
             for (let pq = 0; pq < 3; pq++) {
-              this.add
-                .image(blkX + pp * roadTile, blkY + pq * roadTile, "park")
-                .setOrigin(0, 0)
-                .setScale(SCALE)
-                .setDepth(1);
+              this.add.image(blkX + pp * roadTile, blkY + pq * roadTile, "park")
+                .setOrigin(0, 0).setScale(SCALE).setDepth(1);
             }
           }
           continue;
@@ -159,34 +150,21 @@ export class GameScene extends Phaser.Scene {
         if (blockType === "park") {
           for (let py2 = 0; py2 < blockSize; py2++) {
             for (let px2 = 0; px2 < blockSize; px2++) {
-              this.add
-                .image(blkX + px2 * roadTile, blkY + py2 * roadTile, "park")
-                .setOrigin(0, 0)
-                .setScale(SCALE)
-                .setDepth(1);
+              this.add.image(blkX + px2 * roadTile, blkY + py2 * roadTile, "park")
+                .setOrigin(0, 0).setScale(SCALE).setDepth(1);
             }
           }
         } else if (blockType === "parking") {
           for (let py2 = 0; py2 < blockSize; py2++) {
             for (let px2 = 0; px2 < blockSize; px2++) {
-              this.add
-                .image(blkX + px2 * roadTile, blkY + py2 * roadTile, "parking")
-                .setOrigin(0, 0)
-                .setScale(SCALE)
-                .setDepth(1);
+              this.add.image(blkX + px2 * roadTile, blkY + py2 * roadTile, "parking")
+                .setOrigin(0, 0).setScale(SCALE).setDepth(1);
             }
           }
-          // Building on one side
-          this.add
-            .image(
-              blkX + roadTile,
-              blkY + roadTile,
-              rng.pick(["building", "shop", "gas-station"]),
-            )
-            .setScale(SCALE)
-            .setDepth(2);
+          const tex = rng.pick(["building", "shop", "gas-station"]);
+          const sz = tex === "building" ? "medium" : "small";
+          addBuilding(blkX + roadTile, blkY + roadTile, tex, sz);
         } else if (blockType === "commercial") {
-          // Mix of shops, apartments, buildings
           const spots = [];
           for (let sy = 0; sy < 2; sy++) {
             for (let sx = 0; sx < 2; sx++) {
@@ -197,27 +175,17 @@ export class GameScene extends Phaser.Scene {
             }
           }
           for (const s of spots) {
-            const tex = rng.pick([
-              "building",
-              "apartment",
-              "shop",
-              "shop",
-              "gas-station",
-            ]);
-            this.add.image(s.x, s.y, tex).setScale(SCALE).setDepth(2);
+            const tex = rng.pick(["building", "apartment", "shop", "shop", "gas-station"]);
+            const sz = (tex === "building" || tex === "apartment") ? "medium" : "small";
+            addBuilding(s.x, s.y, tex, sz);
           }
         } else {
-          // Residential — houses in a grid
           for (let hy = 0; hy < 3; hy++) {
             for (let hx = 0; hx < 3; hx++) {
-              if (rng.frac() < 0.15) continue; // occasional empty lot
+              if (rng.frac() < 0.15) continue;
               const houseX = blkX + (hx * 2 + 0.5) * roadTile;
               const houseY = blkY + (hy * 2 + 0.5) * roadTile;
-              const h = this.add
-                .image(houseX, houseY, "house")
-                .setScale(SCALE)
-                .setDepth(2);
-              h.setTint(rng.pick(houseTints));
+              addBuilding(houseX, houseY, "house", "small", rng.pick(houseTints));
             }
           }
         }
@@ -230,37 +198,22 @@ export class GameScene extends Phaser.Scene {
     const farmBaseX = halfW * SCALE + 200;
     const farmBaseY = 200;
 
-    // Place barns and silos in a grid pattern
     for (let fy = 0; fy < 4; fy++) {
       for (let fx = 0; fx < 3; fx++) {
-        const cx = farmBaseX + fx * 600 + rng.between(-40, 40);
-        const cy = farmBaseY + fy * 500 + rng.between(-40, 40);
+        const fcx = farmBaseX + fx * 600 + rng.between(-40, 40);
+        const fcy = farmBaseY + fy * 500 + rng.between(-40, 40);
 
-        // Barn
-        this.add.image(cx, cy, "barn").setScale(SCALE).setDepth(2);
-
-        // 1-2 silos near barn
-        this.add
-          .image(cx + 100, cy - 40, "silo")
-          .setScale(SCALE)
-          .setDepth(2);
+        addBuilding(fcx, fcy, "barn", "medium");
+        addBuilding(fcx + 100, fcy - 40, "silo", "small");
         if (rng.frac() > 0.4) {
-          this.add
-            .image(cx + 140, cy - 20, "silo")
-            .setScale(SCALE)
-            .setDepth(2);
+          addBuilding(fcx + 140, fcy - 20, "silo", "small");
         }
 
-        // Fences around fields
         for (let f = 0; f < 4; f++) {
-          this.add
-            .image(cx - 150 + f * 80, cy - 120, "fence-h")
-            .setScale(SCALE)
-            .setDepth(1.5);
-          this.add
-            .image(cx - 150 + f * 80, cy + 120, "fence-h")
-            .setScale(SCALE)
-            .setDepth(1.5);
+          this.add.image(fcx - 150 + f * 80, fcy - 120, "fence-h")
+            .setScale(SCALE).setDepth(1.5);
+          this.add.image(fcx - 150 + f * 80, fcy + 120, "fence-h")
+            .setScale(SCALE).setDepth(1.5);
         }
       }
     }
@@ -375,7 +328,7 @@ export class GameScene extends Phaser.Scene {
         .setDepth(2);
       this.people.push({
         sprite,
-        state: "idle", // idle | waving | panicking
+        state: "idle",
         greeting: rng.pick(greetings),
         bubble: null,
         waveTimer: 0,
@@ -383,6 +336,10 @@ export class GameScene extends Phaser.Scene {
         runAngle: 0,
         runTimer: 0,
         runFrame: 0,
+        wanderTimer: 0,
+        wanderDuration: 2 + Math.random() * 4,
+        wanderAngle: Math.random() < 0.5 ? null : Math.random() * Math.PI * 2,
+        hideTarget: null,
         homeX: px,
         homeY: py,
       });
@@ -1017,6 +974,76 @@ export class GameScene extends Phaser.Scene {
       }
     }
 
+    // Check building hits
+    for (const b of this.buildings) {
+      if (b.destroyed) continue;
+      const dist = Phaser.Math.Distance.Between(x, y, b.x, b.y);
+      if (dist < b.radius) {
+        b.hp--;
+        if (b.hp <= 0) {
+          // Destroyed
+          b.destroyed = true;
+          b.sprite.setTexture("rubble");
+          b.sprite.setTint(0x888888);
+          if (b.cracksSprite) b.cracksSprite.destroy();
+          for (const f of b.fireSprites) f.destroy();
+          b.fireSprites = [];
+          // Big explosion
+          this.time.delayedCall(100, () => {
+            const exp3 = this.add.sprite(b.x, b.y, "explosion-sheet", 0)
+              .setScale(SCALE * 2).setDepth(11);
+            this.hudCam.ignore(exp3);
+            exp3.play("explode");
+            exp3.once("animationcomplete", () => exp3.destroy());
+          });
+          // Kill people hiding in this building
+          this.killPeopleInBuilding(b);
+        } else {
+          // Show damage — darken tint based on remaining hp
+          const dmgFrac = b.hp / b.maxHp;
+          const tintVal = Math.floor(0x88 + 0x77 * dmgFrac);
+          const tint = (tintVal << 16) | (tintVal << 8) | tintVal;
+          b.sprite.setTint(tint);
+          // Add cracks on first hit
+          if (!b.cracksSprite) {
+            b.cracksSprite = this.add.image(b.x, b.y, "cracks")
+              .setScale(SCALE).setDepth(3).setAlpha(0.6);
+            this.hudCam.ignore(b.cracksSprite);
+          }
+          // Add fire at half hp or below
+          if (b.hp <= b.maxHp / 2) {
+            const fire = this.add.image(
+              b.x + Phaser.Math.Between(-15, 15),
+              b.y + Phaser.Math.Between(-15, 15),
+              "fire",
+            ).setScale(SCALE).setDepth(3);
+            this.hudCam.ignore(fire);
+            b.fireSprites.push(fire);
+            // Animate fire flicker
+            this.tweens.add({
+              targets: fire,
+              alpha: { from: 1, to: 0.5 },
+              scaleX: { from: SCALE, to: SCALE * 0.8 },
+              scaleY: { from: SCALE, to: SCALE * 1.2 },
+              duration: 300,
+              yoyo: true,
+              repeat: -1,
+            });
+          }
+          // Smoke puff on hit
+          const smoke = this.add.image(b.x, b.y - 10, "smoke")
+            .setScale(SCALE).setDepth(12).setAlpha(0.8);
+          this.hudCam.ignore(smoke);
+          this.tweens.add({
+            targets: smoke,
+            y: b.y - 60, alpha: 0, scale: SCALE * 2,
+            duration: 800, ease: "Quad.easeOut",
+            onComplete: () => smoke.destroy(),
+          });
+        }
+      }
+    }
+
     // Kill or panic nearby people
     this.affectNearbyPeople(x, y);
   }
@@ -1067,7 +1094,7 @@ export class GameScene extends Phaser.Scene {
     ];
 
     for (const p of this.people) {
-      if (p.state === "ghost" || p.state === "gone") continue;
+      if (p.state === "ghost" || p.state === "gone" || p.state === "hiding") continue;
       const dist = Phaser.Math.Distance.Between(x, y, p.sprite.x, p.sprite.y);
 
       if (dist < killRadius) {
@@ -1079,6 +1106,12 @@ export class GameScene extends Phaser.Scene {
         }
         p.sprite.setTexture("ghost");
         p.sprite.setAlpha(0.8);
+        p.sprite.setDepth(13);
+        // Random drift away from explosion
+        const awayAngle = Phaser.Math.Angle.Between(x, y, p.sprite.x, p.sprite.y);
+        p.ghostDriftX = Math.cos(awayAngle) * (15 + Math.random() * 25);
+        p.ghostDriftY = -(20 + Math.random() * 20);
+        p.ghostWobbleOffset = Math.random() * Math.PI * 2;
 
         // Ghost speech bubble
         const line = Phaser.Utils.Array.GetRandom(ghostLines);
@@ -1093,39 +1126,132 @@ export class GameScene extends Phaser.Scene {
           .setScale(SCALE * 0.5)
           .setDepth(14);
         this.hudCam.ignore(p.bubble);
-      } else if (dist < panicRadius && p.state !== "panicking") {
-        // Panic
+      } else if (dist < panicRadius && p.state !== "panicking" && p.state !== "hiding") {
+        // Panic — find nearest intact building to hide in
         p.state = "panicking";
-        p.runAngle = Phaser.Math.Angle.Between(x, y, p.sprite.x, p.sprite.y);
         if (p.bubble) {
           p.bubble.destroy();
           p.bubble = null;
+        }
+        p.hideTarget = this.findNearestBuilding(p.sprite.x, p.sprite.y);
+        if (p.hideTarget) {
+          p.runAngle = Phaser.Math.Angle.Between(
+            p.sprite.x, p.sprite.y, p.hideTarget.x, p.hideTarget.y,
+          );
+        } else {
+          // No building — just run away from explosion
+          p.runAngle = Phaser.Math.Angle.Between(x, y, p.sprite.x, p.sprite.y);
         }
       }
     }
   }
 
+  findNearestBuilding(px, py) {
+    let best = null;
+    let bestDist = Infinity;
+    for (const b of this.buildings) {
+      if (b.destroyed) continue;
+      const d = Phaser.Math.Distance.Between(px, py, b.x, b.y);
+      if (d < bestDist) {
+        bestDist = d;
+        best = b;
+      }
+    }
+    return best;
+  }
+
+  killPeopleInBuilding(building) {
+    const ghostLines = [
+      "Thanks!", "I hated this\nplace anyway", "Finally!", "Sweet release!",
+      "About time!", "Freedom!", "Weeee!", "Best day ever!", "No more taxes!",
+      "The rent was\ntoo high anyway!", "Worst hiding\nspot ever!",
+      "Should've picked\na different house!", "Not again!",
+    ];
+    let ghostIdx = 0;
+    for (const p of this.people) {
+      if (p.state !== "hiding") continue;
+      if (p.hideTarget !== building) continue;
+      const idx = ghostIdx++;
+      // Stagger each ghost's appearance
+      this.time.delayedCall(idx * 300, () => {
+        p.state = "ghost";
+        // Spread starting positions around the building
+        const spawnAngle = (idx / Math.max(ghostIdx, 1)) * Math.PI * 2 + Math.random() * 0.5;
+        p.sprite.setPosition(
+          building.x + Math.cos(spawnAngle) * 25,
+          building.y + Math.sin(spawnAngle) * 25,
+        );
+        p.sprite.setVisible(true);
+        p.sprite.setTexture("ghost");
+        p.sprite.setAlpha(0.8);
+        p.sprite.setDepth(13);
+        // Each ghost drifts in a unique direction
+        p.ghostDriftX = Math.cos(spawnAngle) * (15 + Math.random() * 25);
+        p.ghostDriftY = -(20 + Math.random() * 20); // always float up, but at different speeds
+        p.ghostWobbleOffset = Math.random() * Math.PI * 2;
+
+        const line = Phaser.Utils.Array.GetRandom(ghostLines);
+        p.bubble = this.add
+          .text(p.sprite.x + 20, p.sprite.y - 20, line, {
+            fontFamily: "monospace",
+            fontSize: "8px",
+            color: "#aaccff",
+            backgroundColor: "#000000aa",
+            padding: { x: 4, y: 3 },
+          })
+          .setScale(SCALE * 0.5)
+          .setDepth(14);
+        this.hudCam.ignore(p.bubble);
+      });
+    }
+  }
+
+  isInsideBuilding(px, py) {
+    for (const b of this.buildings) {
+      if (b.destroyed) continue;
+      if (Phaser.Math.Distance.Between(px, py, b.x, b.y) < b.radius) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  steerAroundBuildings(px, py, angle, dt) {
+    // Check if next position would be inside a building
+    const checkDist = 40;
+    const nx = px + Math.cos(angle) * checkDist;
+    const ny = py + Math.sin(angle) * checkDist;
+    for (const b of this.buildings) {
+      if (b.destroyed) continue;
+      const d = Phaser.Math.Distance.Between(nx, ny, b.x, b.y);
+      if (d < b.radius + 20) {
+        // Steer perpendicular to the building
+        const awayAngle = Phaser.Math.Angle.Between(b.x, b.y, px, py);
+        return awayAngle;
+      }
+    }
+    return angle;
+  }
+
   updatePeople(dt, delta) {
     const ds = this.droneState;
     const droneDetectRadius = 600;
-    const panicSpeed = 90;
+    const wanderSpeed = 30;
+    const panicSpeed = 120;
 
     for (const p of this.people) {
-      if (p.state === "gone") continue;
+      if (p.state === "gone" || p.state === "hiding") continue;
+
       const distToDrone = Phaser.Math.Distance.Between(
-        ds.x,
-        ds.y,
-        p.sprite.x,
-        p.sprite.y,
+        ds.x, ds.y, p.sprite.x, p.sprite.y,
       );
 
+      // --- IDLE: wander slowly ---
       if (p.state === "idle") {
-        // Detect drone flying overhead
+        // Detect drone
         if (ds.altitude > 0 && distToDrone < droneDetectRadius) {
           p.state = "waving";
           p.waveTimer = 0;
-
-          // Show greeting bubble
           p.bubble = this.add
             .text(p.sprite.x + 20, p.sprite.y - 30, p.greeting, {
               fontFamily: "monospace",
@@ -1137,21 +1263,50 @@ export class GameScene extends Phaser.Scene {
             .setScale(SCALE * 0.5)
             .setDepth(13);
           this.hudCam.ignore(p.bubble);
+        } else {
+          // Wander
+          p.wanderTimer = (p.wanderTimer || 0) + dt;
+          if (p.wanderTimer > p.wanderDuration) {
+            // Pick new direction or stop
+            p.wanderTimer = 0;
+            p.wanderDuration = 2 + Math.random() * 4;
+            if (Math.random() < 0.4) {
+              p.wanderAngle = null; // stop and stand
+            } else {
+              p.wanderAngle = Math.random() * Math.PI * 2;
+            }
+          }
+          if (p.wanderAngle !== null && p.wanderAngle !== undefined) {
+            const steered = this.steerAroundBuildings(
+              p.sprite.x, p.sprite.y, p.wanderAngle, dt,
+            );
+            p.sprite.x += Math.cos(steered) * wanderSpeed * dt;
+            p.sprite.y += Math.sin(steered) * wanderSpeed * dt;
+            p.sprite.setFlipX(Math.cos(steered) < 0);
+            // Walk anim
+            p.runTimer = (p.runTimer || 0) + delta;
+            if (p.runTimer > 200) {
+              p.runTimer = 0;
+              p.runFrame = 1 - p.runFrame;
+              p.sprite.setTexture(p.runFrame === 0 ? "person-run1" : "person-run2");
+            }
+          } else {
+            p.sprite.setTexture("person-stand");
+          }
+          // Clamp to world
+          p.sprite.x = Phaser.Math.Clamp(p.sprite.x, 50, WORLD_W * SCALE - 50);
+          p.sprite.y = Phaser.Math.Clamp(p.sprite.y, 50, WORLD_H * SCALE - 50);
         }
       }
 
+      // --- WAVING ---
       if (p.state === "waving") {
-        // Wave animation
         p.waveTimer += delta;
         if (p.waveTimer > 250) {
           p.waveTimer = 0;
           p.waveFrame = 1 - p.waveFrame;
-          p.sprite.setTexture(
-            p.waveFrame === 0 ? "person-wave1" : "person-wave2",
-          );
+          p.sprite.setTexture(p.waveFrame === 0 ? "person-wave1" : "person-wave2");
         }
-
-        // Stop waving if drone flies away
         if (distToDrone > droneDetectRadius * 1.5 || ds.altitude <= 0) {
           p.state = "idle";
           p.sprite.setTexture("person-stand");
@@ -1162,37 +1317,58 @@ export class GameScene extends Phaser.Scene {
         }
       }
 
+      // --- PANICKING: run toward nearest building ---
       if (p.state === "panicking") {
-        // Run animation
-        p.runTimer += delta;
+        p.runTimer = (p.runTimer || 0) + delta;
         if (p.runTimer > 120) {
           p.runTimer = 0;
           p.runFrame = 1 - p.runFrame;
           p.sprite.setTexture(p.runFrame === 0 ? "person-run1" : "person-run2");
         }
 
-        // Move away
+        // Update angle toward hide target if it exists
+        if (p.hideTarget && !p.hideTarget.destroyed) {
+          p.runAngle = Phaser.Math.Angle.Between(
+            p.sprite.x, p.sprite.y, p.hideTarget.x, p.hideTarget.y,
+          );
+          // Check if reached the building
+          const distToB = Phaser.Math.Distance.Between(
+            p.sprite.x, p.sprite.y, p.hideTarget.x, p.hideTarget.y,
+          );
+          if (distToB < 20) {
+            // Hide inside
+            p.state = "hiding";
+            p.sprite.setVisible(false);
+            continue;
+          }
+        } else if (p.hideTarget && p.hideTarget.destroyed) {
+          // Target destroyed — find another
+          p.hideTarget = this.findNearestBuilding(p.sprite.x, p.sprite.y);
+          if (!p.hideTarget) {
+            // No buildings left — just run away
+            p.runAngle += (Math.random() - 0.5) * 0.5;
+          }
+        }
+
         p.sprite.x += Math.cos(p.runAngle) * panicSpeed * dt;
         p.sprite.y += Math.sin(p.runAngle) * panicSpeed * dt;
-
-        // Flip sprite if running left
         p.sprite.setFlipX(Math.cos(p.runAngle) < 0);
       }
 
+      // --- GHOST ---
       if (p.state === "ghost") {
-        // Float upward and fade
-        p.sprite.y -= 30 * dt;
-        // Gentle side-to-side wobble
-        p.sprite.x += Math.sin(p.sprite.y * 0.05) * 20 * dt;
+        const driftX = p.ghostDriftX || 0;
+        const driftY = p.ghostDriftY || -30;
+        const wobbleOff = p.ghostWobbleOffset || 0;
+        p.sprite.y += driftY * dt;
+        p.sprite.x += driftX * dt + Math.sin(p.sprite.y * 0.04 + wobbleOff) * 15 * dt;
         p.sprite.setAlpha(p.sprite.alpha - 0.08 * dt);
 
-        // Move bubble with ghost
         if (p.bubble) {
           p.bubble.setPosition(p.sprite.x + 20, p.sprite.y - 20);
           p.bubble.setAlpha(p.sprite.alpha);
         }
 
-        // Fully faded — clean up
         if (p.sprite.alpha <= 0) {
           p.sprite.destroy();
           if (p.bubble) {
