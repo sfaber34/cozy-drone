@@ -285,33 +285,48 @@ export class GameScene extends Phaser.Scene {
   fireMissile() {
     if (!this.targetPos) return;
 
+    // Launch from drone's nose in the direction it's facing
+    const ds = this.droneState;
+    const launchRad = Phaser.Math.DegToRad(ds.angle - 90);
+    const launchOffset = 30;
+    const startX = ds.x + Math.cos(launchRad) * launchOffset;
+    const startY = ds.y + Math.sin(launchRad) * launchOffset;
+
     const missile = this.add
-      .image(this.droneState.x, this.droneState.y, "missile")
+      .image(startX, startY, "missile")
       .setScale(SCALE)
       .setDepth(9);
     this.hudCam.ignore(missile);
 
-    const target = { x: this.targetPos.x, y: this.targetPos.y };
-    const angle = Phaser.Math.Angle.Between(
-      missile.x,
-      missile.y,
-      target.x,
-      target.y,
-    );
-    missile.setRotation(angle + Math.PI / 2);
+    // Missile starts heading in the drone's direction
+    const heading = launchRad;
+    missile.setRotation(heading + Math.PI / 2);
 
     this.missiles.push({
       sprite: missile,
-      target,
-      speed: 400,
-      altitude: this.droneState.altitude, // missile starts at drone altitude and descends
+      target: { x: this.targetPos.x, y: this.targetPos.y },
+      speed: 280,
+      heading,               // current direction of travel (radians)
+      turnRate: 3.0,         // radians/sec max turn
+      boostTime: 0.3,        // seconds of straight flight before turning
+      elapsed: 0,
+      altitude: ds.altitude,
+      launchAlt: ds.altitude, // remember starting altitude for scale calc
     });
   }
 
   updateMissiles(dt) {
     for (let i = this.missiles.length - 1; i >= 0; i--) {
       const m = this.missiles[i];
-      const angle = Phaser.Math.Angle.Between(
+      m.elapsed += dt;
+
+      // Always track the current target point
+      if (this.targetPos) {
+        m.target.x = this.targetPos.x;
+        m.target.y = this.targetPos.y;
+      }
+
+      const targetAngle = Phaser.Math.Angle.Between(
         m.sprite.x,
         m.sprite.y,
         m.target.x,
@@ -324,20 +339,41 @@ export class GameScene extends Phaser.Scene {
         m.target.y,
       );
 
-      m.sprite.x += Math.cos(angle) * m.speed * dt;
-      m.sprite.y += Math.sin(angle) * m.speed * dt;
-      m.sprite.setRotation(angle + Math.PI / 2);
+      // After initial boost, steer toward target
+      if (m.elapsed > m.boostTime) {
+        let diff = targetAngle - m.heading;
+        // Normalize to [-PI, PI]
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        const maxTurn = m.turnRate * dt;
+        m.heading += Phaser.Math.Clamp(diff, -maxTurn, maxTurn);
+      }
+
+      // Accelerate after boost phase
+      if (m.elapsed > m.boostTime) {
+        m.speed = Math.min(400, m.speed + 240 * dt);
+      }
+
+      m.sprite.x += Math.cos(m.heading) * m.speed * dt;
+      m.sprite.y += Math.sin(m.heading) * m.speed * dt;
+      m.sprite.setRotation(m.heading + Math.PI / 2);
 
       // Missile descends
       m.altitude = Math.max(0, m.altitude - 600 * dt);
 
-      // Scale missile based on altitude (gets bigger as it descends)
-      const mScale = SCALE * (0.5 + (1 - m.altitude / 2000) * 0.5);
+      // Scale missile: full size at launch altitude, shrinks as it descends to ground
+      const altFrac = m.launchAlt > 0 ? m.altitude / m.launchAlt : 0;
+      const mScale = SCALE * (0.3 + altFrac * 0.7);
       m.sprite.setScale(mScale);
 
-      if (dist < 15 || m.altitude <= 0) {
-        // Impact!
+      if (dist < 15) {
+        // Direct hit on target
         this.missileImpact(m.target.x, m.target.y);
+        m.sprite.destroy();
+        this.missiles.splice(i, 1);
+      } else if (m.altitude <= 0) {
+        // Ran out of altitude — impact where the missile actually is
+        this.missileImpact(m.sprite.x, m.sprite.y);
         m.sprite.destroy();
         this.missiles.splice(i, 1);
       }
@@ -353,6 +389,28 @@ export class GameScene extends Phaser.Scene {
     this.hudCam.ignore(exp);
     exp.play("explode");
     exp.once("animationcomplete", () => exp.destroy());
+
+    // Spawn cute symbols
+    const symbols = ["heart", "flower", "smiley", "star", "rainbow"];
+    for (let i = 0; i < 8; i++) {
+      const tex = Phaser.Utils.Array.GetRandom(symbols);
+      const sym = this.add.image(x, y, tex).setScale(SCALE).setDepth(12);
+      this.hudCam.ignore(sym);
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 60 + Math.random() * 80;
+      const duration = 600 + Math.random() * 600;
+      this.tweens.add({
+        targets: sym,
+        x: x + Math.cos(angle) * dist,
+        y: y + Math.sin(angle) * dist - 30,
+        scale: SCALE * (0.5 + Math.random() * 0.8),
+        alpha: 0,
+        angle: Phaser.Math.Between(-180, 180),
+        duration,
+        ease: "Quad.easeOut",
+        onComplete: () => sym.destroy(),
+      });
+    }
 
     // Screen shake
     this.cameras.main.shake(200, 0.005);

@@ -156,6 +156,102 @@ export class BootScene extends Phaser.Scene {
     mc.fillRect(1, 5, 2, 1);
     missileCanvas.refresh();
 
+    // --- Cute symbols (10x10 each) ---
+    // Heart
+    const heartCanvas = this.textures.createCanvas('heart', 10, 10);
+    const hc = heartCanvas.context;
+    hc.fillStyle = '#ff4488';
+    // Top bumps
+    hc.fillRect(1, 1, 3, 3);
+    hc.fillRect(6, 1, 3, 3);
+    hc.fillRect(0, 2, 2, 2);
+    hc.fillRect(8, 2, 2, 2);
+    // Middle fill
+    hc.fillRect(0, 3, 10, 2);
+    hc.fillRect(1, 5, 8, 1);
+    hc.fillRect(2, 6, 6, 1);
+    hc.fillRect(3, 7, 4, 1);
+    hc.fillRect(4, 8, 2, 1);
+    // Highlight
+    hc.fillStyle = '#ff88aa';
+    hc.fillRect(2, 2, 1, 1);
+    heartCanvas.refresh();
+
+    // Flower
+    const flowerCanvas = this.textures.createCanvas('flower', 10, 10);
+    const fc = flowerCanvas.context;
+    // Petals
+    fc.fillStyle = '#ff88cc';
+    fc.fillRect(4, 0, 2, 3);  // top
+    fc.fillRect(4, 7, 2, 3);  // bottom
+    fc.fillRect(0, 4, 3, 2);  // left
+    fc.fillRect(7, 4, 3, 2);  // right
+    // Diagonal petals
+    fc.fillStyle = '#ffaadd';
+    fc.fillRect(1, 1, 2, 2);
+    fc.fillRect(7, 1, 2, 2);
+    fc.fillRect(1, 7, 2, 2);
+    fc.fillRect(7, 7, 2, 2);
+    // Center
+    fc.fillStyle = '#ffee00';
+    fc.fillRect(4, 4, 2, 2);
+    fc.fillRect(3, 4, 1, 2);
+    fc.fillRect(6, 4, 1, 2);
+    flowerCanvas.refresh();
+
+    // Smiley
+    const smileyCanvas = this.textures.createCanvas('smiley', 10, 10);
+    const smc = smileyCanvas.context;
+    // Face
+    smc.fillStyle = '#ffdd00';
+    smc.fillRect(2, 0, 6, 1);
+    smc.fillRect(1, 1, 8, 1);
+    smc.fillRect(0, 2, 10, 6);
+    smc.fillRect(1, 8, 8, 1);
+    smc.fillRect(2, 9, 6, 1);
+    // Eyes
+    smc.fillStyle = '#222';
+    smc.fillRect(2, 3, 2, 2);
+    smc.fillRect(6, 3, 2, 2);
+    // Smile
+    smc.fillRect(2, 6, 1, 1);
+    smc.fillRect(3, 7, 4, 1);
+    smc.fillRect(7, 6, 1, 1);
+    smileyCanvas.refresh();
+
+    // Star
+    const starCanvas = this.textures.createCanvas('star', 10, 10);
+    const stc = starCanvas.context;
+    stc.fillStyle = '#ffee44';
+    stc.fillRect(4, 0, 2, 3);   // top spike
+    stc.fillRect(0, 3, 10, 3);  // middle bar
+    stc.fillRect(2, 2, 6, 1);   // upper fill
+    stc.fillRect(2, 7, 6, 1);   // lower fill
+    stc.fillRect(4, 7, 2, 3);   // bottom spike
+    stc.fillRect(1, 6, 2, 2);   // bottom-left
+    stc.fillRect(7, 6, 2, 2);   // bottom-right
+    stc.fillStyle = '#fff';
+    stc.fillRect(5, 4, 1, 1);   // sparkle
+    starCanvas.refresh();
+
+    // Rainbow
+    const rainbowCanvas = this.textures.createCanvas('rainbow', 10, 10);
+    const rbc = rainbowCanvas.context;
+    const arcColors = ['#ff0000', '#ff8800', '#ffff00', '#00cc00', '#0088ff'];
+    for (let i = 0; i < 5; i++) {
+      rbc.fillStyle = arcColors[i];
+      rbc.fillRect(1, 2 + i, 8, 1);
+    }
+    // Rounded top
+    rbc.fillStyle = '#ff0000';
+    rbc.fillRect(2, 1, 6, 1);
+    rbc.fillRect(3, 0, 4, 1);
+    // Clouds
+    rbc.fillStyle = '#fff';
+    rbc.fillRect(0, 7, 3, 3);
+    rbc.fillRect(7, 7, 3, 3);
+    rainbowCanvas.refresh();
+
     // --- Explosion spritesheet (5 frames, 24x24 each) ---
     const expCanvas = this.textures.createCanvas('explosion-sheet', 120, 24);
     const ec = expCanvas.context;
