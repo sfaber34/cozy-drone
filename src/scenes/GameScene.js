@@ -58,6 +58,148 @@ export class GameScene extends Phaser.Scene {
       this.add.image(x, y, tex).setScale(SCALE).setDepth(1);
     }
 
+    // Initialize people array early (wedding + regular people both push to it)
+    this.people = [];
+
+    // ==========================================
+    // WEDDING SCENE (out in the desert)
+    // ==========================================
+    const weddingX = WORLD_W * SCALE * 0.75;
+    const weddingY = WORLD_H * SCALE * 0.6;
+    this.weddingPos = { x: weddingX, y: weddingY };
+
+    // Wedding rug (aisle)
+    for (let r = -2; r <= 2; r++) {
+      this.add.image(weddingX, weddingY + r * 12 * SCALE, "wedding-rug")
+        .setScale(SCALE).setDepth(1.5);
+    }
+
+    // Wedding arch at the front
+    this.add.image(weddingX, weddingY - 3 * 12 * SCALE, "wedding-arch")
+      .setScale(SCALE).setDepth(2);
+
+    // Lanterns flanking the aisle
+    for (let li = -2; li <= 2; li++) {
+      this.add.image(weddingX - 50, weddingY + li * 40, "lantern")
+        .setScale(SCALE).setDepth(2);
+      this.add.image(weddingX + 50, weddingY + li * 40, "lantern")
+        .setScale(SCALE).setDepth(2);
+    }
+
+    // Cushion seating (rows on each side)
+    for (let row = 0; row < 4; row++) {
+      for (let seat = 0; seat < 5; seat++) {
+        this.add.image(
+          weddingX - 80 - seat * 22,
+          weddingY - 30 + row * 30,
+          "cushion",
+        ).setScale(SCALE).setDepth(1.5);
+        this.add.image(
+          weddingX + 80 + seat * 22,
+          weddingY - 30 + row * 30,
+          "cushion",
+        ).setScale(SCALE).setDepth(1.5);
+      }
+    }
+
+    // Priest at the arch
+    const priestSprite = this.add.image(weddingX, weddingY - 3 * 12 * SCALE + 20, "priest")
+      .setScale(SCALE).setDepth(3);
+
+    // Bride & Groom in front of the arch
+    const brideSprite = this.add.image(weddingX - 25, weddingY - 2 * 12 * SCALE, "bride")
+      .setScale(SCALE).setDepth(3);
+    const groomSprite = this.add.image(weddingX + 25, weddingY - 2 * 12 * SCALE, "groom")
+      .setScale(SCALE).setDepth(3);
+
+    // Hearts floating from the couple
+    this.time.addEvent({
+      delay: 800,
+      loop: true,
+      callback: () => {
+        if (!brideSprite.active || !groomSprite.active) return;
+        const hx = (brideSprite.x + groomSprite.x) / 2;
+        const hy = brideSprite.y - 10;
+        const heart = this.add.image(hx, hy, "heart")
+          .setScale(SCALE * 0.8).setDepth(4);
+        this.hudCam.ignore(heart);
+        const angle = -Math.PI / 2 + (Math.random() - 0.5) * 1.2;
+        const dist = 40 + Math.random() * 40;
+        this.tweens.add({
+          targets: heart,
+          x: hx + Math.cos(angle) * dist,
+          y: hy + Math.sin(angle) * dist - 20,
+          alpha: 0,
+          scale: SCALE * (0.4 + Math.random() * 0.4),
+          duration: 1200 + Math.random() * 600,
+          ease: "Quad.easeOut",
+          onComplete: () => heart.destroy(),
+        });
+      },
+    });
+
+    // Wedding guests (seated on cushions, using different skins)
+    for (let side = -1; side <= 1; side += 2) {
+      for (let row = 0; row < 4; row++) {
+        for (let seat = 0; seat < 4; seat++) {
+          const gx = weddingX + side * (80 + seat * 22);
+          const gy = weddingY - 30 + row * 30;
+          const skinId = rng.between(0, 9);
+          const sprite = this.add.image(gx, gy, `person-stand-${skinId}`)
+            .setScale(SCALE).setDepth(2);
+          this.people.push({
+            sprite,
+            skinId,
+            state: "idle",
+            greeting: "",
+            noGreet: true,
+            scatterPanic: true,
+            bubble: null,
+            waveTimer: 0,
+            waveFrame: 0,
+            runAngle: 0,
+            runTimer: 0,
+            runFrame: 0,
+            wanderTimer: 0,
+            wanderDuration: 999,
+            wanderAngle: null,
+            hideTarget: null,
+            homeX: gx,
+            homeY: gy,
+          });
+        }
+      }
+    }
+
+    // Also add bride, groom, priest to people array so they can react
+    const weddingPeople = [
+      { sprite: brideSprite },
+      { sprite: groomSprite },
+      { sprite: priestSprite },
+    ];
+    for (const wp of weddingPeople) {
+      this.people.push({
+        sprite: wp.sprite,
+        skinId: 0,
+        state: "idle",
+        greeting: "",
+        noGreet: true,
+        scatterPanic: true,
+        bubble: null,
+        waveTimer: 0,
+        waveFrame: 0,
+        runAngle: 0,
+        runTimer: 0,
+        runFrame: 0,
+        wanderTimer: 0,
+        wanderDuration: 999,
+        wanderAngle: null,
+        hideTarget: null,
+        homeX: wp.sprite.x,
+        homeY: wp.sprite.y,
+      });
+    }
+
     // ==========================================
     // BUILDINGS — tracked for destruction
     // ==========================================
@@ -278,8 +420,7 @@ export class GameScene extends Phaser.Scene {
       this.tankData.push(tank);
     }
 
-    // --- People ---
-    this.people = [];
+    // --- People (random wanderers) ---
     const greetings = [
       "Hi there!",
       "Oh a drone!",
@@ -819,9 +960,14 @@ export class GameScene extends Phaser.Scene {
     } else {
       stateLabel = this.targetPos ? "TGT LOCK" : "NO TGT";
     }
+    const wDist = Math.round(Phaser.Math.Distance.Between(ds.x, ds.y, this.weddingPos.x, this.weddingPos.y));
+    const wBearing = ((Math.round(Phaser.Math.RadToDeg(
+      Phaser.Math.Angle.Between(ds.x, ds.y, this.weddingPos.x, this.weddingPos.y),
+    ) + 90) % 360) + 360) % 360;
     this.hudText.setText(
       `ALT: ${Math.round(ds.altitude)} ft  SPD: ${spdDisplay} kts  HDG: ${(((ds.angle % 360) + 360) % 360) | 0}°\n` +
-        `KILLS: ${this.kills}/${this.tankData.length}  ${stateLabel}`,
+        `KILLS: ${this.kills}/${this.tankData.length}  ${stateLabel}\n` +
+        `WEDDING: ${wBearing}° ${wDist}px`,
     );
   }
 
@@ -1151,20 +1297,27 @@ export class GameScene extends Phaser.Scene {
           .setDepth(14);
         this.hudCam.ignore(p.bubble);
       } else if (dist < panicRadius && p.state !== "panicking" && p.state !== "hiding") {
-        // Panic — find nearest intact building to hide in
+        // Panic
         p.state = "panicking";
         if (p.bubble) {
           p.bubble.destroy();
           p.bubble = null;
         }
-        p.hideTarget = this.findNearestBuilding(p.sprite.x, p.sprite.y);
-        if (p.hideTarget) {
-          p.runAngle = Phaser.Math.Angle.Between(
-            p.sprite.x, p.sprite.y, p.hideTarget.x, p.hideTarget.y,
-          );
+        if (p.scatterPanic) {
+          // Scatter in a random direction (away-ish from explosion)
+          const awayAngle = Phaser.Math.Angle.Between(x, y, p.sprite.x, p.sprite.y);
+          p.runAngle = awayAngle + (Math.random() - 0.5) * Math.PI;
+          p.hideTarget = null;
         } else {
-          // No building — just run away from explosion
-          p.runAngle = Phaser.Math.Angle.Between(x, y, p.sprite.x, p.sprite.y);
+          // Find nearest building to hide in
+          p.hideTarget = this.findNearestBuilding(p.sprite.x, p.sprite.y);
+          if (p.hideTarget) {
+            p.runAngle = Phaser.Math.Angle.Between(
+              p.sprite.x, p.sprite.y, p.hideTarget.x, p.hideTarget.y,
+            );
+          } else {
+            p.runAngle = Phaser.Math.Angle.Between(x, y, p.sprite.x, p.sprite.y);
+          }
         }
       }
     }
@@ -1273,7 +1426,7 @@ export class GameScene extends Phaser.Scene {
       // --- IDLE: wander slowly ---
       if (p.state === "idle") {
         // Detect drone
-        if (ds.altitude > 0 && distToDrone < droneDetectRadius) {
+        if (!p.noGreet && ds.altitude > 0 && distToDrone < droneDetectRadius) {
           p.state = "waving";
           p.waveTimer = 0;
           p.bubble = this.add

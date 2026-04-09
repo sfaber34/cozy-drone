@@ -424,6 +424,202 @@ export class BootScene extends Phaser.Scene {
     }
 
 
+    // --- Bride (10x14) ---
+    const brideCanvas = this.textures.createCanvas('bride', 10, 14);
+    const brc = brideCanvas.context;
+    // Veil
+    brc.fillStyle = '#fff';
+    brc.fillRect(2, 0, 6, 3);
+    // Head
+    brc.fillStyle = '#d4a574';
+    brc.fillRect(3, 1, 4, 3);
+    // Eyes
+    brc.fillStyle = '#222';
+    brc.fillRect(4, 2, 1, 1);
+    brc.fillRect(6, 2, 1, 1);
+    // Smile
+    brc.fillStyle = '#c44';
+    brc.fillRect(4, 3, 3, 1);
+    // White dress
+    brc.fillStyle = '#fff';
+    brc.fillRect(3, 4, 4, 3);
+    brc.fillRect(2, 7, 6, 4);
+    brc.fillRect(1, 9, 8, 3);
+    // Dress detail
+    brc.fillStyle = '#eee';
+    brc.fillRect(3, 8, 4, 1);
+    // Bouquet
+    brc.fillStyle = '#ff6688';
+    brc.fillRect(2, 5, 2, 2);
+    brc.fillStyle = '#66cc44';
+    brc.fillRect(2, 7, 1, 1);
+    brc.fillRect(3, 7, 1, 1);
+    // Shoes
+    brc.fillStyle = '#eeddcc';
+    brc.fillRect(3, 12, 2, 2);
+    brc.fillRect(5, 12, 2, 2);
+    brideCanvas.refresh();
+
+    // --- Groom (10x14) ---
+    const groomCanvas = this.textures.createCanvas('groom', 10, 14);
+    const gmc = groomCanvas.context;
+    // Head + keffiyeh
+    gmc.fillStyle = '#c49a6c';
+    gmc.fillRect(3, 0, 4, 4);
+    gmc.fillStyle = '#fff';
+    gmc.fillRect(3, 0, 4, 1);
+    gmc.fillRect(2, 0, 1, 3);
+    gmc.fillRect(7, 0, 1, 3);
+    // Gold agal
+    gmc.fillStyle = '#cc9933';
+    gmc.fillRect(3, 0, 4, 1);
+    // Eyes
+    gmc.fillStyle = '#222';
+    gmc.fillRect(4, 1, 1, 1);
+    gmc.fillRect(6, 1, 1, 1);
+    // Smile
+    gmc.fillStyle = '#c44';
+    gmc.fillRect(4, 3, 3, 1);
+    // White bisht (formal robe)
+    gmc.fillStyle = '#f0ece0';
+    gmc.fillRect(3, 4, 4, 6);
+    // Gold trim
+    gmc.fillStyle = '#cc9933';
+    gmc.fillRect(3, 4, 1, 6);
+    gmc.fillRect(6, 4, 1, 6);
+    gmc.fillRect(4, 4, 2, 1);
+    // Arms
+    gmc.fillStyle = '#c49a6c';
+    gmc.fillRect(2, 5, 1, 3);
+    gmc.fillRect(7, 5, 1, 3);
+    // Legs/robe bottom
+    gmc.fillStyle = '#f0ece0';
+    gmc.fillRect(3, 9, 2, 3);
+    gmc.fillRect(5, 9, 2, 3);
+    // Shoes
+    gmc.fillStyle = '#5a3a1a';
+    gmc.fillRect(3, 12, 2, 2);
+    gmc.fillRect(5, 12, 2, 2);
+    groomCanvas.refresh();
+
+    // --- Priest/Imam (10x14) ---
+    const priestCanvas = this.textures.createCanvas('priest', 10, 14);
+    const prc = priestCanvas.context;
+    // Head
+    prc.fillStyle = '#c49a6c';
+    prc.fillRect(3, 0, 4, 4);
+    // White turban
+    prc.fillStyle = '#fff';
+    prc.fillRect(2, 0, 6, 2);
+    prc.fillRect(3, 0, 4, 1);
+    // Beard
+    prc.fillStyle = '#888';
+    prc.fillRect(4, 3, 2, 2);
+    // Eyes
+    prc.fillStyle = '#222';
+    prc.fillRect(4, 1, 1, 1);
+    prc.fillRect(6, 1, 1, 1);
+    // Long dark robe
+    prc.fillStyle = '#2a3a2a';
+    prc.fillRect(3, 5, 4, 5);
+    prc.fillRect(2, 6, 6, 4);
+    // Book in hand
+    prc.fillStyle = '#6a4a2a';
+    prc.fillRect(1, 6, 2, 2);
+    prc.fillStyle = '#f0ece0';
+    prc.fillRect(1, 6, 2, 1);
+    // Arms
+    prc.fillStyle = '#c49a6c';
+    prc.fillRect(2, 5, 1, 1);
+    prc.fillRect(7, 5, 1, 3);
+    // Robe bottom
+    prc.fillStyle = '#2a3a2a';
+    prc.fillRect(3, 10, 2, 2);
+    prc.fillRect(5, 10, 2, 2);
+    // Shoes
+    prc.fillStyle = '#333';
+    prc.fillRect(3, 12, 2, 2);
+    prc.fillRect(5, 12, 2, 2);
+    priestCanvas.refresh();
+
+    // --- Wedding arch (top-down, 20x16) ---
+    const archCanvas = this.textures.createCanvas('wedding-arch', 20, 16);
+    const arc = archCanvas.context;
+    // Posts
+    arc.fillStyle = '#ddd';
+    arc.fillRect(0, 2, 2, 14);
+    arc.fillRect(18, 2, 2, 14);
+    // Top beam
+    arc.fillStyle = '#eee';
+    arc.fillRect(0, 0, 20, 3);
+    // Draping fabric
+    arc.fillStyle = '#fff';
+    arc.fillRect(2, 1, 16, 2);
+    // Flowers on arch
+    arc.fillStyle = '#ff88aa';
+    arc.fillRect(3, 0, 2, 2);
+    arc.fillRect(8, 0, 2, 2);
+    arc.fillRect(15, 0, 2, 2);
+    arc.fillStyle = '#ff6688';
+    arc.fillRect(5, 1, 2, 1);
+    arc.fillRect(11, 1, 2, 1);
+    // Greenery
+    arc.fillStyle = '#4a8a2a';
+    arc.fillRect(1, 1, 1, 2);
+    arc.fillRect(18, 1, 1, 2);
+    archCanvas.refresh();
+
+    // --- Wedding carpet/rug (24x12) ---
+    const rugCanvas = this.textures.createCanvas('wedding-rug', 24, 12);
+    const rgc = rugCanvas.context;
+    // Main rug
+    rgc.fillStyle = '#882222';
+    rgc.fillRect(0, 0, 24, 12);
+    // Border
+    rgc.fillStyle = '#cc9933';
+    rgc.fillRect(0, 0, 24, 1);
+    rgc.fillRect(0, 11, 24, 1);
+    rgc.fillRect(0, 0, 1, 12);
+    rgc.fillRect(23, 0, 1, 12);
+    // Pattern
+    rgc.fillStyle = '#aa3333';
+    rgc.fillRect(4, 3, 3, 3);
+    rgc.fillRect(10, 3, 4, 3);
+    rgc.fillRect(17, 3, 3, 3);
+    rgc.fillStyle = '#cc9933';
+    rgc.fillRect(5, 4, 1, 1);
+    rgc.fillRect(12, 4, 1, 1);
+    rgc.fillRect(18, 4, 1, 1);
+    // Fringe
+    rgc.fillStyle = '#cc9933';
+    for (let fx = 1; fx < 24; fx += 3) {
+      rgc.fillRect(fx, 11, 1, 1);
+    }
+    rugCanvas.refresh();
+
+    // --- Chair/cushion (6x6) ---
+    const cushionCanvas = this.textures.createCanvas('cushion', 6, 6);
+    const cuc = cushionCanvas.context;
+    cuc.fillStyle = '#cc8844';
+    cuc.fillRect(0, 0, 6, 6);
+    cuc.fillStyle = '#aa6633';
+    cuc.fillRect(0, 0, 6, 1);
+    cuc.fillRect(0, 5, 6, 1);
+    cuc.fillStyle = '#dd9955';
+    cuc.fillRect(2, 2, 2, 2);
+    cushionCanvas.refresh();
+
+    // --- Lantern (4x6) ---
+    const lanternCanvas = this.textures.createCanvas('lantern', 4, 6);
+    const lnc = lanternCanvas.context;
+    lnc.fillStyle = '#cc8833';
+    lnc.fillRect(1, 0, 2, 1);
+    lnc.fillRect(0, 1, 4, 4);
+    lnc.fillRect(1, 5, 2, 1);
+    lnc.fillStyle = '#ffcc44';
+    lnc.fillRect(1, 2, 2, 2);
+    lanternCanvas.refresh();
+
     // --- Ghost (10x14, translucent floaty person) ---
     const ghostCanvas = this.textures.createCanvas('ghost', 10, 14);
     const gh = ghostCanvas.context;
