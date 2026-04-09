@@ -252,6 +252,157 @@ export class BootScene extends Phaser.Scene {
     rbc.fillRect(7, 7, 3, 3);
     rainbowCanvas.refresh();
 
+    // --- Person standing (10x14) ---
+    const pStandCanvas = this.textures.createCanvas('person-stand', 10, 14);
+    const ps = pStandCanvas.context;
+    ps.fillStyle = '#ffcc88';
+    ps.fillRect(3, 0, 4, 4);     // head
+    ps.fillStyle = '#222';
+    ps.fillRect(4, 1, 1, 1);     // eyes
+    ps.fillRect(6, 1, 1, 1);
+    ps.fillStyle = '#c44';
+    ps.fillRect(5, 3, 1, 1);     // mouth
+    ps.fillStyle = '#cc3333';
+    ps.fillRect(3, 4, 4, 5);     // shirt
+    ps.fillStyle = '#ffcc88';
+    ps.fillRect(2, 5, 1, 3);     // arms
+    ps.fillRect(7, 5, 1, 3);
+    ps.fillStyle = '#445588';
+    ps.fillRect(3, 9, 2, 3);     // legs
+    ps.fillRect(5, 9, 2, 3);
+    ps.fillStyle = '#333';
+    ps.fillRect(3, 12, 2, 2);    // shoes
+    ps.fillRect(5, 12, 2, 2);
+    pStandCanvas.refresh();
+
+    // --- Person waving frame 1 (right arm up) ---
+    const pWave1Canvas = this.textures.createCanvas('person-wave1', 10, 14);
+    const pw1 = pWave1Canvas.context;
+    pw1.fillStyle = '#ffcc88';
+    pw1.fillRect(3, 0, 4, 4);
+    pw1.fillStyle = '#222';
+    pw1.fillRect(4, 1, 1, 1);
+    pw1.fillRect(6, 1, 1, 1);
+    pw1.fillStyle = '#c44';        // smile
+    pw1.fillRect(4, 3, 1, 1);
+    pw1.fillRect(5, 3, 1, 1);
+    pw1.fillRect(6, 3, 1, 1);
+    pw1.fillStyle = '#cc3333';
+    pw1.fillRect(3, 4, 4, 5);
+    pw1.fillStyle = '#ffcc88';
+    pw1.fillRect(2, 5, 1, 3);     // left arm down
+    pw1.fillRect(7, 4, 1, 1);     // right arm raised
+    pw1.fillRect(8, 3, 1, 1);
+    pw1.fillRect(9, 2, 1, 1);
+    pw1.fillStyle = '#445588';
+    pw1.fillRect(3, 9, 2, 3);
+    pw1.fillRect(5, 9, 2, 3);
+    pw1.fillStyle = '#333';
+    pw1.fillRect(3, 12, 2, 2);
+    pw1.fillRect(5, 12, 2, 2);
+    pWave1Canvas.refresh();
+
+    // --- Person waving frame 2 (right arm higher) ---
+    const pWave2Canvas = this.textures.createCanvas('person-wave2', 10, 14);
+    const pw2 = pWave2Canvas.context;
+    pw2.fillStyle = '#ffcc88';
+    pw2.fillRect(3, 0, 4, 4);
+    pw2.fillStyle = '#222';
+    pw2.fillRect(4, 1, 1, 1);
+    pw2.fillRect(6, 1, 1, 1);
+    pw2.fillStyle = '#c44';
+    pw2.fillRect(4, 3, 1, 1);
+    pw2.fillRect(5, 3, 1, 1);
+    pw2.fillRect(6, 3, 1, 1);
+    pw2.fillStyle = '#cc3333';
+    pw2.fillRect(3, 4, 4, 5);
+    pw2.fillStyle = '#ffcc88';
+    pw2.fillRect(2, 5, 1, 3);     // left arm down
+    pw2.fillRect(7, 4, 1, 1);     // right arm raised higher
+    pw2.fillRect(8, 2, 1, 1);
+    pw2.fillRect(9, 1, 1, 1);
+    pw2.fillStyle = '#445588';
+    pw2.fillRect(3, 9, 2, 3);
+    pw2.fillRect(5, 9, 2, 3);
+    pw2.fillStyle = '#333';
+    pw2.fillRect(3, 12, 2, 2);
+    pw2.fillRect(5, 12, 2, 2);
+    pWave2Canvas.refresh();
+
+    // --- Person running frame 1 ---
+    const pRun1Canvas = this.textures.createCanvas('person-run1', 10, 14);
+    const pr1 = pRun1Canvas.context;
+    pr1.fillStyle = '#ffcc88';
+    pr1.fillRect(3, 0, 4, 4);
+    pr1.fillStyle = '#222';
+    pr1.fillRect(4, 1, 1, 1);
+    pr1.fillRect(6, 1, 1, 1);
+    pr1.fillStyle = '#c44';        // open mouth (scared)
+    pr1.fillRect(5, 2, 1, 2);
+    pr1.fillStyle = '#cc3333';
+    pr1.fillRect(3, 4, 4, 5);
+    pr1.fillStyle = '#ffcc88';
+    pr1.fillRect(1, 4, 2, 1);     // arms flailing back
+    pr1.fillRect(7, 5, 2, 1);
+    pr1.fillStyle = '#445588';
+    pr1.fillRect(3, 9, 2, 3);     // legs spread
+    pr1.fillRect(6, 9, 2, 2);
+    pr1.fillStyle = '#333';
+    pr1.fillRect(3, 12, 2, 2);
+    pr1.fillRect(6, 11, 2, 2);
+    pRun1Canvas.refresh();
+
+    // --- Person running frame 2 ---
+    const pRun2Canvas = this.textures.createCanvas('person-run2', 10, 14);
+    const pr2 = pRun2Canvas.context;
+    pr2.fillStyle = '#ffcc88';
+    pr2.fillRect(3, 0, 4, 4);
+    pr2.fillStyle = '#222';
+    pr2.fillRect(4, 1, 1, 1);
+    pr2.fillRect(6, 1, 1, 1);
+    pr2.fillStyle = '#c44';
+    pr2.fillRect(5, 2, 1, 2);
+    pr2.fillStyle = '#cc3333';
+    pr2.fillRect(3, 4, 4, 5);
+    pr2.fillStyle = '#ffcc88';
+    pr2.fillRect(1, 5, 2, 1);     // arms flailing
+    pr2.fillRect(7, 4, 2, 1);
+    pr2.fillStyle = '#445588';
+    pr2.fillRect(3, 9, 2, 2);
+    pr2.fillRect(6, 9, 2, 3);
+    pr2.fillStyle = '#333';
+    pr2.fillRect(3, 11, 2, 2);
+    pr2.fillRect(6, 12, 2, 2);
+    pRun2Canvas.refresh();
+
+    // --- Ghost (10x14, translucent floaty person) ---
+    const ghostCanvas = this.textures.createCanvas('ghost', 10, 14);
+    const gh = ghostCanvas.context;
+    gh.fillStyle = '#ffffff';
+    // Head (round)
+    gh.fillRect(3, 0, 4, 4);
+    gh.fillRect(2, 1, 6, 2);
+    // Eyes (happy closed)
+    gh.fillStyle = '#6688cc';
+    gh.fillRect(3, 1, 1, 1);
+    gh.fillRect(6, 1, 1, 1);
+    // Smile
+    gh.fillRect(4, 3, 2, 1);
+    // Body (wispy)
+    gh.fillStyle = '#ffffff';
+    gh.fillRect(2, 4, 6, 6);
+    gh.fillRect(3, 3, 4, 1);
+    // Wavy bottom
+    gh.fillRect(2, 10, 2, 2);
+    gh.fillRect(6, 10, 2, 2);
+    gh.fillRect(4, 11, 2, 1);
+    // Halo
+    gh.fillStyle = '#ffee66';
+    gh.fillRect(4, -1, 2, 1);
+    gh.fillRect(3, -1, 1, 1);
+    gh.fillRect(6, -1, 1, 1);
+    ghostCanvas.refresh();
+
     // --- Little guy (10x14, side view walking) frame 1 ---
     const guy1Canvas = this.textures.createCanvas('guy1', 10, 14);
     const g1 = guy1Canvas.context;

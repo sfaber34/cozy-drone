@@ -57,9 +57,9 @@ export class GameScene extends Phaser.Scene {
     };
 
     // --- Hangar (to the right of the runway bottom) ---
-    const hangarOffset = 48 * SCALE / 2 + 32 * SCALE / 2 + 16 * SCALE * 3; // hangar half + runway half + taxiway gap
+    const hangarOffset = (48 * SCALE) / 2 + (32 * SCALE) / 2 + 16 * SCALE * 3; // hangar half + runway half + taxiway gap
     this.hangarX = rwX + hangarOffset;
-    this.hangarY = rwBottom - 48 * SCALE / 2;
+    this.hangarY = rwBottom - (48 * SCALE) / 2;
     this.add
       .image(this.hangarX, this.hangarY, "hangar")
       .setScale(SCALE)
@@ -91,6 +91,69 @@ export class GameScene extends Phaser.Scene {
       tank.alive = true;
       this.tanks.add(tank);
       this.tankData.push(tank);
+    }
+
+    // --- People ---
+    this.people = [];
+    const greetings = [
+      "Hi there!",
+      "Oh a drone!",
+      "Drones are neat!",
+      "Hello!",
+      "So cool!",
+      "Wow look!",
+      "Hey friend!",
+      "Up here!",
+      "Heyyy!",
+      "Nice drone!",
+      "Is that a Predator?",
+      "Come closer!",
+      "Do a flip!",
+      "Wave back!",
+      "I love drones!",
+      "Fly safe!",
+      "You're amazing!",
+      "Take my photo!",
+      "Over here!",
+      "Wooooo!",
+      "Go go go!",
+      "So majestic!",
+      "Beautiful!",
+      "I want one!",
+      "How high\nare you?",
+      "Incredible!",
+      "Zoom zoom!",
+      "Big bird!",
+      "Living the\ndream!",
+      "Can I get\na ride?",
+      "Show off!",
+      "Tell the CIA\nI said hi!",
+      "Top Gun\nvibes!",
+      "Brrrrt!",
+      "You seeing\nthis?!",
+      "Look mom!",
+      "The future\nis now!",
+    ];
+    for (let i = 0; i < 60; i++) {
+      const px = rng.between(300, WORLD_W * SCALE - 300);
+      const py = rng.between(300, WORLD_H * SCALE - 300);
+      const sprite = this.add
+        .image(px, py, "person-stand")
+        .setScale(SCALE)
+        .setDepth(2);
+      this.people.push({
+        sprite,
+        state: "idle", // idle | waving | panicking
+        greeting: rng.pick(greetings),
+        bubble: null,
+        waveTimer: 0,
+        waveFrame: 0,
+        runAngle: 0,
+        runTimer: 0,
+        runFrame: 0,
+        homeX: px,
+        homeY: py,
+      });
     }
 
     // --- Drone shadow ---
@@ -195,20 +258,27 @@ export class GameScene extends Phaser.Scene {
       .setDepth(100);
 
     this.controlsText = this.add
-      .text(10, 0, "WASD:turn/speed  E/Q:alt  Click:target  Space:fire", {
-        fontFamily: "monospace",
-        fontSize: "11px",
-        color: "#0f0",
-        backgroundColor: "#000000aa",
-        padding: { x: 6, y: 4 },
-      })
+      .text(
+        10,
+        0,
+        "WASD/Arrows:turn/speed  E/Q:alt  Click:target  Space:fire",
+        {
+          fontFamily: "monospace",
+          fontSize: "11px",
+          color: "#0f0",
+          backgroundColor: "#000000aa",
+          padding: { x: 6, y: 4 },
+        },
+      )
       .setDepth(100);
 
     // Main camera ignores HUD, HUD camera only sees HUD
     this.cameras.main.ignore([this.hudText, this.controlsText]);
-    this.hudCam.ignore(this.children.list.filter(
-      (child) => child !== this.hudText && child !== this.controlsText,
-    ));
+    this.hudCam.ignore(
+      this.children.list.filter(
+        (child) => child !== this.hudText && child !== this.controlsText,
+      ),
+    );
 
     // Reposition on resize
     this.scale.on("resize", (gameSize) => {
@@ -233,7 +303,10 @@ export class GameScene extends Phaser.Scene {
     const guyTargetX = ds.x + 30; // stop near the nose
     const guyTargetY = ds.y - 30; // nose is at the top of the drone
 
-    const guy = this.add.image(guyStartX, guyStartY, "guy1").setScale(SCALE).setDepth(10);
+    const guy = this.add
+      .image(guyStartX, guyStartY, "guy1")
+      .setScale(SCALE)
+      .setDepth(10);
     this.hudCam.ignore(guy);
 
     // Walk animation
@@ -266,7 +339,10 @@ export class GameScene extends Phaser.Scene {
             .setScale(SCALE)
             .setDepth(12);
           this.hudCam.ignore(heart);
-          const angle = -Math.PI * 0.2 + (i / 4) * -Math.PI * 0.6 + (Math.random() - 0.5) * 0.5;
+          const angle =
+            -Math.PI * 0.2 +
+            (i / 4) * -Math.PI * 0.6 +
+            (Math.random() - 0.5) * 0.5;
           const dist = 80 + Math.random() * 60;
           this.tweens.add({
             targets: heart,
@@ -283,13 +359,18 @@ export class GameScene extends Phaser.Scene {
 
         // Speech bubble
         const bubble = this.add
-          .text(guyTargetX + 40, guyTargetY - 40, "I love you drone!\n    Have Fun!", {
-            fontFamily: "monospace",
-            fontSize: "10px",
-            color: "#000",
-            backgroundColor: "#fff",
-            padding: { x: 8, y: 6 },
-          })
+          .text(
+            guyTargetX + 40,
+            guyTargetY - 40,
+            "I love you drone!\n    Have Fun!",
+            {
+              fontFamily: "monospace",
+              fontSize: "10px",
+              color: "#000",
+              backgroundColor: "#fff",
+              padding: { x: 8, y: 6 },
+            },
+          )
           .setDepth(13)
           .setScale(SCALE * 0.6);
         this.hudCam.ignore(bubble);
@@ -327,10 +408,7 @@ export class GameScene extends Phaser.Scene {
 
   isOnRunway(x, y) {
     const rw = this.runway;
-    return (
-      Math.abs(x - rw.x) < rw.halfW &&
-      Math.abs(y - rw.y) < rw.halfH
-    );
+    return Math.abs(x - rw.x) < rw.halfW && Math.abs(y - rw.y) < rw.halfH;
   }
 
   crashDrone() {
@@ -346,19 +424,26 @@ export class GameScene extends Phaser.Scene {
 
     // Show crash message
     this.crashText = this.add
-      .text(this.scale.width / 2, this.scale.height / 2, "DRONE DESTROYED\n\nPress R to restart", {
-        fontFamily: "monospace",
-        fontSize: "24px",
-        color: "#f00",
-        backgroundColor: "#000000cc",
-        padding: { x: 20, y: 16 },
-        align: "center",
-      })
+      .text(
+        this.scale.width / 2,
+        this.scale.height / 2,
+        "DRONE DESTROYED\n\nPress R to restart",
+        {
+          fontFamily: "monospace",
+          fontSize: "24px",
+          color: "#f00",
+          backgroundColor: "#000000cc",
+          padding: { x: 20, y: 16 },
+          align: "center",
+        },
+      )
       .setOrigin(0.5)
       .setDepth(200);
     this.cameras.main.ignore(this.crashText);
 
-    this.restartKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+    this.restartKey = this.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.R,
+    );
   }
 
   update(time, delta) {
@@ -492,12 +577,19 @@ export class GameScene extends Phaser.Scene {
     }
 
     // --- Fire missile (only when airborne) ---
-    if (Phaser.Input.Keyboard.JustDown(this.cursors.fire) && this.targetPos && isAirborne) {
+    if (
+      Phaser.Input.Keyboard.JustDown(this.cursors.fire) &&
+      this.targetPos &&
+      isAirborne
+    ) {
       this.fireMissile();
     }
 
     // --- Update missiles ---
     this.updateMissiles(dt);
+
+    // --- Update people ---
+    this.updatePeople(dt, delta);
 
     // --- HUD ---
     const spdDisplay = Math.round(speedKnots);
@@ -538,9 +630,9 @@ export class GameScene extends Phaser.Scene {
       sprite: missile,
       target: { x: this.targetPos.x, y: this.targetPos.y },
       speed: 280,
-      heading,               // current direction of travel (radians)
-      turnRate: 3.0,         // radians/sec max turn
-      boostTime: 0.3,        // seconds of straight flight before turning
+      heading, // current direction of travel (radians)
+      turnRate: 3.0, // radians/sec max turn
+      boostTime: 0.3, // seconds of straight flight before turning
       elapsed: 0,
       altitude: ds.altitude,
       launchAlt: ds.altitude, // remember starting altitude for scale calc
@@ -667,6 +759,192 @@ export class GameScene extends Phaser.Scene {
           exp2.play("explode");
           exp2.once("animationcomplete", () => exp2.destroy());
         });
+      }
+    }
+
+    // Kill or panic nearby people
+    this.affectNearbyPeople(x, y);
+  }
+
+  affectNearbyPeople(x, y) {
+    const killRadius = 50;
+    const panicRadius = 400;
+    const ghostLines = [
+      "Thanks!",
+      "I hated this\nplace anyway",
+      "Finally!",
+      "Sweet release!",
+      "About time!",
+      "Freedom!",
+      "Weeee!",
+      "Best day ever!",
+      "No more taxes!",
+      "Tell my wife\nI said bye!",
+      "5 stars!",
+      "Do it again!",
+      "That was fun!",
+      "I needed that!",
+      "Cozy!",
+      "Worth it!",
+      "Bye bye legs!",
+      "I feel so light!",
+      "Rent free now!",
+      "GG!",
+      "This rules!",
+      "My back doesn't\nhurt anymore!",
+      "Totally worth\nthe wait!",
+      "I was so bored!",
+      "Incredible!",
+      "Much appreciated!",
+      "That tickled!",
+      "10/10!",
+      "Yasss!",
+      "I love you\ndrone!",
+      "My therapist\nwas right!",
+      "Zero regrets!",
+      "Better than\ncoffee!",
+      "I can fly now!",
+      "See you\nin heaven!",
+      "Cloud nine\nliterally!",
+      "I'm free!",
+      "Delete my\nbrowser history!",
+      "Nice shot tho!",
+    ];
+
+    for (const p of this.people) {
+      if (p.state === "ghost") continue;
+      const dist = Phaser.Math.Distance.Between(x, y, p.sprite.x, p.sprite.y);
+
+      if (dist < killRadius) {
+        // Killed — become ghost
+        p.state = "ghost";
+        if (p.bubble) {
+          p.bubble.destroy();
+          p.bubble = null;
+        }
+        p.sprite.setTexture("ghost");
+        p.sprite.setAlpha(0.8);
+
+        // Ghost speech bubble
+        const line = Phaser.Utils.Array.GetRandom(ghostLines);
+        p.bubble = this.add
+          .text(p.sprite.x + 20, p.sprite.y - 20, line, {
+            fontFamily: "monospace",
+            fontSize: "8px",
+            color: "#aaccff",
+            backgroundColor: "#000000aa",
+            padding: { x: 4, y: 3 },
+          })
+          .setScale(SCALE * 0.5)
+          .setDepth(14);
+        this.hudCam.ignore(p.bubble);
+      } else if (dist < panicRadius && p.state !== "panicking") {
+        // Panic
+        p.state = "panicking";
+        p.runAngle = Phaser.Math.Angle.Between(x, y, p.sprite.x, p.sprite.y);
+        if (p.bubble) {
+          p.bubble.destroy();
+          p.bubble = null;
+        }
+      }
+    }
+  }
+
+  updatePeople(dt, delta) {
+    const ds = this.droneState;
+    const droneDetectRadius = 600;
+    const panicSpeed = 90;
+
+    for (const p of this.people) {
+      const distToDrone = Phaser.Math.Distance.Between(
+        ds.x,
+        ds.y,
+        p.sprite.x,
+        p.sprite.y,
+      );
+
+      if (p.state === "idle") {
+        // Detect drone flying overhead
+        if (ds.altitude > 0 && distToDrone < droneDetectRadius) {
+          p.state = "waving";
+          p.waveTimer = 0;
+
+          // Show greeting bubble
+          p.bubble = this.add
+            .text(p.sprite.x + 20, p.sprite.y - 30, p.greeting, {
+              fontFamily: "monospace",
+              fontSize: "8px",
+              color: "#000",
+              backgroundColor: "#fff",
+              padding: { x: 4, y: 3 },
+            })
+            .setScale(SCALE * 0.5)
+            .setDepth(13);
+          this.hudCam.ignore(p.bubble);
+        }
+      }
+
+      if (p.state === "waving") {
+        // Wave animation
+        p.waveTimer += delta;
+        if (p.waveTimer > 250) {
+          p.waveTimer = 0;
+          p.waveFrame = 1 - p.waveFrame;
+          p.sprite.setTexture(
+            p.waveFrame === 0 ? "person-wave1" : "person-wave2",
+          );
+        }
+
+        // Stop waving if drone flies away
+        if (distToDrone > droneDetectRadius * 1.5 || ds.altitude <= 0) {
+          p.state = "idle";
+          p.sprite.setTexture("person-stand");
+          if (p.bubble) {
+            p.bubble.destroy();
+            p.bubble = null;
+          }
+        }
+      }
+
+      if (p.state === "panicking") {
+        // Run animation
+        p.runTimer += delta;
+        if (p.runTimer > 120) {
+          p.runTimer = 0;
+          p.runFrame = 1 - p.runFrame;
+          p.sprite.setTexture(p.runFrame === 0 ? "person-run1" : "person-run2");
+        }
+
+        // Move away
+        p.sprite.x += Math.cos(p.runAngle) * panicSpeed * dt;
+        p.sprite.y += Math.sin(p.runAngle) * panicSpeed * dt;
+
+        // Flip sprite if running left
+        p.sprite.setFlipX(Math.cos(p.runAngle) < 0);
+      }
+
+      if (p.state === "ghost") {
+        // Float upward and fade
+        p.sprite.y -= 30 * dt;
+        // Gentle side-to-side wobble
+        p.sprite.x += Math.sin(p.sprite.y * 0.05) * 20 * dt;
+        p.sprite.setAlpha(p.sprite.alpha - 0.08 * dt);
+
+        // Move bubble with ghost
+        if (p.bubble) {
+          p.bubble.setPosition(p.sprite.x + 20, p.sprite.y - 20);
+          p.bubble.setAlpha(p.sprite.alpha);
+        }
+
+        // Fully faded — clean up
+        if (p.sprite.alpha <= 0) {
+          p.sprite.destroy();
+          if (p.bubble) {
+            p.bubble.destroy();
+            p.bubble = null;
+          }
+          p.state = "gone";
+        }
       }
     }
   }
