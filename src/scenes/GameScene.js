@@ -319,15 +319,22 @@ export class GameScene extends Phaser.Scene {
       "Look mom!",
       "The future\nis now!",
     ];
+    const droneStartX = rwX;
+    const droneStartY = rwBottom - 80;
     for (let i = 0; i < 60; i++) {
-      const px = rng.between(300, WORLD_W * SCALE - 300);
-      const py = rng.between(300, WORLD_H * SCALE - 300);
+      let px, py;
+      do {
+        px = rng.between(300, WORLD_W * SCALE - 300);
+        py = rng.between(300, WORLD_H * SCALE - 300);
+      } while (Phaser.Math.Distance.Between(px, py, droneStartX, droneStartY) < 2000);
+      const skinId = rng.between(0, 9);
       const sprite = this.add
-        .image(px, py, "person-stand")
+        .image(px, py, `person-stand-${skinId}`)
         .setScale(SCALE)
         .setDepth(2);
       this.people.push({
         sprite,
+        skinId,
         state: "idle",
         greeting: rng.pick(greetings),
         bubble: null,
@@ -876,11 +883,8 @@ export class GameScene extends Phaser.Scene {
       );
 
       // After initial boost, steer toward target
-      if (m.elapsed > m.boostTime) {
-        let diff = targetAngle - m.heading;
-        // Normalize to [-PI, PI]
-        while (diff > Math.PI) diff -= Math.PI * 2;
-        while (diff < -Math.PI) diff += Math.PI * 2;
+      if (m.elapsed > m.boostTime && dist > 5) {
+        let diff = Phaser.Math.Angle.Wrap(targetAngle - m.heading);
         const maxTurn = m.turnRate * dt;
         m.heading += Phaser.Math.Clamp(diff, -maxTurn, maxTurn);
       }
@@ -893,6 +897,26 @@ export class GameScene extends Phaser.Scene {
       m.sprite.x += Math.cos(m.heading) * m.speed * dt;
       m.sprite.y += Math.sin(m.heading) * m.speed * dt;
       m.sprite.setRotation(m.heading + Math.PI / 2);
+
+      // Smoke trail
+      m.smokeTimer = (m.smokeTimer || 0) + dt * 1000;
+      if (m.smokeTimer > 40) {
+        m.smokeTimer = 0;
+        const puff = this.add.image(m.sprite.x, m.sprite.y, "smoke")
+          .setScale(SCALE * (0.4 + Math.random() * 0.3))
+          .setDepth(8)
+          .setAlpha(0.6);
+        this.hudCam.ignore(puff);
+        this.tweens.add({
+          targets: puff,
+          alpha: 0,
+          scale: SCALE * (0.8 + Math.random() * 0.4),
+          x: puff.x + (Math.random() - 0.5) * 10,
+          y: puff.y + (Math.random() - 0.5) * 10,
+          duration: 400 + Math.random() * 200,
+          onComplete: () => puff.destroy(),
+        });
+      }
 
       // Missile descends
       m.altitude = Math.max(0, m.altitude - 600 * dt);
@@ -1288,10 +1312,10 @@ export class GameScene extends Phaser.Scene {
             if (p.runTimer > 200) {
               p.runTimer = 0;
               p.runFrame = 1 - p.runFrame;
-              p.sprite.setTexture(p.runFrame === 0 ? "person-run1" : "person-run2");
+              p.sprite.setTexture(p.runFrame === 0 ? `person-run1-${p.skinId}` : `person-run2-${p.skinId}`);
             }
           } else {
-            p.sprite.setTexture("person-stand");
+            p.sprite.setTexture(`person-stand-${p.skinId}`);
           }
           // Clamp to world
           p.sprite.x = Phaser.Math.Clamp(p.sprite.x, 50, WORLD_W * SCALE - 50);
@@ -1305,11 +1329,11 @@ export class GameScene extends Phaser.Scene {
         if (p.waveTimer > 250) {
           p.waveTimer = 0;
           p.waveFrame = 1 - p.waveFrame;
-          p.sprite.setTexture(p.waveFrame === 0 ? "person-wave1" : "person-wave2");
+          p.sprite.setTexture(p.waveFrame === 0 ? `person-wave1-${p.skinId}` : `person-wave2-${p.skinId}`);
         }
         if (distToDrone > droneDetectRadius * 1.5 || ds.altitude <= 0) {
           p.state = "idle";
-          p.sprite.setTexture("person-stand");
+          p.sprite.setTexture(`person-stand-${p.skinId}`);
           if (p.bubble) {
             p.bubble.destroy();
             p.bubble = null;
@@ -1323,7 +1347,7 @@ export class GameScene extends Phaser.Scene {
         if (p.runTimer > 120) {
           p.runTimer = 0;
           p.runFrame = 1 - p.runFrame;
-          p.sprite.setTexture(p.runFrame === 0 ? "person-run1" : "person-run2");
+          p.sprite.setTexture(p.runFrame === 0 ? `person-run1-${p.skinId}` : `person-run2-${p.skinId}`);
         }
 
         // Update angle toward hide target if it exists

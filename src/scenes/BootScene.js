@@ -252,128 +252,177 @@ export class BootScene extends Phaser.Scene {
     rbc.fillRect(7, 7, 3, 3);
     rainbowCanvas.refresh();
 
-    // --- Person standing (10x14) ---
-    const pStandCanvas = this.textures.createCanvas('person-stand', 10, 14);
-    const ps = pStandCanvas.context;
-    ps.fillStyle = '#ffcc88';
-    ps.fillRect(3, 0, 4, 4);     // head
-    ps.fillStyle = '#222';
-    ps.fillRect(4, 1, 1, 1);     // eyes
-    ps.fillRect(6, 1, 1, 1);
-    ps.fillStyle = '#c44';
-    ps.fillRect(5, 3, 1, 1);     // mouth
-    ps.fillStyle = '#cc3333';
-    ps.fillRect(3, 4, 4, 5);     // shirt
-    ps.fillStyle = '#ffcc88';
-    ps.fillRect(2, 5, 1, 3);     // arms
-    ps.fillRect(7, 5, 1, 3);
-    ps.fillStyle = '#445588';
-    ps.fillRect(3, 9, 2, 3);     // legs
-    ps.fillRect(5, 9, 2, 3);
-    ps.fillStyle = '#333';
-    ps.fillRect(3, 12, 2, 2);    // shoes
-    ps.fillRect(5, 12, 2, 2);
-    pStandCanvas.refresh();
+    // --- Person skins (10 variants with Middle Eastern clothing) ---
+    // Each skin: {skin, robe, headwear, headColor, shoes}
+    const personSkins = [
+      // 1: White thobe, red keffiyeh
+      { skin: '#d4a574', robe: '#f0ece0', head: '#cc3333', headType: 'keffiyeh', shoes: '#8a6a3a', accent: '#aa2222' },
+      // 2: Beige dishdasha, white keffiyeh
+      { skin: '#c49a6c', robe: '#e8dcc8', head: '#fff', headType: 'keffiyeh', shoes: '#5a3a1a', accent: '#222' },
+      // 3: Blue thobe, white kufi cap
+      { skin: '#d4a574', robe: '#4477aa', head: '#eee', headType: 'kufi', shoes: '#333', accent: '#335588' },
+      // 4: Dark robe, black agal+keffiyeh
+      { skin: '#c49a6c', robe: '#3a3a3a', head: '#ddd', headType: 'keffiyeh', shoes: '#222', accent: '#111' },
+      // 5: Green thobe, brown kufi
+      { skin: '#b8885c', robe: '#5a7a4a', head: '#8a6a3a', headType: 'kufi', shoes: '#4a3a1a', accent: '#3a5a2a' },
+      // 6: Woman — dark abaya, colored hijab
+      { skin: '#d4a574', robe: '#2a2a2a', head: '#884488', headType: 'hijab', shoes: '#333', accent: '#2a2a2a' },
+      // 7: Woman — navy abaya, blue hijab
+      { skin: '#c49a6c', robe: '#2a3a5a', head: '#4466aa', headType: 'hijab', shoes: '#2a2a3a', accent: '#1a2a4a' },
+      // 8: Light brown robe, orange keffiyeh
+      { skin: '#b8885c', robe: '#c8b088', head: '#dd8833', headType: 'keffiyeh', shoes: '#6a4a2a', accent: '#bb6622' },
+      // 9: Woman — maroon abaya, cream hijab
+      { skin: '#d4a574', robe: '#6a2a2a', head: '#e8dcc8', headType: 'hijab', shoes: '#4a2a1a', accent: '#5a1a1a' },
+      // 10: White thobe, white kufi, older (grey beard hint)
+      { skin: '#c49a6c', robe: '#f0ece0', head: '#ddd', headType: 'kufi', shoes: '#6a5a3a', accent: '#bbb' },
+    ];
 
-    // --- Person waving frame 1 (right arm up) ---
-    const pWave1Canvas = this.textures.createCanvas('person-wave1', 10, 14);
-    const pw1 = pWave1Canvas.context;
-    pw1.fillStyle = '#ffcc88';
-    pw1.fillRect(3, 0, 4, 4);
-    pw1.fillStyle = '#222';
-    pw1.fillRect(4, 1, 1, 1);
-    pw1.fillRect(6, 1, 1, 1);
-    pw1.fillStyle = '#c44';        // smile
-    pw1.fillRect(4, 3, 1, 1);
-    pw1.fillRect(5, 3, 1, 1);
-    pw1.fillRect(6, 3, 1, 1);
-    pw1.fillStyle = '#cc3333';
-    pw1.fillRect(3, 4, 4, 5);
-    pw1.fillStyle = '#ffcc88';
-    pw1.fillRect(2, 5, 1, 3);     // left arm down
-    pw1.fillRect(7, 4, 1, 1);     // right arm raised
-    pw1.fillRect(8, 3, 1, 1);
-    pw1.fillRect(9, 2, 1, 1);
-    pw1.fillStyle = '#445588';
-    pw1.fillRect(3, 9, 2, 3);
-    pw1.fillRect(5, 9, 2, 3);
-    pw1.fillStyle = '#333';
-    pw1.fillRect(3, 12, 2, 2);
-    pw1.fillRect(5, 12, 2, 2);
-    pWave1Canvas.refresh();
+    const drawPersonHead = (ctx, s, yOff) => {
+      // Head
+      ctx.fillStyle = s.skin;
+      ctx.fillRect(3, yOff, 4, 4);
+      // Eyes
+      ctx.fillStyle = '#222';
+      ctx.fillRect(4, yOff + 1, 1, 1);
+      ctx.fillRect(6, yOff + 1, 1, 1);
 
-    // --- Person waving frame 2 (right arm higher) ---
-    const pWave2Canvas = this.textures.createCanvas('person-wave2', 10, 14);
-    const pw2 = pWave2Canvas.context;
-    pw2.fillStyle = '#ffcc88';
-    pw2.fillRect(3, 0, 4, 4);
-    pw2.fillStyle = '#222';
-    pw2.fillRect(4, 1, 1, 1);
-    pw2.fillRect(6, 1, 1, 1);
-    pw2.fillStyle = '#c44';
-    pw2.fillRect(4, 3, 1, 1);
-    pw2.fillRect(5, 3, 1, 1);
-    pw2.fillRect(6, 3, 1, 1);
-    pw2.fillStyle = '#cc3333';
-    pw2.fillRect(3, 4, 4, 5);
-    pw2.fillStyle = '#ffcc88';
-    pw2.fillRect(2, 5, 1, 3);     // left arm down
-    pw2.fillRect(7, 4, 1, 1);     // right arm raised higher
-    pw2.fillRect(8, 2, 1, 1);
-    pw2.fillRect(9, 1, 1, 1);
-    pw2.fillStyle = '#445588';
-    pw2.fillRect(3, 9, 2, 3);
-    pw2.fillRect(5, 9, 2, 3);
-    pw2.fillStyle = '#333';
-    pw2.fillRect(3, 12, 2, 2);
-    pw2.fillRect(5, 12, 2, 2);
-    pWave2Canvas.refresh();
+      if (s.headType === 'keffiyeh') {
+        // Keffiyeh drapes over head and sides
+        ctx.fillStyle = s.head;
+        ctx.fillRect(3, yOff, 4, 1);     // top
+        ctx.fillRect(2, yOff, 1, 3);     // left drape
+        ctx.fillRect(7, yOff, 1, 3);     // right drape
+        // Agal (band)
+        ctx.fillStyle = s.accent;
+        ctx.fillRect(3, yOff, 4, 1);
+      } else if (s.headType === 'kufi') {
+        // Kufi cap on top
+        ctx.fillStyle = s.head;
+        ctx.fillRect(3, yOff, 4, 1);
+        ctx.fillRect(2, yOff, 1, 1);
+        ctx.fillRect(7, yOff, 1, 1);
+      } else if (s.headType === 'hijab') {
+        // Hijab wraps head
+        ctx.fillStyle = s.head;
+        ctx.fillRect(2, yOff, 6, 2);
+        ctx.fillRect(2, yOff + 2, 1, 2);
+        ctx.fillRect(7, yOff + 2, 1, 2);
+        ctx.fillRect(3, yOff, 4, 1);
+        // Re-draw eyes on top
+        ctx.fillStyle = '#222';
+        ctx.fillRect(4, yOff + 1, 1, 1);
+        ctx.fillRect(6, yOff + 1, 1, 1);
+      }
+    };
 
-    // --- Person running frame 1 ---
-    const pRun1Canvas = this.textures.createCanvas('person-run1', 10, 14);
-    const pr1 = pRun1Canvas.context;
-    pr1.fillStyle = '#ffcc88';
-    pr1.fillRect(3, 0, 4, 4);
-    pr1.fillStyle = '#222';
-    pr1.fillRect(4, 1, 1, 1);
-    pr1.fillRect(6, 1, 1, 1);
-    pr1.fillStyle = '#c44';        // open mouth (scared)
-    pr1.fillRect(5, 2, 1, 2);
-    pr1.fillStyle = '#cc3333';
-    pr1.fillRect(3, 4, 4, 5);
-    pr1.fillStyle = '#ffcc88';
-    pr1.fillRect(1, 4, 2, 1);     // arms flailing back
-    pr1.fillRect(7, 5, 2, 1);
-    pr1.fillStyle = '#445588';
-    pr1.fillRect(3, 9, 2, 3);     // legs spread
-    pr1.fillRect(6, 9, 2, 2);
-    pr1.fillStyle = '#333';
-    pr1.fillRect(3, 12, 2, 2);
-    pr1.fillRect(6, 11, 2, 2);
-    pRun1Canvas.refresh();
+    for (let si = 0; si < personSkins.length; si++) {
+      const s = personSkins[si];
+      const suffix = si; // 0-9
 
-    // --- Person running frame 2 ---
-    const pRun2Canvas = this.textures.createCanvas('person-run2', 10, 14);
-    const pr2 = pRun2Canvas.context;
-    pr2.fillStyle = '#ffcc88';
-    pr2.fillRect(3, 0, 4, 4);
-    pr2.fillStyle = '#222';
-    pr2.fillRect(4, 1, 1, 1);
-    pr2.fillRect(6, 1, 1, 1);
-    pr2.fillStyle = '#c44';
-    pr2.fillRect(5, 2, 1, 2);
-    pr2.fillStyle = '#cc3333';
-    pr2.fillRect(3, 4, 4, 5);
-    pr2.fillStyle = '#ffcc88';
-    pr2.fillRect(1, 5, 2, 1);     // arms flailing
-    pr2.fillRect(7, 4, 2, 1);
-    pr2.fillStyle = '#445588';
-    pr2.fillRect(3, 9, 2, 2);
-    pr2.fillRect(6, 9, 2, 3);
-    pr2.fillStyle = '#333';
-    pr2.fillRect(3, 11, 2, 2);
-    pr2.fillRect(6, 12, 2, 2);
-    pRun2Canvas.refresh();
+      // --- Standing ---
+      const standC = this.textures.createCanvas(`person-stand-${suffix}`, 10, 14);
+      const sc = standC.context;
+      drawPersonHead(sc, s, 0);
+      sc.fillStyle = '#c44';
+      sc.fillRect(5, 3, 1, 1);      // mouth
+      sc.fillStyle = s.robe;
+      sc.fillRect(3, 4, 4, 6);      // thobe/abaya (longer)
+      sc.fillStyle = s.skin;
+      sc.fillRect(2, 5, 1, 3);      // arms
+      sc.fillRect(7, 5, 1, 3);
+      sc.fillStyle = s.robe;
+      sc.fillRect(3, 9, 2, 3);      // robe bottom / legs
+      sc.fillRect(5, 9, 2, 3);
+      sc.fillStyle = s.shoes;
+      sc.fillRect(3, 12, 2, 2);     // sandals/shoes
+      sc.fillRect(5, 12, 2, 2);
+      standC.refresh();
+
+      // --- Wave frame 1 ---
+      const wave1C = this.textures.createCanvas(`person-wave1-${suffix}`, 10, 14);
+      const w1 = wave1C.context;
+      drawPersonHead(w1, s, 0);
+      w1.fillStyle = '#c44';
+      w1.fillRect(4, 3, 1, 1);
+      w1.fillRect(5, 3, 1, 1);
+      w1.fillRect(6, 3, 1, 1);
+      w1.fillStyle = s.robe;
+      w1.fillRect(3, 4, 4, 6);
+      w1.fillStyle = s.skin;
+      w1.fillRect(2, 5, 1, 3);
+      w1.fillRect(7, 4, 1, 1);
+      w1.fillRect(8, 3, 1, 1);
+      w1.fillRect(9, 2, 1, 1);
+      w1.fillStyle = s.robe;
+      w1.fillRect(3, 9, 2, 3);
+      w1.fillRect(5, 9, 2, 3);
+      w1.fillStyle = s.shoes;
+      w1.fillRect(3, 12, 2, 2);
+      w1.fillRect(5, 12, 2, 2);
+      wave1C.refresh();
+
+      // --- Wave frame 2 ---
+      const wave2C = this.textures.createCanvas(`person-wave2-${suffix}`, 10, 14);
+      const w2 = wave2C.context;
+      drawPersonHead(w2, s, 0);
+      w2.fillStyle = '#c44';
+      w2.fillRect(4, 3, 1, 1);
+      w2.fillRect(5, 3, 1, 1);
+      w2.fillRect(6, 3, 1, 1);
+      w2.fillStyle = s.robe;
+      w2.fillRect(3, 4, 4, 6);
+      w2.fillStyle = s.skin;
+      w2.fillRect(2, 5, 1, 3);
+      w2.fillRect(7, 4, 1, 1);
+      w2.fillRect(8, 2, 1, 1);
+      w2.fillRect(9, 1, 1, 1);
+      w2.fillStyle = s.robe;
+      w2.fillRect(3, 9, 2, 3);
+      w2.fillRect(5, 9, 2, 3);
+      w2.fillStyle = s.shoes;
+      w2.fillRect(3, 12, 2, 2);
+      w2.fillRect(5, 12, 2, 2);
+      wave2C.refresh();
+
+      // --- Run frame 1 ---
+      const run1C = this.textures.createCanvas(`person-run1-${suffix}`, 10, 14);
+      const r1 = run1C.context;
+      drawPersonHead(r1, s, 0);
+      r1.fillStyle = '#c44';
+      r1.fillRect(5, 2, 1, 2);
+      r1.fillStyle = s.robe;
+      r1.fillRect(3, 4, 4, 5);
+      r1.fillStyle = s.skin;
+      r1.fillRect(1, 4, 2, 1);
+      r1.fillRect(7, 5, 2, 1);
+      r1.fillStyle = s.robe;
+      r1.fillRect(3, 9, 2, 3);
+      r1.fillRect(6, 9, 2, 2);
+      r1.fillStyle = s.shoes;
+      r1.fillRect(3, 12, 2, 2);
+      r1.fillRect(6, 11, 2, 2);
+      run1C.refresh();
+
+      // --- Run frame 2 ---
+      const run2C = this.textures.createCanvas(`person-run2-${suffix}`, 10, 14);
+      const r2 = run2C.context;
+      drawPersonHead(r2, s, 0);
+      r2.fillStyle = '#c44';
+      r2.fillRect(5, 2, 1, 2);
+      r2.fillStyle = s.robe;
+      r2.fillRect(3, 4, 4, 5);
+      r2.fillStyle = s.skin;
+      r2.fillRect(1, 5, 2, 1);
+      r2.fillRect(7, 4, 2, 1);
+      r2.fillStyle = s.robe;
+      r2.fillRect(3, 9, 2, 2);
+      r2.fillRect(6, 9, 2, 3);
+      r2.fillStyle = s.shoes;
+      r2.fillRect(3, 11, 2, 2);
+      r2.fillRect(6, 12, 2, 2);
+      run2C.refresh();
+    }
+
 
     // --- Ghost (10x14, translucent floaty person) ---
     const ghostCanvas = this.textures.createCanvas('ghost', 10, 14);
