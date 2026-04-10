@@ -5,6 +5,10 @@ import {
   ghostLines,
   buildingGhostLines,
   cheerPhrases,
+  merchantGreetings,
+  shopperGreetings,
+  shepherdGreetings,
+  workerGreetings,
 } from "../dialog.js";
 
 const WORLD_W = 3200;
@@ -682,9 +686,7 @@ export class GameScene extends Phaser.Scene {
           .setScale(SCALE).setDepth(3);
         this.people.push({
           sprite, skinId, state: "idle",
-          greeting: rng.pick(["Welcome!", "Best prices!", "Fresh today!",
-            "Come see!", "Special deal!", "For you,\ndiscount!",
-            "Finest quality!", "Look! Look!"]),
+          greeting: rng.pick(merchantGreetings),
           bubble: null, waveTimer: 0, waveFrame: 0,
           runAngle: 0, runTimer: 0, runFrame: 0,
           wanderTimer: 0, wanderDuration: 999, wanderAngle: null,
@@ -707,9 +709,7 @@ export class GameScene extends Phaser.Scene {
 
         this.people.push({
           sprite, skinId, state: "idle",
-          greeting: rng.pick(["Great finds!", "So crowded!", "Love this\nmarket!",
-            "Need more\nbags!", "What a deal!", "Smells amazing!",
-            "My favorite\nstall!", "Haggling is\nan art!"]),
+          greeting: rng.pick(shopperGreetings),
           bubble: null, waveTimer: 0, waveFrame: 0,
           runAngle: 0, runTimer: 0, runFrame: 0,
           wanderTimer: 0,
@@ -860,10 +860,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     // Shepherds (3, spread around the flock edges)
-    const shepherdGreetings = [
-      "My goats!", "Easy now...", "Don't scare\nthem!",
-      "Shoo! Shoo!", "They're friendly!", "Want some\ngoat milk?",
-    ];
+    // shepherdGreetings imported from dialog.js
     const shepherdPositions = [
       { x: flockX - 160, y: flockY - 80 },
       { x: flockX + 170, y: flockY + 60 },
@@ -892,6 +889,105 @@ export class GameScene extends Phaser.Scene {
         hideTarget: null,
         homeX: sp.x,
         homeY: sp.y,
+      });
+    }
+
+    // ==========================================
+    // OILFIELD (below the farm, NE area — large)
+    // ==========================================
+    const oilX = farmX + 200;
+    const oilY = farmY + 800;
+
+    // Oil tanks (spread across the field)
+    this.oilWells = [];
+    const tankPositions = [
+      { x: oilX - 500, y: oilY - 200 },
+      { x: oilX + 100, y: oilY - 250 },
+      { x: oilX + 500, y: oilY - 150 },
+      { x: oilX - 300, y: oilY + 300 },
+      { x: oilX + 300, y: oilY + 250 },
+      { x: oilX + 600, y: oilY + 100 },
+      { x: oilX - 100, y: oilY + 450 },
+      { x: oilX + 500, y: oilY + 450 },
+    ];
+    for (const tp of tankPositions) {
+      const b = addBuilding(tp.x, tp.y, "oil-tank", "large");
+      b.isOilInfra = true;
+    }
+
+    // Oil wells (many, spread across a large area)
+    const wellPositions = [];
+    for (let wy = -2; wy <= 3; wy++) {
+      for (let wx = -3; wx <= 3; wx++) {
+        // Skip positions too close to tanks
+        const wpx = oilX + wx * 200 + Phaser.Math.Between(-40, 40);
+        const wpy = oilY + wy * 180 + Phaser.Math.Between(-40, 40);
+        let tooClose = false;
+        for (const tp of tankPositions) {
+          if (Phaser.Math.Distance.Between(wpx, wpy, tp.x, tp.y) < 100) {
+            tooClose = true;
+            break;
+          }
+        }
+        if (!tooClose) wellPositions.push({ x: wpx, y: wpy });
+      }
+    }
+    for (const wp of wellPositions) {
+      const sprite = this.add.image(wp.x, wp.y, "oil-well1")
+        .setScale(SCALE).setDepth(2);
+      const well = {
+        sprite,
+        x: wp.x, y: wp.y,
+        alive: true,
+        pumpFrame: 0,
+        pumpTimer: 0,
+        pumpSpeed: 600 + Math.random() * 400,
+      };
+      this.oilWells.push(well);
+      this.buildings.push({
+        sprite, tex: "oil-well1", size: "small",
+        hp: 1, maxHp: 1, radius: 30,
+        x: wp.x, y: wp.y, destroyed: false,
+        cracksSprite: null, fireSprites: [],
+        isOilWell: true, wellRef: well, isOilInfra: true,
+      });
+    }
+
+    // Pipes connecting in a grid
+    const pipeFn = TILE * SCALE;
+    // Horizontal pipe runs at multiple Y levels
+    for (const pipeY of [-200, -30, 120, 280, 440]) {
+      for (let px = -16; px <= 16; px++) {
+        this.add.image(oilX + px * pipeFn, oilY + pipeY, "pipe-h")
+          .setScale(SCALE).setDepth(1.5);
+      }
+    }
+    // Vertical pipe runs
+    for (const vx of [-500, -300, -100, 100, 300, 500]) {
+      for (let py = -5; py <= 10; py++) {
+        this.add.image(oilX + vx, oilY - 200 + py * pipeFn, "pipe-v")
+          .setScale(SCALE).setDepth(1.5);
+      }
+    }
+
+    // Oil field workers (hard hat skins 10-11)
+    // workerGreetings imported from dialog.js
+    for (let w = 0; w < 25; w++) {
+      const wx = oilX + Phaser.Math.Between(-600, 600);
+      const wy = oilY + Phaser.Math.Between(-250, 500);
+      const skinId = 10 + (w % 2);
+      const sprite = this.add.image(wx, wy, `person-stand-${skinId}`)
+        .setScale(SCALE).setDepth(2);
+      this.people.push({
+        sprite, skinId, state: "idle",
+        greeting: rng.pick(workerGreetings),
+        bubble: null, waveTimer: 0, waveFrame: 0,
+        runAngle: 0, runTimer: 0, runFrame: 0,
+        wanderTimer: 0,
+        wanderDuration: 2 + Math.random() * 4,
+        wanderAngle: Math.random() < 0.5 ? null : Math.random() * Math.PI * 2,
+        hideTarget: null, homeX: wx, homeY: wy,
+        scatterPanic: true,
       });
     }
 
@@ -1004,6 +1100,28 @@ export class GameScene extends Phaser.Scene {
         hideTarget: null,
         homeX: px,
         homeY: py,
+      });
+    }
+
+    // --- Dirt bikers ---
+    this.dirtBikers = [];
+    for (let bi = 0; bi < 8; bi++) {
+      const bx = Phaser.Math.Between(500, WORLD_W * SCALE - 500);
+      const by = Phaser.Math.Between(500, WORLD_H * SCALE - 500);
+      const sprite = this.add.image(bx, by, "dirtbike")
+        .setScale(SCALE).setDepth(3);
+      // Dust trail emitter reference
+      this.dirtBikers.push({
+        sprite,
+        heading: Math.random() * Math.PI * 2,
+        speed: 100 + Math.random() * 60,
+        targetX: bx,
+        targetY: by,
+        retargetTimer: 0,
+        bounceFrame: 0,
+        bounceTimer: 0,
+        dustTimer: 0,
+        alive: true,
       });
     }
 
@@ -1661,6 +1779,8 @@ export class GameScene extends Phaser.Scene {
     this.updatePeople(dt, delta);
     this.updateSoccer(dt, delta);
     this.updateAnimals(dt);
+    this.updateOilWells(delta);
+    this.updateDirtBikers(dt, delta);
 
     // --- HUD ---
     const spdDisplay = Math.round(speedKnots);
@@ -1847,8 +1967,17 @@ export class GameScene extends Phaser.Scene {
         if (b.hp <= 0) {
           // Destroyed
           b.destroyed = true;
-          b.sprite.setTexture("rubble");
-          b.sprite.setTint(0x888888);
+          if (b.isOilWell) {
+            b.sprite.setTexture("oil-well-burn");
+            b.sprite.clearTint();
+            if (b.wellRef) b.wellRef.alive = false;
+          } else if (b.isOilInfra) {
+            // Oil tank — show as dark burned tank
+            b.sprite.setTint(0x333333);
+          } else {
+            b.sprite.setTexture("rubble");
+            b.sprite.setTint(0x888888);
+          }
           if (b.cracksSprite) b.cracksSprite.destroy();
           for (const f of b.fireSprites) f.destroy();
           b.fireSprites = [];
@@ -1862,6 +1991,44 @@ export class GameScene extends Phaser.Scene {
             exp3.play("explode");
             exp3.once("animationcomplete", () => exp3.destroy());
           });
+          // Oil infrastructure burns forever with black smoke
+          if (b.isOilInfra) {
+            // Persistent fire
+            const permFire = this.add.image(b.x, b.y - 5, "fire")
+              .setScale(SCALE * 1.5).setDepth(3);
+            this.hudCam.ignore(permFire);
+            this.tweens.add({
+              targets: permFire,
+              scaleX: { from: SCALE * 1.2, to: SCALE * 1.8 },
+              scaleY: { from: SCALE * 1.5, to: SCALE * 2.0 },
+              alpha: { from: 1, to: 0.7 },
+              duration: 400,
+              yoyo: true,
+              repeat: -1,
+            });
+            // Perpetual black smoke plume
+            this.time.addEvent({
+              delay: 300,
+              loop: true,
+              callback: () => {
+                const smoke = this.add.image(
+                  b.x + Phaser.Math.Between(-10, 10),
+                  b.y - 10,
+                  "smoke",
+                ).setScale(SCALE * 0.6).setDepth(12).setAlpha(0.7).setTint(0x222222);
+                this.hudCam.ignore(smoke);
+                this.tweens.add({
+                  targets: smoke,
+                  y: b.y - 80 - Math.random() * 40,
+                  x: smoke.x + Phaser.Math.Between(-20, 20),
+                  scale: SCALE * (1.5 + Math.random()),
+                  alpha: 0,
+                  duration: 1500 + Math.random() * 500,
+                  onComplete: () => smoke.destroy(),
+                });
+              },
+            });
+          }
           // Kill people hiding in this building
           this.killPeopleInBuilding(b);
         } else {
@@ -1919,6 +2086,44 @@ export class GameScene extends Phaser.Scene {
             onComplete: () => smoke.destroy(),
           });
         }
+      }
+    }
+
+    // Kill dirt bikers — turn into ghosts
+    for (const bk of this.dirtBikers) {
+      if (!bk.alive) continue;
+      const dist = Phaser.Math.Distance.Between(x, y, bk.sprite.x, bk.sprite.y);
+      if (dist < 60) {
+        bk.alive = false;
+        this.kills++;
+        // Explosion at biker position
+        const bkExp = this.add.sprite(bk.sprite.x, bk.sprite.y, "explosion-sheet", 0)
+          .setScale(SCALE * 1.5).setDepth(11);
+        this.hudCam.ignore(bkExp);
+        bkExp.play("explode");
+        bkExp.once("animationcomplete", () => bkExp.destroy());
+        // Ghost floats away
+        bk.sprite.setTexture("ghost");
+        bk.sprite.setAlpha(0.8);
+        bk.sprite.setDepth(13);
+        const awayAngle = Phaser.Math.Angle.Between(x, y, bk.sprite.x, bk.sprite.y);
+        bk.ghostDriftX = Math.cos(awayAngle) * (15 + Math.random() * 25);
+        bk.ghostDriftY = -(20 + Math.random() * 20);
+        bk.ghostWobble = Math.random() * Math.PI * 2;
+        bk.isGhost = true;
+        // Speech bubble
+        const line = Phaser.Utils.Array.GetRandom(ghostLines);
+        bk.bubble = this.add
+          .text(bk.sprite.x + 20, bk.sprite.y - 20, line, {
+            fontFamily: "monospace",
+            fontSize: "8px",
+            color: "#aaccff",
+            backgroundColor: "#000000aa",
+            padding: { x: 4, y: 3 },
+          })
+          .setScale(SCALE * 0.5)
+          .setDepth(14);
+        this.hudCam.ignore(bk.bubble);
       }
     }
 
@@ -2126,17 +2331,28 @@ export class GameScene extends Phaser.Scene {
         if (!p.noGreet && ds.altitude > 0 && distToDrone < droneDetectRadius) {
           p.state = "waving";
           p.waveTimer = 0;
-          p.bubble = this.add
-            .text(p.sprite.x + 20, p.sprite.y - 30, p.greeting, {
-              fontFamily: "monospace",
-              fontSize: "8px",
-              color: "#000",
-              backgroundColor: "#fff",
-              padding: { x: 4, y: 3 },
-            })
-            .setScale(SCALE * 0.5)
-            .setDepth(13);
-          this.hudCam.ignore(p.bubble);
+          // Only show bubble if no other bubble is within 150px
+          let tooClose = false;
+          for (const other of this.people) {
+            if (other === p || !other.bubble || other.state !== "waving") continue;
+            if (Phaser.Math.Distance.Between(p.sprite.x, p.sprite.y, other.sprite.x, other.sprite.y) < 150) {
+              tooClose = true;
+              break;
+            }
+          }
+          if (!tooClose) {
+            p.bubble = this.add
+              .text(p.sprite.x + 20, p.sprite.y - 30, p.greeting, {
+                fontFamily: "monospace",
+                fontSize: "8px",
+                color: "#000",
+                backgroundColor: "#fff",
+                padding: { x: 4, y: 3 },
+              })
+              .setScale(SCALE * 0.5)
+              .setDepth(13);
+            this.hudCam.ignore(p.bubble);
+          }
         } else {
           // Wander
           p.wanderTimer = (p.wanderTimer || 0) + dt;
@@ -2671,6 +2887,112 @@ export class GameScene extends Phaser.Scene {
           a.panicTimer = 0;
           a.freeRoamOrigin = null; // Reset so it picks up current position if outside corral
         }
+      }
+    }
+  }
+
+  updateOilWells(delta) {
+    for (const well of this.oilWells) {
+      if (!well.alive) continue;
+      well.pumpTimer += delta;
+      if (well.pumpTimer > well.pumpSpeed) {
+        well.pumpTimer = 0;
+        well.pumpFrame = 1 - well.pumpFrame;
+        well.sprite.setTexture(well.pumpFrame === 0 ? "oil-well1" : "oil-well2");
+      }
+    }
+  }
+
+  updateDirtBikers(dt, delta) {
+    const worldW = WORLD_W * SCALE;
+    const worldH = WORLD_H * SCALE;
+    const margin = 200;
+
+    for (const bk of this.dirtBikers) {
+      // Ghost float animation
+      if (bk.isGhost) {
+        if (!bk.sprite.active) continue;
+        bk.sprite.y += (bk.ghostDriftY || -30) * dt;
+        bk.sprite.x += (bk.ghostDriftX || 0) * dt + Math.sin(bk.sprite.y * 0.04 + (bk.ghostWobble || 0)) * 15 * dt;
+        bk.sprite.setAlpha(bk.sprite.alpha - 0.08 * dt);
+        if (bk.bubble) {
+          bk.bubble.setPosition(bk.sprite.x + 20, bk.sprite.y - 20);
+          bk.bubble.setAlpha(bk.sprite.alpha);
+        }
+        if (bk.sprite.alpha <= 0) {
+          bk.sprite.destroy();
+          if (bk.bubble) { bk.bubble.destroy(); bk.bubble = null; }
+        }
+        continue;
+      }
+      if (!bk.alive) continue;
+
+      // Pick new random destination periodically
+      bk.retargetTimer += dt;
+      if (bk.retargetTimer > 3 + Math.random() * 4) {
+        bk.retargetTimer = 0;
+        bk.targetX = Phaser.Math.Between(margin, worldW - margin);
+        bk.targetY = Phaser.Math.Between(margin, worldH - margin);
+      }
+
+      // Steer toward target, avoiding buildings
+      const targetAngle = Phaser.Math.Angle.Between(
+        bk.sprite.x, bk.sprite.y, bk.targetX, bk.targetY,
+      );
+
+      // Smooth turn toward target
+      let diff = Phaser.Math.Angle.Wrap(targetAngle - bk.heading);
+      const maxTurn = 2.0 * dt;
+      bk.heading += Phaser.Math.Clamp(diff, -maxTurn, maxTurn);
+
+      // Steer around buildings
+      bk.heading = this.steerAroundBuildings(
+        bk.sprite.x, bk.sprite.y, bk.heading, dt,
+      );
+
+      // Move
+      bk.sprite.x += Math.cos(bk.heading) * bk.speed * dt;
+      bk.sprite.y += Math.sin(bk.heading) * bk.speed * dt;
+
+      // Face direction of travel
+      bk.sprite.setFlipX(Math.cos(bk.heading) < 0);
+
+      // Bounce animation (riding over terrain)
+      bk.bounceTimer += delta;
+      if (bk.bounceTimer > 120) {
+        bk.bounceTimer = 0;
+        bk.bounceFrame = 1 - bk.bounceFrame;
+        bk.sprite.setTexture(bk.bounceFrame === 0 ? "dirtbike" : "dirtbike2");
+      }
+
+      // Dust trail
+      bk.dustTimer += delta;
+      if (bk.dustTimer > 80) {
+        bk.dustTimer = 0;
+        const dust = this.add.image(
+          bk.sprite.x - Math.cos(bk.heading) * 15,
+          bk.sprite.y - Math.sin(bk.heading) * 15,
+          "smoke",
+        ).setScale(SCALE * 0.3).setDepth(1).setAlpha(0.4).setTint(0xccaa88);
+        this.hudCam.ignore(dust);
+        this.tweens.add({
+          targets: dust,
+          alpha: 0,
+          scale: SCALE * 0.8,
+          duration: 400,
+          onComplete: () => dust.destroy(),
+        });
+      }
+
+      // Keep on map
+      bk.sprite.x = Phaser.Math.Clamp(bk.sprite.x, margin, worldW - margin);
+      bk.sprite.y = Phaser.Math.Clamp(bk.sprite.y, margin, worldH - margin);
+      if (bk.sprite.x <= margin || bk.sprite.x >= worldW - margin ||
+          bk.sprite.y <= margin || bk.sprite.y >= worldH - margin) {
+        // Redirect toward center
+        bk.targetX = worldW / 2 + Phaser.Math.Between(-1000, 1000);
+        bk.targetY = worldH / 2 + Phaser.Math.Between(-1000, 1000);
+        bk.retargetTimer = 0;
       }
     }
   }

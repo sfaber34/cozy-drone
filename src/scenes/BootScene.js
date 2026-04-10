@@ -1640,6 +1640,419 @@ export class BootScene extends Phaser.Scene {
     brd.fillRect(1, 0, 2, 3);
     brdC.refresh();
 
+    // =============================================
+    // OILFIELD TEXTURES
+    // =============================================
+
+    // --- Oil tank (top-down, 24x24 cylinder) ---
+    const oilTankCanvas = this.textures.createCanvas('oil-tank', 24, 24);
+    const otc = oilTankCanvas.context;
+    // Tank body (circle)
+    otc.fillStyle = '#888';
+    for (let y = 0; y < 24; y++) {
+      for (let x = 0; x < 24; x++) {
+        if ((x - 11.5) * (x - 11.5) + (y - 11.5) * (y - 11.5) <= 130) {
+          otc.fillRect(x, y, 1, 1);
+        }
+      }
+    }
+    // Highlight
+    otc.fillStyle = '#aaa';
+    for (let y = 0; y < 24; y++) {
+      for (let x = 0; x < 24; x++) {
+        if ((x - 10) * (x - 10) + (y - 10) * (y - 10) <= 40) {
+          otc.fillRect(x, y, 1, 1);
+        }
+      }
+    }
+    // Rim
+    otc.fillStyle = '#666';
+    for (let y = 0; y < 24; y++) {
+      for (let x = 0; x < 24; x++) {
+        const d = (x - 11.5) * (x - 11.5) + (y - 11.5) * (y - 11.5);
+        if (d <= 130 && d >= 110) {
+          otc.fillRect(x, y, 1, 1);
+        }
+      }
+    }
+    // Access ladder
+    otc.fillStyle = '#555';
+    otc.fillRect(11, 0, 2, 6);
+    oilTankCanvas.refresh();
+
+    // --- Oil well pump jack frame 1 (side view, 16x16, beam up) ---
+    const well1Canvas = this.textures.createCanvas('oil-well1', 16, 16);
+    const ow1 = well1Canvas.context;
+    // Base/platform
+    ow1.fillStyle = '#666';
+    ow1.fillRect(2, 14, 12, 2);
+    // Support tower (A-frame)
+    ow1.fillStyle = '#888';
+    ow1.fillRect(6, 4, 2, 10);
+    ow1.fillRect(9, 4, 2, 10);
+    ow1.fillRect(5, 3, 5, 2);
+    // Walking beam (up position)
+    ow1.fillStyle = '#aa3333';
+    ow1.fillRect(1, 3, 14, 2);
+    // Horse head (front)
+    ow1.fillStyle = '#cc4444';
+    ow1.fillRect(0, 2, 3, 3);
+    // Counterweight (back)
+    ow1.fillStyle = '#555';
+    ow1.fillRect(13, 4, 3, 2);
+    // Cable/rod going down
+    ow1.fillStyle = '#444';
+    ow1.fillRect(1, 5, 1, 9);
+    // Motor housing
+    ow1.fillStyle = '#777';
+    ow1.fillRect(10, 10, 4, 4);
+    ow1.fillStyle = '#999';
+    ow1.fillRect(11, 11, 2, 2);
+    well1Canvas.refresh();
+
+    // --- Oil well pump jack frame 2 (beam down) ---
+    const well2Canvas = this.textures.createCanvas('oil-well2', 16, 16);
+    const ow2 = well2Canvas.context;
+    // Base
+    ow2.fillStyle = '#666';
+    ow2.fillRect(2, 14, 12, 2);
+    // Support tower
+    ow2.fillStyle = '#888';
+    ow2.fillRect(6, 4, 2, 10);
+    ow2.fillRect(9, 4, 2, 10);
+    ow2.fillRect(5, 3, 5, 2);
+    // Walking beam (down position — tilted)
+    ow2.fillStyle = '#aa3333';
+    ow2.fillRect(1, 5, 14, 2);
+    // Horse head (lower)
+    ow2.fillStyle = '#cc4444';
+    ow2.fillRect(0, 5, 3, 3);
+    // Counterweight (higher)
+    ow2.fillStyle = '#555';
+    ow2.fillRect(13, 2, 3, 2);
+    // Cable/rod (shorter, beam is down)
+    ow2.fillStyle = '#444';
+    ow2.fillRect(1, 8, 1, 6);
+    // Motor housing
+    ow2.fillStyle = '#777';
+    ow2.fillRect(10, 10, 4, 4);
+    ow2.fillStyle = '#999';
+    ow2.fillRect(11, 11, 2, 2);
+    well2Canvas.refresh();
+
+    // --- Pipe horizontal (16x4) ---
+    const pipeHCanvas = this.textures.createCanvas('pipe-h', 16, 4);
+    const phc = pipeHCanvas.context;
+    phc.fillStyle = '#777';
+    phc.fillRect(0, 1, 16, 2);
+    phc.fillStyle = '#999';
+    phc.fillRect(0, 1, 16, 1);
+    phc.fillStyle = '#555';
+    phc.fillRect(0, 0, 1, 4);
+    phc.fillRect(15, 0, 1, 4);
+    pipeHCanvas.refresh();
+
+    // --- Pipe vertical (4x16) ---
+    const pipeVCanvas = this.textures.createCanvas('pipe-v', 4, 16);
+    const pvc = pipeVCanvas.context;
+    pvc.fillStyle = '#777';
+    pvc.fillRect(1, 0, 2, 16);
+    pvc.fillStyle = '#999';
+    pvc.fillRect(1, 0, 1, 16);
+    pvc.fillStyle = '#555';
+    pvc.fillRect(0, 0, 4, 1);
+    pvc.fillRect(0, 15, 4, 1);
+    pipeVCanvas.refresh();
+
+    // --- Burning well (oil-well with fire, for destroyed state) ---
+    const wellBurnCanvas = this.textures.createCanvas('oil-well-burn', 16, 16);
+    const owb = wellBurnCanvas.context;
+    // Destroyed base
+    owb.fillStyle = '#444';
+    owb.fillRect(2, 14, 12, 2);
+    owb.fillStyle = '#333';
+    owb.fillRect(5, 6, 6, 8);
+    // Fire plume
+    owb.fillStyle = '#f80';
+    owb.fillRect(5, 0, 6, 8);
+    owb.fillRect(4, 2, 8, 5);
+    owb.fillStyle = '#ff0';
+    owb.fillRect(6, 1, 4, 5);
+    owb.fillStyle = '#f00';
+    owb.fillRect(4, 0, 2, 4);
+    owb.fillRect(10, 0, 2, 4);
+    // Black smoke
+    owb.fillStyle = '#222';
+    owb.fillRect(5, 0, 2, 2);
+    owb.fillRect(9, 0, 2, 1);
+    wellBurnCanvas.refresh();
+
+    // --- Hard hat worker skin (index 10 and 11) ---
+    const hardHatSkins = [
+      { skin: '#c49a6c', hat: '#ffcc00', vest: '#ff6600', pants: '#335588' },
+      { skin: '#d4a574', hat: '#fff', vest: '#ff6600', pants: '#445588' },
+    ];
+    for (let hi = 0; hi < hardHatSkins.length; hi++) {
+      const h = hardHatSkins[hi];
+      const idx = 10 + hi;
+
+      // Standing
+      const hsCanvas = this.textures.createCanvas(`person-stand-${idx}`, 10, 14);
+      const hs = hsCanvas.context;
+      hs.fillStyle = h.skin;
+      hs.fillRect(3, 1, 4, 3);
+      hs.fillStyle = h.hat;
+      hs.fillRect(2, 0, 6, 2);
+      hs.fillStyle = '#222';
+      hs.fillRect(4, 2, 1, 1);
+      hs.fillRect(6, 2, 1, 1);
+      hs.fillStyle = h.vest;
+      hs.fillRect(3, 4, 4, 5);
+      hs.fillStyle = '#ff8800';
+      hs.fillRect(5, 4, 1, 5); // vest stripe
+      hs.fillStyle = h.skin;
+      hs.fillRect(2, 5, 1, 3);
+      hs.fillRect(7, 5, 1, 3);
+      hs.fillStyle = h.pants;
+      hs.fillRect(3, 9, 2, 3);
+      hs.fillRect(5, 9, 2, 3);
+      hs.fillStyle = '#333';
+      hs.fillRect(3, 12, 2, 2);
+      hs.fillRect(5, 12, 2, 2);
+      hsCanvas.refresh();
+
+      // Wave 1
+      const hw1Canvas = this.textures.createCanvas(`person-wave1-${idx}`, 10, 14);
+      const hw1 = hw1Canvas.context;
+      hw1.fillStyle = h.skin;
+      hw1.fillRect(3, 1, 4, 3);
+      hw1.fillStyle = h.hat;
+      hw1.fillRect(2, 0, 6, 2);
+      hw1.fillStyle = '#222';
+      hw1.fillRect(4, 2, 1, 1);
+      hw1.fillRect(6, 2, 1, 1);
+      hw1.fillStyle = '#c44';
+      hw1.fillRect(4, 3, 3, 1);
+      hw1.fillStyle = h.vest;
+      hw1.fillRect(3, 4, 4, 5);
+      hw1.fillStyle = '#ff8800';
+      hw1.fillRect(5, 4, 1, 5);
+      hw1.fillStyle = h.skin;
+      hw1.fillRect(2, 5, 1, 3);
+      hw1.fillRect(7, 4, 1, 1);
+      hw1.fillRect(8, 3, 1, 1);
+      hw1.fillRect(9, 2, 1, 1);
+      hw1.fillStyle = h.pants;
+      hw1.fillRect(3, 9, 2, 3);
+      hw1.fillRect(5, 9, 2, 3);
+      hw1.fillStyle = '#333';
+      hw1.fillRect(3, 12, 2, 2);
+      hw1.fillRect(5, 12, 2, 2);
+      hw1Canvas.refresh();
+
+      // Wave 2
+      const hw2Canvas = this.textures.createCanvas(`person-wave2-${idx}`, 10, 14);
+      const hw2 = hw2Canvas.context;
+      hw2.fillStyle = h.skin;
+      hw2.fillRect(3, 1, 4, 3);
+      hw2.fillStyle = h.hat;
+      hw2.fillRect(2, 0, 6, 2);
+      hw2.fillStyle = '#222';
+      hw2.fillRect(4, 2, 1, 1);
+      hw2.fillRect(6, 2, 1, 1);
+      hw2.fillStyle = '#c44';
+      hw2.fillRect(4, 3, 3, 1);
+      hw2.fillStyle = h.vest;
+      hw2.fillRect(3, 4, 4, 5);
+      hw2.fillStyle = '#ff8800';
+      hw2.fillRect(5, 4, 1, 5);
+      hw2.fillStyle = h.skin;
+      hw2.fillRect(2, 5, 1, 3);
+      hw2.fillRect(7, 4, 1, 1);
+      hw2.fillRect(8, 2, 1, 1);
+      hw2.fillRect(9, 1, 1, 1);
+      hw2.fillStyle = h.pants;
+      hw2.fillRect(3, 9, 2, 3);
+      hw2.fillRect(5, 9, 2, 3);
+      hw2.fillStyle = '#333';
+      hw2.fillRect(3, 12, 2, 2);
+      hw2.fillRect(5, 12, 2, 2);
+      hw2Canvas.refresh();
+
+      // Run 1
+      const hr1Canvas = this.textures.createCanvas(`person-run1-${idx}`, 10, 14);
+      const hr1 = hr1Canvas.context;
+      hr1.fillStyle = h.skin;
+      hr1.fillRect(3, 1, 4, 3);
+      hr1.fillStyle = h.hat;
+      hr1.fillRect(2, 0, 6, 2);
+      hr1.fillStyle = '#222';
+      hr1.fillRect(4, 2, 1, 1);
+      hr1.fillRect(6, 2, 1, 1);
+      hr1.fillStyle = h.vest;
+      hr1.fillRect(3, 4, 4, 5);
+      hr1.fillStyle = '#ff8800';
+      hr1.fillRect(5, 4, 1, 5);
+      hr1.fillStyle = h.skin;
+      hr1.fillRect(1, 4, 2, 1);
+      hr1.fillRect(7, 5, 2, 1);
+      hr1.fillStyle = h.pants;
+      hr1.fillRect(3, 9, 2, 3);
+      hr1.fillRect(6, 9, 2, 2);
+      hr1.fillStyle = '#333';
+      hr1.fillRect(3, 12, 2, 2);
+      hr1.fillRect(6, 11, 2, 2);
+      hr1Canvas.refresh();
+
+      // Run 2
+      const hr2Canvas = this.textures.createCanvas(`person-run2-${idx}`, 10, 14);
+      const hr2 = hr2Canvas.context;
+      hr2.fillStyle = h.skin;
+      hr2.fillRect(3, 1, 4, 3);
+      hr2.fillStyle = h.hat;
+      hr2.fillRect(2, 0, 6, 2);
+      hr2.fillStyle = '#222';
+      hr2.fillRect(4, 2, 1, 1);
+      hr2.fillRect(6, 2, 1, 1);
+      hr2.fillStyle = h.vest;
+      hr2.fillRect(3, 4, 4, 5);
+      hr2.fillStyle = '#ff8800';
+      hr2.fillRect(5, 4, 1, 5);
+      hr2.fillStyle = h.skin;
+      hr2.fillRect(1, 5, 2, 1);
+      hr2.fillRect(7, 4, 2, 1);
+      hr2.fillStyle = h.pants;
+      hr2.fillRect(3, 9, 2, 2);
+      hr2.fillRect(6, 9, 2, 3);
+      hr2.fillStyle = '#333';
+      hr2.fillRect(3, 11, 2, 2);
+      hr2.fillRect(6, 12, 2, 2);
+      hr2Canvas.refresh();
+    }
+
+    // --- Dirt bike with rider (side view, 18x16) ---
+    const bikeCanvas = this.textures.createCanvas('dirtbike', 18, 16);
+    const dbc = bikeCanvas.context;
+    // Wheels
+    dbc.fillStyle = '#333';
+    dbc.fillRect(1, 11, 4, 4);
+    dbc.fillRect(13, 11, 4, 4);
+    dbc.fillStyle = '#555';
+    dbc.fillRect(2, 12, 2, 2);
+    dbc.fillRect(14, 12, 2, 2);
+    // Spokes
+    dbc.fillStyle = '#777';
+    dbc.fillRect(3, 13, 1, 1);
+    dbc.fillRect(15, 13, 1, 1);
+    // Frame
+    dbc.fillStyle = '#cc3333';
+    dbc.fillRect(4, 9, 10, 3);
+    dbc.fillRect(6, 8, 6, 1);
+    // Engine block
+    dbc.fillStyle = '#888';
+    dbc.fillRect(6, 11, 4, 2);
+    dbc.fillStyle = '#666';
+    dbc.fillRect(7, 12, 2, 1);
+    // Handlebars
+    dbc.fillStyle = '#666';
+    dbc.fillRect(13, 7, 3, 2);
+    // Exhaust pipe
+    dbc.fillStyle = '#777';
+    dbc.fillRect(2, 10, 3, 1);
+    dbc.fillStyle = '#888';
+    dbc.fillRect(1, 10, 1, 1);
+    // Rider head
+    dbc.fillStyle = '#c49a6c';
+    dbc.fillRect(9, 2, 3, 3);
+    // Helmet
+    dbc.fillStyle = '#222';
+    dbc.fillRect(9, 1, 3, 2);
+    dbc.fillStyle = '#444';
+    dbc.fillRect(9, 1, 3, 1);
+    // Visor
+    dbc.fillStyle = '#4488cc';
+    dbc.fillRect(11, 2, 1, 1);
+    // Torso
+    dbc.fillStyle = '#3366cc';
+    dbc.fillRect(9, 5, 3, 4);
+    // Arms reaching to handlebars
+    dbc.fillStyle = '#c49a6c';
+    dbc.fillRect(12, 6, 2, 1);
+    dbc.fillRect(11, 5, 1, 1);
+    // Legs straddling bike
+    dbc.fillStyle = '#335588';
+    dbc.fillRect(8, 8, 2, 3);
+    dbc.fillRect(11, 8, 2, 3);
+    // Boots
+    dbc.fillStyle = '#333';
+    dbc.fillRect(8, 10, 2, 1);
+    dbc.fillRect(11, 10, 2, 1);
+    // Fender
+    dbc.fillStyle = '#aa2222';
+    dbc.fillRect(14, 10, 3, 1);
+    dbc.fillRect(1, 10, 3, 1);
+    bikeCanvas.refresh();
+
+    // --- Dirt bike frame 2 (bounce — wheels down, body up) ---
+    const bike2Canvas = this.textures.createCanvas('dirtbike2', 18, 16);
+    const db2 = bike2Canvas.context;
+    // Wheels (lower)
+    db2.fillStyle = '#333';
+    db2.fillRect(1, 12, 4, 4);
+    db2.fillRect(13, 12, 4, 4);
+    db2.fillStyle = '#555';
+    db2.fillRect(2, 13, 2, 2);
+    db2.fillRect(14, 13, 2, 2);
+    db2.fillStyle = '#777';
+    db2.fillRect(3, 14, 1, 1);
+    db2.fillRect(15, 14, 1, 1);
+    // Frame (higher)
+    db2.fillStyle = '#cc3333';
+    db2.fillRect(4, 8, 10, 3);
+    db2.fillRect(6, 7, 6, 1);
+    // Engine
+    db2.fillStyle = '#888';
+    db2.fillRect(6, 10, 4, 2);
+    db2.fillStyle = '#666';
+    db2.fillRect(7, 11, 2, 1);
+    // Handlebars
+    db2.fillStyle = '#666';
+    db2.fillRect(13, 6, 3, 2);
+    // Exhaust
+    db2.fillStyle = '#777';
+    db2.fillRect(2, 9, 3, 1);
+    db2.fillStyle = '#888';
+    db2.fillRect(1, 9, 1, 1);
+    // Rider head
+    db2.fillStyle = '#c49a6c';
+    db2.fillRect(9, 1, 3, 3);
+    db2.fillStyle = '#222';
+    db2.fillRect(9, 0, 3, 2);
+    db2.fillStyle = '#444';
+    db2.fillRect(9, 0, 3, 1);
+    db2.fillStyle = '#4488cc';
+    db2.fillRect(11, 1, 1, 1);
+    // Torso
+    db2.fillStyle = '#3366cc';
+    db2.fillRect(9, 4, 3, 4);
+    // Arms
+    db2.fillStyle = '#c49a6c';
+    db2.fillRect(12, 5, 2, 1);
+    db2.fillRect(11, 4, 1, 1);
+    // Legs
+    db2.fillStyle = '#335588';
+    db2.fillRect(8, 7, 2, 3);
+    db2.fillRect(11, 7, 2, 3);
+    // Boots
+    db2.fillStyle = '#333';
+    db2.fillRect(8, 9, 2, 1);
+    db2.fillRect(11, 9, 2, 1);
+    // Fender
+    db2.fillStyle = '#aa2222';
+    db2.fillRect(14, 9, 3, 1);
+    db2.fillRect(1, 9, 3, 1);
+    bike2Canvas.refresh();
+
     // --- Meat chunk (6x5) ---
     const meatCanvas = this.textures.createCanvas('meat', 6, 5);
     const mtc = meatCanvas.context;

@@ -154,3 +154,46 @@ export const cheerPhrases = [
   "Ref!!",
   "Ole!",
 ];
+
+export const merchantGreetings = [
+  "Welcome!",
+  "Best prices!",
+  "Fresh today!",
+  "Come see!",
+  "Special deal!",
+  "For you,\ndiscount!",
+  "Finest quality!",
+  "Look! Look!",
+];
+
+export const shopperGreetings = [
+  "Great finds!",
+  "So crowded!",
+  "Love this\nmarket!",
+  "Need more\nbags!",
+  "What a deal!",
+  "Smells amazing!",
+  "My favorite\nstall!",
+  "Haggling is\nan art!",
+];
+
+export const shepherdGreetings = [
+  "My goats!",
+  "Easy now...",
+  "Don't scare\nthem!",
+  "Shoo! Shoo!",
+  "They're friendly!",
+  "Want some\ngoat milk?",
+];
+
+export const workerGreetings = [
+  "Watch your\nhead!",
+  "Hard hat\narea!",
+  "Oil's flowing!",
+  "Careful here!",
+  "Don't smoke\nnear the wells!",
+  "Shift ends\nat 6!",
+  "Black gold!",
+  "Pump it up!",
+  "Safety first!",
+];
