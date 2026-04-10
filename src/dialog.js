@@ -36,7 +36,7 @@ export const greetings = [
   "So cool!",
   "Wow look!",
   "Hey friend!",
-  "Up here!",
+  "Down here!",
   "Heyyy!",
   "Nice drone!",
   "Is that a Predator?",

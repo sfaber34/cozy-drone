@@ -57,11 +57,13 @@ export class GameScene extends Phaser.Scene {
       }
     }
 
-    // --- Desert props (bottom half only) ---
-    for (let i = 0; i < 200; i++) {
-      const x = rng.between(0, WORLD_W * SCALE);
-      const y = rng.between(halfH * SCALE, WORLD_H * SCALE);
-      const tex = rng.pick(["rock", "brush"]);
+    // --- Desert props (spread evenly across bottom half) ---
+    const desertTop = halfH * SCALE;
+    const desertBot = WORLD_H * SCALE;
+    for (let i = 0; i < 500; i++) {
+      const x = Math.random() * WORLD_W * SCALE;
+      const y = desertTop + Math.random() * (desertBot - desertTop);
+      const tex = Math.random() > 0.5 ? "rock" : "brush";
       this.add.image(x, y, tex).setScale(SCALE).setDepth(1);
     }
 
@@ -635,33 +637,177 @@ export class GameScene extends Phaser.Scene {
     }
 
     // ==========================================
-    // FARM (NE quadrant)
+    // FARM (NE quadrant) — single farm compound
     // ==========================================
-    const farmBaseX = halfW * SCALE + 200;
-    const farmBaseY = 200;
+    const farmX = halfW * SCALE + 600;
+    const farmY = halfH * SCALE * 0.4;
 
-    for (let fy = 0; fy < 4; fy++) {
-      for (let fx = 0; fx < 3; fx++) {
-        const fcx = farmBaseX + fx * 600 + rng.between(-40, 40);
-        const fcy = farmBaseY + fy * 500 + rng.between(-40, 40);
+    // Farmhouse (main house)
+    addBuilding(farmX, farmY, "house", "small", 0xddccaa);
 
-        addBuilding(fcx, fcy, "barn", "medium");
-        addBuilding(fcx + 100, fcy - 40, "silo", "small");
-        if (rng.frac() > 0.4) {
-          addBuilding(fcx + 140, fcy - 20, "silo", "small");
-        }
+    // Barn (large, to the right)
+    addBuilding(farmX + 250, farmY - 20, "barn", "medium");
 
-        for (let f = 0; f < 4; f++) {
-          this.add
-            .image(fcx - 150 + f * 80, fcy - 120, "fence-h")
-            .setScale(SCALE)
-            .setDepth(1.5);
-          this.add
-            .image(fcx - 150 + f * 80, fcy + 120, "fence-h")
-            .setScale(SCALE)
-            .setDepth(1.5);
-        }
+    // Silos near the barn
+    addBuilding(farmX + 380, farmY - 60, "silo", "small");
+    addBuilding(farmX + 420, farmY - 30, "silo", "small");
+    addBuilding(farmX + 400, farmY + 20, "silo", "small");
+
+    // Small huts scattered around
+    addBuilding(farmX - 150, farmY + 100, "hut", "small");
+    addBuilding(farmX + 80, farmY + 140, "hut", "small");
+    addBuilding(farmX - 80, farmY - 120, "hut", "small");
+
+    // Corral (livestock pen)
+    this.add.image(farmX + 150, farmY + 150, "corral")
+      .setScale(SCALE).setDepth(1.5);
+
+    // Hay bale piles
+    const hayPositions = [
+      { x: farmX + 300, y: farmY + 80 },
+      { x: farmX + 320, y: farmY + 100 },
+      { x: farmX + 290, y: farmY + 110 },
+      { x: farmX - 200, y: farmY - 40 },
+      { x: farmX - 180, y: farmY - 20 },
+      { x: farmX + 50, y: farmY - 80 },
+      { x: farmX + 70, y: farmY - 70 },
+      { x: farmX + 60, y: farmY - 60 },
+    ];
+    for (const hp of hayPositions) {
+      this.add.image(hp.x, hp.y, "hay").setScale(SCALE).setDepth(2);
+    }
+
+    // Fences around the farm perimeter (with gate gaps)
+    const fenceLen = TILE * SCALE;
+    // Top fence (gap at f=1 for gate)
+    for (let f = -6; f <= 8; f++) {
+      if (f === 1) continue;
+      this.add.image(farmX + f * fenceLen, farmY - 180, "fence-h")
+        .setScale(SCALE).setDepth(1.5);
+    }
+    // Bottom fence (gap at f=2 for gate)
+    for (let f = -6; f <= 8; f++) {
+      if (f === 2) continue;
+      this.add.image(farmX + f * fenceLen, farmY + 200, "fence-h")
+        .setScale(SCALE).setDepth(1.5);
+    }
+    // Left fence (gap at f=0 for gate)
+    for (let f = -4; f <= 4; f++) {
+      if (f === 0) continue;
+      this.add.image(farmX - 6 * fenceLen, farmY + f * fenceLen, "fence-v")
+        .setScale(SCALE).setDepth(1.5);
+    }
+    // Right fence (gap at f=1 for gate)
+    for (let f = -4; f <= 4; f++) {
+      if (f === 1) continue;
+      this.add.image(farmX + 8 * fenceLen + 10, farmY + f * fenceLen, "fence-v")
+        .setScale(SCALE).setDepth(1.5);
+    }
+
+    // ==========================================
+    // ANIMAL CORRALS (outside the farm compound)
+    // ==========================================
+    this.animals = [];
+
+    const corralDefs = [
+      { cx: farmX - 400, cy: farmY - 100, animal: "pig", count: 6 },
+      { cx: farmX - 400, cy: farmY + 120, animal: "chicken", count: 10 },
+      { cx: farmX + 550, cy: farmY - 100, animal: "camel", count: 4 },
+      { cx: farmX + 550, cy: farmY + 120, animal: "goat", count: 6 },
+    ];
+
+    const corralW = 32 * SCALE;
+    const corralH = 24 * SCALE;
+
+    for (const cd of corralDefs) {
+      // Draw the corral fence
+      this.add.image(cd.cx, cd.cy, "corral").setScale(SCALE).setDepth(1.5);
+
+      // Spawn animals inside
+      for (let a = 0; a < cd.count; a++) {
+        const ax = cd.cx + Phaser.Math.Between(-corralW / 2 + 15, corralW / 2 - 15);
+        const ay = cd.cy + Phaser.Math.Between(-corralH / 2 + 10, corralH / 2 - 10);
+        const sprite = this.add.image(ax, ay, cd.animal)
+          .setScale(SCALE).setDepth(2);
+        this.animals.push({
+          sprite,
+          type: cd.animal,
+          state: "idle", // idle | panicking | dead
+          corral: { x: cd.cx, y: cd.cy, hw: corralW / 2, hh: corralH / 2 },
+          wanderAngle: Math.random() * Math.PI * 2,
+          wanderTimer: 0,
+          wanderDuration: 1 + Math.random() * 3,
+          moving: Math.random() > 0.5,
+          runAngle: 0,
+          panicTimer: 0,
+        });
       }
+    }
+
+    // ==========================================
+    // GOAT FLOCK WITH SHEPHERDS (right of farm)
+    // ==========================================
+    const flockX = farmX + 900;
+    const flockY = farmY;
+    const flockRadius = 200;
+
+    // Large goat flock (20 goats)
+    for (let g = 0; g < 20; g++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.random() * flockRadius * 0.8;
+      const gx = flockX + Math.cos(angle) * dist;
+      const gy = flockY + Math.sin(angle) * dist;
+      const sprite = this.add.image(gx, gy, "goat").setScale(SCALE).setDepth(2);
+      this.animals.push({
+        sprite,
+        type: "goat",
+        state: "idle",
+        corral: { x: flockX, y: flockY, hw: flockRadius, hh: flockRadius },
+        wanderAngle: Math.random() * Math.PI * 2,
+        wanderTimer: 0,
+        wanderDuration: 1 + Math.random() * 3,
+        moving: Math.random() > 0.5,
+        runAngle: 0,
+        runTimer: 0,
+        runFrame: 0,
+        panicTimer: 0,
+      });
+    }
+
+    // Shepherds (3, spread around the flock edges)
+    const shepherdGreetings = [
+      "My goats!", "Easy now...", "Don't scare\nthem!",
+      "Shoo! Shoo!", "They're friendly!", "Want some\ngoat milk?",
+    ];
+    const shepherdPositions = [
+      { x: flockX - 160, y: flockY - 80 },
+      { x: flockX + 170, y: flockY + 60 },
+      { x: flockX - 40, y: flockY + 170 },
+    ];
+    for (const sp of shepherdPositions) {
+      const skinId = rng.pick([4, 5, 7, 9]); // earthy/pastoral skin variants
+      const sprite = this.add.image(sp.x, sp.y, `person-stand-${skinId}`)
+        .setScale(SCALE).setDepth(2);
+      this.people.push({
+        sprite,
+        skinId,
+        state: "idle",
+        greeting: rng.pick(shepherdGreetings),
+        noGreet: false,
+        scatterPanic: true,
+        bubble: null,
+        waveTimer: 0,
+        waveFrame: 0,
+        runAngle: 0,
+        runTimer: 0,
+        runFrame: 0,
+        wanderTimer: 0,
+        wanderDuration: 3 + Math.random() * 4,
+        wanderAngle: Math.random() < 0.5 ? null : Math.random() * Math.PI * 2,
+        hideTarget: null,
+        homeX: sp.x,
+        homeY: sp.y,
+      });
     }
 
     // --- Runway (6 tiles long) ---
@@ -1398,6 +1544,7 @@ export class GameScene extends Phaser.Scene {
     // --- Update people ---
     this.updatePeople(dt, delta);
     this.updateSoccer(dt, delta);
+    this.updateAnimals(dt);
 
     // --- HUD ---
     const spdDisplay = Math.round(speedKnots);
@@ -1658,6 +1805,9 @@ export class GameScene extends Phaser.Scene {
         }
       }
     }
+
+    // Kill or panic nearby animals
+    this.affectNearbyAnimals(x, y);
 
     // Kill or panic nearby people
     this.affectNearbyPeople(x, y);
@@ -2237,6 +2387,158 @@ export class GameScene extends Phaser.Scene {
             ? `person-wave1-${spec.skinId}`
             : `person-wave2-${spec.skinId}`,
         );
+      }
+    }
+  }
+
+  affectNearbyAnimals(x, y) {
+    const killRadius = 50;
+    const panicRadius = 300;
+
+    for (const a of this.animals) {
+      if (a.state === "dead") continue;
+      const dist = Phaser.Math.Distance.Between(x, y, a.sprite.x, a.sprite.y);
+
+      if (dist < killRadius) {
+        // Explode into meat!
+        a.state = "dead";
+        a.sprite.setVisible(false);
+        const meatCount = Phaser.Math.Between(3, 6);
+        for (let m = 0; m < meatCount; m++) {
+          const meat = this.add.image(a.sprite.x, a.sprite.y, "meat")
+            .setScale(SCALE * 0.7).setDepth(12);
+          this.hudCam.ignore(meat);
+          const angle = Math.random() * Math.PI * 2;
+          const flingDist = 30 + Math.random() * 60;
+          this.tweens.add({
+            targets: meat,
+            x: a.sprite.x + Math.cos(angle) * flingDist,
+            y: a.sprite.y + Math.sin(angle) * flingDist,
+            angle: Phaser.Math.Between(-360, 360),
+            alpha: 0,
+            duration: 800 + Math.random() * 400,
+            delay: Math.random() * 100,
+            ease: "Quad.easeOut",
+            onComplete: () => meat.destroy(),
+          });
+        }
+      } else if (dist < panicRadius && a.state !== "panicking") {
+        a.state = "panicking";
+        const awayAngle = Phaser.Math.Angle.Between(x, y, a.sprite.x, a.sprite.y);
+        a.runAngle = awayAngle + (Math.random() - 0.5) * 1.0;
+        a.panicTimer = 0;
+      }
+    }
+  }
+
+  updateAnimals(dt) {
+    const worldW = WORLD_W * SCALE;
+    const worldH = WORLD_H * SCALE;
+
+    for (const a of this.animals) {
+      if (a.state === "dead") continue;
+
+      // Determine if animal is inside its corral
+      const insideCorral = Math.abs(a.sprite.x - a.corral.x) < a.corral.hw &&
+                           Math.abs(a.sprite.y - a.corral.y) < a.corral.hh;
+
+      if (a.state === "idle") {
+        // Wander
+        a.wanderTimer += dt;
+        if (a.wanderTimer > a.wanderDuration) {
+          a.wanderTimer = 0;
+          a.wanderDuration = 1 + Math.random() * 3;
+          a.moving = Math.random() > 0.3;
+          a.wanderAngle = Math.random() * Math.PI * 2;
+        }
+
+        if (a.moving) {
+          const speed = a.type === "chicken" ? 15 : 10;
+          // Steer around buildings
+          const steered = this.steerAroundBuildings(
+            a.sprite.x, a.sprite.y, a.wanderAngle, dt,
+          );
+          if (steered !== a.wanderAngle) a.wanderAngle = steered;
+
+          const nx = a.sprite.x + Math.cos(a.wanderAngle) * speed * dt;
+          const ny = a.sprite.y + Math.sin(a.wanderAngle) * speed * dt;
+
+          if (insideCorral) {
+            if (Math.abs(nx - a.corral.x) < a.corral.hw - 10 &&
+                Math.abs(ny - a.corral.y) < a.corral.hh - 10) {
+              a.sprite.x = nx;
+              a.sprite.y = ny;
+            } else {
+              a.wanderAngle = Phaser.Math.Angle.Between(
+                a.sprite.x, a.sprite.y, a.corral.x, a.corral.y,
+              ) + (Math.random() - 0.5) * 1.0;
+            }
+          } else {
+            const wanderRadius = 60;
+            if (!a.freeRoamOrigin) {
+              a.freeRoamOrigin = { x: a.sprite.x, y: a.sprite.y };
+            }
+            if (Math.abs(nx - a.freeRoamOrigin.x) < wanderRadius &&
+                Math.abs(ny - a.freeRoamOrigin.y) < wanderRadius &&
+                nx > 10 && nx < worldW - 10 &&
+                ny > 10 && ny < worldH - 10) {
+              a.sprite.x = nx;
+              a.sprite.y = ny;
+            } else {
+              a.wanderAngle = Phaser.Math.Angle.Between(
+                a.sprite.x, a.sprite.y, a.freeRoamOrigin.x, a.freeRoamOrigin.y,
+              ) + (Math.random() - 0.5) * 1.0;
+            }
+          }
+          a.sprite.setFlipX(Math.cos(a.wanderAngle) < 0);
+
+          // Run animation frame cycling
+          a.runTimer += dt;
+          if (a.runTimer > 0.15) {
+            a.runTimer = 0;
+            a.runFrame = 1 - a.runFrame;
+            a.sprite.setTexture(a.runFrame === 0 ? a.type : a.type + '2');
+          }
+        } else {
+          // Standing still: reset to base frame
+          a.sprite.setTexture(a.type);
+          a.runTimer = 0;
+          a.runFrame = 0;
+        }
+      }
+
+      if (a.state === "panicking") {
+        const speed = a.type === "chicken" ? 80 : a.type === "camel" ? 50 : 60;
+        // Steer around buildings
+        a.runAngle = this.steerAroundBuildings(
+          a.sprite.x, a.sprite.y, a.runAngle, dt,
+        );
+        a.sprite.x += Math.cos(a.runAngle) * speed * dt;
+        a.sprite.y += Math.sin(a.runAngle) * speed * dt;
+        a.sprite.setFlipX(Math.cos(a.runAngle) < 0);
+
+        // Run animation frame cycling
+        a.runTimer += dt;
+        if (a.runTimer > 0.15) {
+          a.runTimer = 0;
+          a.runFrame = 1 - a.runFrame;
+          a.sprite.setTexture(a.runFrame === 0 ? a.type : a.type + '2');
+        }
+
+        // Bounce off world edges
+        const margin = 50;
+        if (a.sprite.x < margin) { a.sprite.x = margin; a.runAngle = Math.PI - a.runAngle; }
+        if (a.sprite.x > worldW - margin) { a.sprite.x = worldW - margin; a.runAngle = Math.PI - a.runAngle; }
+        if (a.sprite.y < margin) { a.sprite.y = margin; a.runAngle = -a.runAngle; }
+        if (a.sprite.y > worldH - margin) { a.sprite.y = worldH - margin; a.runAngle = -a.runAngle; }
+
+        // Calm down after a while
+        a.panicTimer += dt;
+        if (a.panicTimer > 8) {
+          a.state = "idle";
+          a.panicTimer = 0;
+          a.freeRoamOrigin = null; // Reset so it picks up current position if outside corral
+        }
       }
     }
   }

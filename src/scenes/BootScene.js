@@ -1168,6 +1168,358 @@ export class BootScene extends Phaser.Scene {
     fhc.fillRect(15, 0, 1, 4);
     fenceHCanvas.refresh();
 
+    // --- Fence vertical (4x16) ---
+    const fenceVCanvas = this.textures.createCanvas('fence-v', 4, 16);
+    const fvc = fenceVCanvas.context;
+    fvc.fillStyle = '#8a6a3a';
+    fvc.fillRect(1, 0, 2, 16);
+    fvc.fillStyle = '#6a4a2a';
+    fvc.fillRect(0, 0, 4, 1);
+    fvc.fillRect(0, 5, 4, 1);
+    fvc.fillRect(0, 10, 4, 1);
+    fvc.fillRect(0, 15, 4, 1);
+    fenceVCanvas.refresh();
+
+    // --- Hay bale (top-down, 8x6) ---
+    const hayCanvas = this.textures.createCanvas('hay', 8, 6);
+    const hyc = hayCanvas.context;
+    hyc.fillStyle = '#ccaa44';
+    hyc.fillRect(1, 0, 6, 6);
+    hyc.fillRect(0, 1, 8, 4);
+    hyc.fillStyle = '#ddbb55';
+    hyc.fillRect(2, 1, 4, 4);
+    hyc.fillStyle = '#bbaa33';
+    hyc.fillRect(3, 0, 2, 1);
+    hyc.fillRect(3, 5, 2, 1);
+    // Straw lines
+    hyc.fillStyle = '#aa8822';
+    hyc.fillRect(1, 2, 6, 1);
+    hyc.fillRect(1, 4, 6, 1);
+    hayCanvas.refresh();
+
+    // --- Small hut (top-down, 12x12) ---
+    const hutCanvas = this.textures.createCanvas('hut', 12, 12);
+    const htc = hutCanvas.context;
+    // Mud walls
+    htc.fillStyle = '#aa8855';
+    htc.fillRect(1, 1, 10, 10);
+    // Roof (thatch)
+    htc.fillStyle = '#ccaa44';
+    htc.fillRect(0, 0, 12, 12);
+    htc.fillStyle = '#bbaa33';
+    htc.fillRect(2, 2, 8, 8);
+    // Roof peak
+    htc.fillStyle = '#ddbb55';
+    htc.fillRect(4, 4, 4, 4);
+    // Door
+    htc.fillStyle = '#5a3a1a';
+    htc.fillRect(5, 9, 2, 3);
+    // Edge
+    htc.fillStyle = '#998844';
+    htc.fillRect(0, 0, 12, 1);
+    htc.fillRect(0, 11, 12, 1);
+    htc.fillRect(0, 0, 1, 12);
+    htc.fillRect(11, 0, 1, 12);
+    hutCanvas.refresh();
+
+    // --- Corral (top-down fence rectangle, 32x24) ---
+    const corralCanvas = this.textures.createCanvas('corral', 32, 24);
+    const crlc = corralCanvas.context;
+    // Dirt floor
+    crlc.fillStyle = '#9a7a50';
+    crlc.fillRect(2, 2, 28, 20);
+    // Fence posts and rails
+    crlc.fillStyle = '#8a6a3a';
+    crlc.fillRect(0, 0, 32, 2);
+    crlc.fillRect(0, 22, 32, 2);
+    crlc.fillRect(0, 0, 2, 24);
+    crlc.fillRect(30, 0, 2, 10);
+    crlc.fillRect(30, 18, 2, 6);
+    // Posts
+    crlc.fillStyle = '#6a4a2a';
+    crlc.fillRect(0, 0, 2, 2);
+    crlc.fillRect(10, 0, 2, 2);
+    crlc.fillRect(20, 0, 2, 2);
+    crlc.fillRect(30, 0, 2, 2);
+    crlc.fillRect(0, 22, 2, 2);
+    crlc.fillRect(10, 22, 2, 2);
+    crlc.fillRect(20, 22, 2, 2);
+    crlc.fillRect(30, 22, 2, 2);
+    crlc.fillRect(0, 11, 2, 2);
+    crlc.fillRect(30, 8, 2, 2);
+    crlc.fillRect(30, 18, 2, 2);
+    corralCanvas.refresh();
+
+    // =============================================
+    // ANIMAL TEXTURES
+    // =============================================
+
+    // --- Pig (side view, 12x10) ---
+    const pigCanvas = this.textures.createCanvas('pig', 12, 10);
+    const pic = pigCanvas.context;
+    // Body (round, fat)
+    pic.fillStyle = '#ffaaaa';
+    pic.fillRect(3, 3, 6, 4);
+    pic.fillRect(2, 4, 8, 2);
+    // Belly highlight
+    pic.fillStyle = '#ffcccc';
+    pic.fillRect(4, 5, 4, 1);
+    // Head
+    pic.fillStyle = '#ffbbbb';
+    pic.fillRect(9, 2, 3, 4);
+    pic.fillRect(10, 1, 2, 5);
+    // Snout
+    pic.fillStyle = '#ff8888';
+    pic.fillRect(11, 3, 1, 2);
+    // Nostril
+    pic.fillStyle = '#dd6666';
+    pic.fillRect(11, 3, 1, 1);
+    // Eye
+    pic.fillStyle = '#222';
+    pic.fillRect(10, 2, 1, 1);
+    // Ear
+    pic.fillStyle = '#ff9999';
+    pic.fillRect(9, 1, 2, 1);
+    // Legs (short, stubby)
+    pic.fillStyle = '#dd8888';
+    pic.fillRect(3, 7, 2, 3);
+    pic.fillRect(7, 7, 2, 3);
+    // Hooves
+    pic.fillStyle = '#aa6666';
+    pic.fillRect(3, 9, 2, 1);
+    pic.fillRect(7, 9, 2, 1);
+    // Curly tail
+    pic.fillStyle = '#ff9999';
+    pic.fillRect(1, 3, 1, 1);
+    pic.fillRect(0, 2, 1, 1);
+    pic.fillRect(1, 1, 1, 1);
+    pigCanvas.refresh();
+
+    // --- Pig frame 2 (alternate leg positions) ---
+    const pig2Canvas = this.textures.createCanvas('pig2', 12, 10);
+    const pic2 = pig2Canvas.context;
+    pic2.drawImage(pigCanvas.canvas, 0, 0);
+    // Erase original legs and hooves
+    pic2.clearRect(3, 7, 2, 3);
+    pic2.clearRect(7, 7, 2, 3);
+    // Draw legs in alternate positions (shifted)
+    pic2.fillStyle = '#dd8888';
+    pic2.fillRect(4, 7, 2, 3);
+    pic2.fillRect(6, 7, 2, 3);
+    // Hooves
+    pic2.fillStyle = '#aa6666';
+    pic2.fillRect(4, 9, 2, 1);
+    pic2.fillRect(6, 9, 2, 1);
+    pig2Canvas.refresh();
+
+    // --- Camel (side view, 16x14) ---
+    const camelCanvas = this.textures.createCanvas('camel', 16, 14);
+    const cmc = camelCanvas.context;
+    // Body
+    cmc.fillStyle = '#c49a6c';
+    cmc.fillRect(4, 4, 8, 5);
+    cmc.fillRect(3, 5, 10, 3);
+    // Hump
+    cmc.fillStyle = '#b88a5c';
+    cmc.fillRect(6, 2, 4, 3);
+    cmc.fillRect(7, 1, 2, 2);
+    // Neck (long, angled)
+    cmc.fillStyle = '#d4aa7c';
+    cmc.fillRect(12, 2, 2, 6);
+    cmc.fillRect(13, 1, 2, 3);
+    // Head
+    cmc.fillStyle = '#d4aa7c';
+    cmc.fillRect(13, 0, 3, 3);
+    cmc.fillRect(14, 0, 2, 2);
+    // Mouth
+    cmc.fillStyle = '#c49a6c';
+    cmc.fillRect(15, 2, 1, 1);
+    // Eye
+    cmc.fillStyle = '#222';
+    cmc.fillRect(14, 0, 1, 1);
+    // Ear
+    cmc.fillStyle = '#b88a5c';
+    cmc.fillRect(13, 0, 1, 1);
+    // Legs (long, thin)
+    cmc.fillStyle = '#aa7a4c';
+    cmc.fillRect(4, 9, 2, 5);
+    cmc.fillRect(10, 9, 2, 5);
+    // Knees
+    cmc.fillStyle = '#997a4c';
+    cmc.fillRect(4, 11, 2, 1);
+    cmc.fillRect(10, 11, 2, 1);
+    // Hooves
+    cmc.fillStyle = '#665533';
+    cmc.fillRect(4, 13, 2, 1);
+    cmc.fillRect(10, 13, 2, 1);
+    // Tail
+    cmc.fillStyle = '#aa7a4c';
+    cmc.fillRect(3, 5, 1, 3);
+    cmc.fillRect(2, 4, 1, 2);
+    camelCanvas.refresh();
+
+    // --- Camel frame 2 (alternate leg positions) ---
+    const camel2Canvas = this.textures.createCanvas('camel2', 16, 14);
+    const cmc2 = camel2Canvas.context;
+    cmc2.drawImage(camelCanvas.canvas, 0, 0);
+    // Erase original legs, knees, hooves
+    cmc2.clearRect(4, 9, 2, 5);
+    cmc2.clearRect(10, 9, 2, 5);
+    // Draw legs in alternate positions (shifted inward)
+    cmc2.fillStyle = '#aa7a4c';
+    cmc2.fillRect(5, 9, 2, 5);
+    cmc2.fillRect(9, 9, 2, 5);
+    // Knees
+    cmc2.fillStyle = '#997a4c';
+    cmc2.fillRect(5, 11, 2, 1);
+    cmc2.fillRect(9, 11, 2, 1);
+    // Hooves
+    cmc2.fillStyle = '#665533';
+    cmc2.fillRect(5, 13, 2, 1);
+    cmc2.fillRect(9, 13, 2, 1);
+    camel2Canvas.refresh();
+
+    // --- Chicken (side view, 8x8) ---
+    const chickenCanvas = this.textures.createCanvas('chicken', 8, 8);
+    const chkc = chickenCanvas.context;
+    // Body
+    chkc.fillStyle = '#fff';
+    chkc.fillRect(2, 3, 4, 3);
+    chkc.fillRect(1, 4, 5, 2);
+    // Wing
+    chkc.fillStyle = '#eee';
+    chkc.fillRect(2, 3, 3, 2);
+    // Head
+    chkc.fillStyle = '#fff';
+    chkc.fillRect(5, 1, 2, 3);
+    // Comb
+    chkc.fillStyle = '#ff3333';
+    chkc.fillRect(5, 0, 2, 1);
+    chkc.fillRect(6, 0, 1, 2);
+    // Wattle
+    chkc.fillStyle = '#ff4444';
+    chkc.fillRect(6, 3, 1, 1);
+    // Beak
+    chkc.fillStyle = '#ffaa00';
+    chkc.fillRect(7, 2, 1, 1);
+    // Eye
+    chkc.fillStyle = '#222';
+    chkc.fillRect(6, 1, 1, 1);
+    // Legs (thin)
+    chkc.fillStyle = '#dd8800';
+    chkc.fillRect(2, 6, 1, 2);
+    chkc.fillRect(4, 6, 1, 2);
+    // Feet
+    chkc.fillRect(1, 7, 2, 1);
+    chkc.fillRect(4, 7, 2, 1);
+    // Tail feathers
+    chkc.fillStyle = '#ddd';
+    chkc.fillRect(0, 2, 2, 2);
+    chkc.fillRect(0, 1, 1, 2);
+    chickenCanvas.refresh();
+
+    // --- Chicken frame 2 (alternate leg positions) ---
+    const chk2Canvas = this.textures.createCanvas('chicken2', 8, 8);
+    const chkc2 = chk2Canvas.context;
+    chkc2.drawImage(chickenCanvas.canvas, 0, 0);
+    // Erase original legs and feet
+    chkc2.clearRect(1, 6, 2, 2);
+    chkc2.clearRect(4, 6, 2, 2);
+    // Draw legs in alternate positions (shifted)
+    chkc2.fillStyle = '#dd8800';
+    chkc2.fillRect(3, 6, 1, 2);
+    chkc2.fillRect(5, 6, 1, 2);
+    // Feet
+    chkc2.fillRect(2, 7, 2, 1);
+    chkc2.fillRect(5, 7, 2, 1);
+    chk2Canvas.refresh();
+
+    // --- Goat (side view, 12x10) ---
+    const goatCanvas = this.textures.createCanvas('goat', 12, 10);
+    const gtc = goatCanvas.context;
+    // Body
+    gtc.fillStyle = '#ddd';
+    gtc.fillRect(3, 3, 6, 4);
+    gtc.fillRect(2, 4, 8, 2);
+    // Fur detail
+    gtc.fillStyle = '#ccc';
+    gtc.fillRect(4, 3, 3, 1);
+    // Head
+    gtc.fillStyle = '#ddd';
+    gtc.fillRect(9, 1, 3, 4);
+    gtc.fillRect(10, 0, 2, 5);
+    // Horns
+    gtc.fillStyle = '#aa8855';
+    gtc.fillRect(10, 0, 1, 1);
+    gtc.fillRect(9, 0, 1, 1);
+    gtc.fillRect(9, -1, 1, 1);
+    // Ear
+    gtc.fillStyle = '#ccc';
+    gtc.fillRect(9, 1, 1, 1);
+    // Eye
+    gtc.fillStyle = '#222';
+    gtc.fillRect(10, 2, 1, 1);
+    // Mouth
+    gtc.fillStyle = '#bbb';
+    gtc.fillRect(11, 4, 1, 1);
+    // Beard
+    gtc.fillStyle = '#aaa';
+    gtc.fillRect(10, 5, 1, 1);
+    gtc.fillRect(11, 5, 1, 1);
+    // Legs
+    gtc.fillStyle = '#999';
+    gtc.fillRect(3, 7, 1, 3);
+    gtc.fillRect(5, 7, 1, 3);
+    gtc.fillRect(7, 7, 1, 3);
+    gtc.fillRect(8, 7, 1, 3);
+    // Hooves
+    gtc.fillStyle = '#666';
+    gtc.fillRect(3, 9, 1, 1);
+    gtc.fillRect(5, 9, 1, 1);
+    gtc.fillRect(7, 9, 1, 1);
+    gtc.fillRect(8, 9, 1, 1);
+    // Tail
+    gtc.fillStyle = '#ccc';
+    gtc.fillRect(2, 3, 1, 2);
+    gtc.fillRect(1, 2, 1, 2);
+    goatCanvas.refresh();
+
+    // --- Goat frame 2 (alternate leg positions) ---
+    const goat2Canvas = this.textures.createCanvas('goat2', 12, 10);
+    const gtc2 = goat2Canvas.context;
+    gtc2.drawImage(goatCanvas.canvas, 0, 0);
+    // Erase original legs and hooves
+    gtc2.clearRect(3, 7, 1, 3);
+    gtc2.clearRect(5, 7, 1, 3);
+    gtc2.clearRect(7, 7, 1, 3);
+    gtc2.clearRect(8, 7, 1, 3);
+    // Draw legs in alternate positions (shifted)
+    gtc2.fillStyle = '#999';
+    gtc2.fillRect(4, 7, 1, 3);
+    gtc2.fillRect(5, 7, 1, 3);
+    gtc2.fillRect(7, 7, 1, 3);
+    gtc2.fillRect(9, 7, 1, 3);
+    // Hooves
+    gtc2.fillStyle = '#666';
+    gtc2.fillRect(4, 9, 1, 1);
+    gtc2.fillRect(5, 9, 1, 1);
+    gtc2.fillRect(7, 9, 1, 1);
+    gtc2.fillRect(9, 9, 1, 1);
+    goat2Canvas.refresh();
+
+    // --- Meat chunk (6x5) ---
+    const meatCanvas = this.textures.createCanvas('meat', 6, 5);
+    const mtc = meatCanvas.context;
+    mtc.fillStyle = '#cc3333';
+    mtc.fillRect(1, 0, 4, 4);
+    mtc.fillRect(0, 1, 6, 3);
+    mtc.fillStyle = '#ff6666';
+    mtc.fillRect(2, 1, 2, 2);
+    mtc.fillStyle = '#eee';
+    mtc.fillRect(1, 3, 1, 2);
+    mtc.fillRect(4, 3, 1, 2);
+    meatCanvas.refresh();
+
     // =============================================
     // TOWN BIOME TEXTURES
     // =============================================
