@@ -536,6 +536,9 @@ export class GameScene extends Phaser.Scene {
     ];
     const houseTints = [0xddccbb, 0xccbbaa, 0xbbccdd, 0xddddcc, 0xeeddcc];
 
+    // Bazaar block coords (skip these during normal building generation)
+    const bazaarSet = new Set(["3,3", "4,3", "5,3", "3,4", "4,4"]);
+
     for (let by = 0; by < gridRows; by++) {
       for (let bx = 0; bx < gridCols; bx++) {
         const blkX = townStartX + (bx * roadSpacing + 1) * roadTile;
@@ -544,6 +547,9 @@ export class GameScene extends Phaser.Scene {
         const blkH = blockSize * roadTile;
         const cx = blkX + blkW / 2;
         const cy = blkY + blkH / 2;
+
+        // Skip bazaar blocks — filled separately
+        if (bazaarSet.has(`${bx},${by}`)) continue;
 
         if (bx === 3 && by === 2) {
           addBuilding(cx, cy, "hospital", "large");
@@ -633,6 +639,85 @@ export class GameScene extends Phaser.Scene {
             }
           }
         }
+      }
+    }
+
+    // ==========================================
+    // BAZAAR (5 blocks in center of town)
+    // ==========================================
+    const bazaarBlocks = [
+      { bx: 3, by: 3 }, { bx: 4, by: 3 }, { bx: 5, by: 3 },
+      { bx: 3, by: 4 }, { bx: 4, by: 4 },
+    ];
+    const goodsTextures = ["goods-basket", "goods-jug", "goods-cloth", "goods-fruit", "goods-bread"];
+    const stallTextures = ["stall", "stall2", "stall3"];
+
+    for (const bb of bazaarBlocks) {
+      const blkX = townStartX + (bb.bx * roadSpacing + 1) * roadTile;
+      const blkY = townStartY + (bb.by * roadSpacing + 1) * roadTile;
+      const blkW = blockSize * roadTile;
+      const blkH = blockSize * roadTile;
+
+      // Place stalls in rows
+      for (let row = 0; row < 3; row++) {
+        for (let col = 0; col < 2; col++) {
+          const sx = blkX + (col * 3 + 1) * roadTile;
+          const sy = blkY + (row * 2 + 0.5) * roadTile;
+          const tex = rng.pick(stallTextures);
+          this.add.image(sx, sy, tex).setScale(SCALE).setDepth(2);
+        }
+      }
+
+      // Place 1-2 tents per block
+      const tentX = blkX + blkW * 0.5;
+      const tentY = blkY + blkH - roadTile;
+      this.add.image(tentX, tentY, "tent").setScale(SCALE).setDepth(2);
+
+      // Merchants (standing behind stalls, don't wander)
+      for (let m = 0; m < 3; m++) {
+        const mx = blkX + (m * 2 + 1) * roadTile;
+        const my = blkY + roadTile * 0.5;
+        const skinId = rng.between(0, 9);
+        const sprite = this.add.image(mx, my, `person-stand-${skinId}`)
+          .setScale(SCALE).setDepth(3);
+        this.people.push({
+          sprite, skinId, state: "idle",
+          greeting: rng.pick(["Welcome!", "Best prices!", "Fresh today!",
+            "Come see!", "Special deal!", "For you,\ndiscount!",
+            "Finest quality!", "Look! Look!"]),
+          bubble: null, waveTimer: 0, waveFrame: 0,
+          runAngle: 0, runTimer: 0, runFrame: 0,
+          wanderTimer: 0, wanderDuration: 999, wanderAngle: null,
+          hideTarget: null, homeX: mx, homeY: my,
+        });
+      }
+
+      // Shoppers wandering the block (carrying goods)
+      for (let s = 0; s < 6; s++) {
+        const sx = blkX + Math.random() * blkW;
+        const sy = blkY + Math.random() * blkH;
+        const skinId = rng.between(0, 9);
+        const sprite = this.add.image(sx, sy, `person-stand-${skinId}`)
+          .setScale(SCALE).setDepth(2);
+
+        // Carried item follows the person
+        const goodsTex = rng.pick(goodsTextures);
+        const goodsSprite = this.add.image(sx + 8, sy - 5, goodsTex)
+          .setScale(SCALE * 0.8).setDepth(3);
+
+        this.people.push({
+          sprite, skinId, state: "idle",
+          greeting: rng.pick(["Great finds!", "So crowded!", "Love this\nmarket!",
+            "Need more\nbags!", "What a deal!", "Smells amazing!",
+            "My favorite\nstall!", "Haggling is\nan art!"]),
+          bubble: null, waveTimer: 0, waveFrame: 0,
+          runAngle: 0, runTimer: 0, runFrame: 0,
+          wanderTimer: 0,
+          wanderDuration: 2 + Math.random() * 3,
+          wanderAngle: Math.random() * Math.PI * 2,
+          hideTarget: null, homeX: sx, homeY: sy,
+          carriedGoods: goodsSprite,
+        });
       }
     }
 
@@ -866,6 +951,37 @@ export class GameScene extends Phaser.Scene {
       } while (
         Phaser.Math.Distance.Between(px, py, droneStartX, droneStartY) < 2000
       );
+      const skinId = rng.between(0, 9);
+      const sprite = this.add
+        .image(px, py, `person-stand-${skinId}`)
+        .setScale(SCALE)
+        .setDepth(2);
+      this.people.push({
+        sprite,
+        skinId,
+        state: "idle",
+        greeting: rng.pick(greetings),
+        bubble: null,
+        waveTimer: 0,
+        waveFrame: 0,
+        runAngle: 0,
+        runTimer: 0,
+        runFrame: 0,
+        wanderTimer: 0,
+        wanderDuration: 2 + Math.random() * 4,
+        wanderAngle: Math.random() < 0.5 ? null : Math.random() * Math.PI * 2,
+        hideTarget: null,
+        homeX: px,
+        homeY: py,
+      });
+    }
+
+    // --- Town people (extra population in the NW town area) ---
+    const townEndX = townStartX + townW * roadTile;
+    const townEndY = townStartY + townH * roadTile;
+    for (let i = 0; i < 80; i++) {
+      const px = townStartX + 50 + Math.random() * (townEndX - townStartX - 100);
+      const py = townStartY + 50 + Math.random() * (townEndY - townStartY - 100);
       const skinId = rng.between(0, 9);
       const sprite = this.add
         .image(px, py, `person-stand-${skinId}`)
@@ -2185,7 +2301,23 @@ export class GameScene extends Phaser.Scene {
             p.bubble.destroy();
             p.bubble = null;
           }
+          if (p.carriedGoods) {
+            p.carriedGoods.destroy();
+            p.carriedGoods = null;
+          }
           p.state = "gone";
+        }
+      }
+
+      // --- Update carried goods position ---
+      if (p.carriedGoods && p.carriedGoods.active) {
+        if (p.state === "gone" || p.state === "hiding") {
+          p.carriedGoods.setVisible(false);
+        } else if (p.state === "ghost") {
+          p.carriedGoods.setVisible(false);
+        } else {
+          p.carriedGoods.setVisible(true);
+          p.carriedGoods.setPosition(p.sprite.x + 8, p.sprite.y - 5);
         }
       }
     }
