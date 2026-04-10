@@ -701,7 +701,6 @@ export class GameScene extends Phaser.Scene {
         .setDepth(1.5);
     }
 
-
     // --- People (random wanderers) ---
     // greetings imported from dialog.js
     const droneStartX = rwX;
@@ -869,6 +868,7 @@ export class GameScene extends Phaser.Scene {
 
     // --- Music ---
     this.initMusic();
+    this.initSfx();
 
     // --- Intro cutscene ---
     this.introPlaying = true;
@@ -938,6 +938,39 @@ export class GameScene extends Phaser.Scene {
     this.currentTrack.once("complete", () => {
       this.playRandomTrack();
     });
+  }
+
+  initSfx() {
+    this.sfx = { missileLaunch: [], explosion: [] };
+
+    const loadCategory = (category, path) => {
+      fetch(`${path}/sounds.json`)
+        .then((res) => res.json())
+        .then((files) => {
+          if (!files || files.length === 0) return;
+          for (const filename of files) {
+            const key = `sfx-${category}-${filename}`;
+            this.load.audio(key, `${path}/${filename}`);
+          }
+          this.load.once("complete", () => {
+            for (const filename of files) {
+              this.sfx[category].push(`sfx-${category}-${filename}`);
+            }
+          });
+          this.load.start();
+        })
+        .catch(() => {});
+    };
+
+    loadCategory("missileLaunch", "/sfx/missileLaunch");
+    loadCategory("explosion", "/sfx/explosion");
+  }
+
+  playSfx(category, volume = 0.5) {
+    const keys = this.sfx[category];
+    if (!keys || keys.length === 0) return;
+    const key = Phaser.Utils.Array.GetRandom(keys);
+    this.sound.play(key, { volume });
   }
 
   playIntroCutscene() {
@@ -1267,6 +1300,7 @@ export class GameScene extends Phaser.Scene {
     // Missile starts heading in the drone's direction
     const heading = launchRad;
     missile.setRotation(heading + Math.PI / 2);
+    this.playSfx("missileLaunch", 0.25);
 
     this.missiles.push({
       sprite: missile,
@@ -1398,6 +1432,9 @@ export class GameScene extends Phaser.Scene {
         onComplete: () => sym.destroy(),
       });
     }
+
+    // Explosion SFX
+    this.playSfx("explosion", 0.3);
 
     // Screen shake
     this.cameras.main.shake(200, 0.005);
