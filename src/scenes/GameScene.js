@@ -143,7 +143,11 @@ export class GameScene extends Phaser.Scene {
       loop: true,
       callback: () => {
         if (!brideSprite.active || !groomSprite.active) return;
-        if (this.brideEntry.state !== "idle" || this.groomEntry.state !== "idle") return;
+        if (
+          this.brideEntry.state !== "idle" ||
+          this.groomEntry.state !== "idle"
+        )
+          return;
         const hx = (brideSprite.x + groomSprite.x) / 2;
         const hy = brideSprite.y - 10;
         const heart = this.add
@@ -650,10 +654,19 @@ export class GameScene extends Phaser.Scene {
     // BAZAAR (5 blocks in center of town)
     // ==========================================
     const bazaarBlocks = [
-      { bx: 3, by: 3 }, { bx: 4, by: 3 }, { bx: 5, by: 3 },
-      { bx: 3, by: 4 }, { bx: 4, by: 4 },
+      { bx: 3, by: 3 },
+      { bx: 4, by: 3 },
+      { bx: 5, by: 3 },
+      { bx: 3, by: 4 },
+      { bx: 4, by: 4 },
     ];
-    const goodsTextures = ["goods-basket", "goods-jug", "goods-cloth", "goods-fruit", "goods-bread"];
+    const goodsTextures = [
+      "goods-basket",
+      "goods-jug",
+      "goods-cloth",
+      "goods-fruit",
+      "goods-bread",
+    ];
     const stallTextures = ["stall", "stall2", "stall3"];
 
     for (const bb of bazaarBlocks) {
@@ -682,15 +695,27 @@ export class GameScene extends Phaser.Scene {
         const mx = blkX + (m * 2 + 1) * roadTile;
         const my = blkY + roadTile * 0.5;
         const skinId = rng.between(0, 9);
-        const sprite = this.add.image(mx, my, `person-stand-${skinId}`)
-          .setScale(SCALE).setDepth(3);
+        const sprite = this.add
+          .image(mx, my, `person-stand-${skinId}`)
+          .setScale(SCALE)
+          .setDepth(3);
         this.people.push({
-          sprite, skinId, state: "idle",
+          sprite,
+          skinId,
+          state: "idle",
           greeting: rng.pick(merchantGreetings),
-          bubble: null, waveTimer: 0, waveFrame: 0,
-          runAngle: 0, runTimer: 0, runFrame: 0,
-          wanderTimer: 0, wanderDuration: 999, wanderAngle: null,
-          hideTarget: null, homeX: mx, homeY: my,
+          bubble: null,
+          waveTimer: 0,
+          waveFrame: 0,
+          runAngle: 0,
+          runTimer: 0,
+          runFrame: 0,
+          wanderTimer: 0,
+          wanderDuration: 999,
+          wanderAngle: null,
+          hideTarget: null,
+          homeX: mx,
+          homeY: my,
         });
       }
 
@@ -699,23 +724,35 @@ export class GameScene extends Phaser.Scene {
         const sx = blkX + Math.random() * blkW;
         const sy = blkY + Math.random() * blkH;
         const skinId = rng.between(0, 9);
-        const sprite = this.add.image(sx, sy, `person-stand-${skinId}`)
-          .setScale(SCALE).setDepth(2);
+        const sprite = this.add
+          .image(sx, sy, `person-stand-${skinId}`)
+          .setScale(SCALE)
+          .setDepth(2);
 
         // Carried item follows the person
         const goodsTex = rng.pick(goodsTextures);
-        const goodsSprite = this.add.image(sx + 8, sy - 5, goodsTex)
-          .setScale(SCALE * 0.8).setDepth(3);
+        const goodsSprite = this.add
+          .image(sx + 8, sy - 5, goodsTex)
+          .setScale(SCALE * 0.8)
+          .setDepth(3);
 
         this.people.push({
-          sprite, skinId, state: "idle",
+          sprite,
+          skinId,
+          state: "idle",
           greeting: rng.pick(shopperGreetings),
-          bubble: null, waveTimer: 0, waveFrame: 0,
-          runAngle: 0, runTimer: 0, runFrame: 0,
+          bubble: null,
+          waveTimer: 0,
+          waveFrame: 0,
+          runAngle: 0,
+          runTimer: 0,
+          runFrame: 0,
           wanderTimer: 0,
           wanderDuration: 2 + Math.random() * 3,
           wanderAngle: Math.random() * Math.PI * 2,
-          hideTarget: null, homeX: sx, homeY: sy,
+          hideTarget: null,
+          homeX: sx,
+          homeY: sy,
           carriedGoods: goodsSprite,
         });
       }
@@ -744,8 +781,10 @@ export class GameScene extends Phaser.Scene {
     addBuilding(farmX - 80, farmY - 120, "hut", "small");
 
     // Corral (livestock pen)
-    this.add.image(farmX + 150, farmY + 150, "corral")
-      .setScale(SCALE).setDepth(1.5);
+    this.add
+      .image(farmX + 150, farmY + 150, "corral")
+      .setScale(SCALE)
+      .setDepth(1.5);
 
     // Hay bale piles
     const hayPositions = [
@@ -767,26 +806,34 @@ export class GameScene extends Phaser.Scene {
     // Top fence (gap at f=1 for gate)
     for (let f = -6; f <= 8; f++) {
       if (f === 1) continue;
-      this.add.image(farmX + f * fenceLen, farmY - 180, "fence-h")
-        .setScale(SCALE).setDepth(1.5);
+      this.add
+        .image(farmX + f * fenceLen, farmY - 180, "fence-h")
+        .setScale(SCALE)
+        .setDepth(1.5);
     }
     // Bottom fence (gap at f=2 for gate)
     for (let f = -6; f <= 8; f++) {
       if (f === 2) continue;
-      this.add.image(farmX + f * fenceLen, farmY + 200, "fence-h")
-        .setScale(SCALE).setDepth(1.5);
+      this.add
+        .image(farmX + f * fenceLen, farmY + 200, "fence-h")
+        .setScale(SCALE)
+        .setDepth(1.5);
     }
     // Left fence (gap at f=0 for gate)
     for (let f = -4; f <= 4; f++) {
       if (f === 0) continue;
-      this.add.image(farmX - 6 * fenceLen, farmY + f * fenceLen, "fence-v")
-        .setScale(SCALE).setDepth(1.5);
+      this.add
+        .image(farmX - 6 * fenceLen, farmY + f * fenceLen, "fence-v")
+        .setScale(SCALE)
+        .setDepth(1.5);
     }
     // Right fence (gap at f=1 for gate)
     for (let f = -4; f <= 4; f++) {
       if (f === 1) continue;
-      this.add.image(farmX + 8 * fenceLen + 10, farmY + f * fenceLen, "fence-v")
-        .setScale(SCALE).setDepth(1.5);
+      this.add
+        .image(farmX + 8 * fenceLen + 10, farmY + f * fenceLen, "fence-v")
+        .setScale(SCALE)
+        .setDepth(1.5);
     }
 
     // ==========================================
@@ -810,10 +857,14 @@ export class GameScene extends Phaser.Scene {
 
       // Spawn animals inside
       for (let a = 0; a < cd.count; a++) {
-        const ax = cd.cx + Phaser.Math.Between(-corralW / 2 + 15, corralW / 2 - 15);
-        const ay = cd.cy + Phaser.Math.Between(-corralH / 2 + 10, corralH / 2 - 10);
-        const sprite = this.add.image(ax, ay, cd.animal)
-          .setScale(SCALE).setDepth(2);
+        const ax =
+          cd.cx + Phaser.Math.Between(-corralW / 2 + 15, corralW / 2 - 15);
+        const ay =
+          cd.cy + Phaser.Math.Between(-corralH / 2 + 10, corralH / 2 - 10);
+        const sprite = this.add
+          .image(ax, ay, cd.animal)
+          .setScale(SCALE)
+          .setDepth(2);
         this.animals.push({
           sprite,
           type: cd.animal,
@@ -868,8 +919,10 @@ export class GameScene extends Phaser.Scene {
     ];
     for (const sp of shepherdPositions) {
       const skinId = rng.pick([4, 5, 7, 9]); // earthy/pastoral skin variants
-      const sprite = this.add.image(sp.x, sp.y, `person-stand-${skinId}`)
-        .setScale(SCALE).setDepth(2);
+      const sprite = this.add
+        .image(sp.x, sp.y, `person-stand-${skinId}`)
+        .setScale(SCALE)
+        .setDepth(2);
       this.people.push({
         sprite,
         skinId,
@@ -933,11 +986,14 @@ export class GameScene extends Phaser.Scene {
       }
     }
     for (const wp of wellPositions) {
-      const sprite = this.add.image(wp.x, wp.y, "oil-well1")
-        .setScale(SCALE).setDepth(2);
+      const sprite = this.add
+        .image(wp.x, wp.y, "oil-well1")
+        .setScale(SCALE)
+        .setDepth(2);
       const well = {
         sprite,
-        x: wp.x, y: wp.y,
+        x: wp.x,
+        y: wp.y,
         alive: true,
         pumpFrame: 0,
         pumpTimer: 0,
@@ -945,11 +1001,20 @@ export class GameScene extends Phaser.Scene {
       };
       this.oilWells.push(well);
       this.buildings.push({
-        sprite, tex: "oil-well1", size: "small",
-        hp: 1, maxHp: 1, radius: 30,
-        x: wp.x, y: wp.y, destroyed: false,
-        cracksSprite: null, fireSprites: [],
-        isOilWell: true, wellRef: well, isOilInfra: true,
+        sprite,
+        tex: "oil-well1",
+        size: "small",
+        hp: 1,
+        maxHp: 1,
+        radius: 30,
+        x: wp.x,
+        y: wp.y,
+        destroyed: false,
+        cracksSprite: null,
+        fireSprites: [],
+        isOilWell: true,
+        wellRef: well,
+        isOilInfra: true,
       });
     }
 
@@ -958,15 +1023,19 @@ export class GameScene extends Phaser.Scene {
     // Horizontal pipe runs at multiple Y levels
     for (const pipeY of [-200, -30, 120, 280, 440]) {
       for (let px = -16; px <= 16; px++) {
-        this.add.image(oilX + px * pipeFn, oilY + pipeY, "pipe-h")
-          .setScale(SCALE).setDepth(1.5);
+        this.add
+          .image(oilX + px * pipeFn, oilY + pipeY, "pipe-h")
+          .setScale(SCALE)
+          .setDepth(1.5);
       }
     }
     // Vertical pipe runs
     for (const vx of [-500, -300, -100, 100, 300, 500]) {
       for (let py = -5; py <= 10; py++) {
-        this.add.image(oilX + vx, oilY - 200 + py * pipeFn, "pipe-v")
-          .setScale(SCALE).setDepth(1.5);
+        this.add
+          .image(oilX + vx, oilY - 200 + py * pipeFn, "pipe-v")
+          .setScale(SCALE)
+          .setDepth(1.5);
       }
     }
 
@@ -976,17 +1045,27 @@ export class GameScene extends Phaser.Scene {
       const wx = oilX + Phaser.Math.Between(-600, 600);
       const wy = oilY + Phaser.Math.Between(-250, 500);
       const skinId = 10 + (w % 2);
-      const sprite = this.add.image(wx, wy, `person-stand-${skinId}`)
-        .setScale(SCALE).setDepth(2);
+      const sprite = this.add
+        .image(wx, wy, `person-stand-${skinId}`)
+        .setScale(SCALE)
+        .setDepth(2);
       this.people.push({
-        sprite, skinId, state: "idle",
+        sprite,
+        skinId,
+        state: "idle",
         greeting: rng.pick(workerGreetings),
-        bubble: null, waveTimer: 0, waveFrame: 0,
-        runAngle: 0, runTimer: 0, runFrame: 0,
+        bubble: null,
+        waveTimer: 0,
+        waveFrame: 0,
+        runAngle: 0,
+        runTimer: 0,
+        runFrame: 0,
         wanderTimer: 0,
         wanderDuration: 2 + Math.random() * 4,
         wanderAngle: Math.random() < 0.5 ? null : Math.random() * Math.PI * 2,
-        hideTarget: null, homeX: wx, homeY: wy,
+        hideTarget: null,
+        homeX: wx,
+        homeY: wy,
         scatterPanic: true,
       });
     }
@@ -1076,8 +1155,10 @@ export class GameScene extends Phaser.Scene {
     const townEndX = townStartX + townW * roadTile;
     const townEndY = townStartY + townH * roadTile;
     for (let i = 0; i < 80; i++) {
-      const px = townStartX + 50 + Math.random() * (townEndX - townStartX - 100);
-      const py = townStartY + 50 + Math.random() * (townEndY - townStartY - 100);
+      const px =
+        townStartX + 50 + Math.random() * (townEndX - townStartX - 100);
+      const py =
+        townStartY + 50 + Math.random() * (townEndY - townStartY - 100);
       const skinId = rng.between(0, 9);
       const sprite = this.add
         .image(px, py, `person-stand-${skinId}`)
@@ -1105,7 +1186,15 @@ export class GameScene extends Phaser.Scene {
 
     // --- Town cars ---
     this.townCars = [];
-    const carNames = ["car-white", "car-black", "car-grey", "car-red", "car-blue", "car-green", "car-tan"];
+    const carNames = [
+      "car-white",
+      "car-black",
+      "car-grey",
+      "car-red",
+      "car-blue",
+      "car-green",
+      "car-tan",
+    ];
 
     // Build road waypoint grid (intersections)
     this.townRoadNodes = [];
@@ -1130,8 +1219,10 @@ export class GameScene extends Phaser.Scene {
       const startNode = Phaser.Utils.Array.GetRandom(townRoadNodes);
       const carTex = Phaser.Utils.Array.GetRandom(carNames);
       const passengers = Phaser.Math.Between(1, 4);
-      const sprite = this.add.image(startNode.x, startNode.y, carTex)
-        .setScale(SCALE).setDepth(2);
+      const sprite = this.add
+        .image(startNode.x, startNode.y, carTex)
+        .setScale(SCALE)
+        .setDepth(2);
       this.townCars.push({
         sprite,
         tex: carTex,
@@ -1150,8 +1241,10 @@ export class GameScene extends Phaser.Scene {
     for (let bi = 0; bi < 8; bi++) {
       const bx = Phaser.Math.Between(500, WORLD_W * SCALE - 500);
       const by = Phaser.Math.Between(500, WORLD_H * SCALE - 500);
-      const sprite = this.add.image(bx, by, "dirtbike")
-        .setScale(SCALE).setDepth(3);
+      const sprite = this.add
+        .image(bx, by, "dirtbike")
+        .setScale(SCALE)
+        .setDepth(3);
       // Dust trail emitter reference
       this.dirtBikers.push({
         sprite,
@@ -1295,45 +1388,122 @@ export class GameScene extends Phaser.Scene {
     // Kill counter
     this.kills = 0;
 
-    // --- Music ---
-    this.initMusic();
-    this.initSfx();
+    // --- Audio (music + SFX + engine, loaded in one batch) ---
+    this.initAudio();
 
     // --- Intro cutscene ---
     this.introPlaying = true;
     this.playIntroCutscene();
   }
 
-  initMusic() {
+  initAudio() {
+    // State
     this.musicTracks = [];
     this.musicStarted = false;
     this.currentTrack = null;
     this.lastTrackKey = null;
+    this.sfx = { missileLaunch: [], explosion: [], death: [] };
+    this.deathSfxActive = 0;
+    this.engineKey = null;
+    this.engineA = null;
+    this.engineB = null;
+    this.engineActive = null;
+    this.engineCrossfade = 0.5;
 
-    // Force-unlock audio context
-    if (this.sound.context) {
-      this.sound.context.resume();
-    }
+    if (this.sound.context) this.sound.context.resume();
 
-    fetch("/music/tracks.json")
-      .then((res) => res.json())
-      .then((tracks) => {
-        if (!tracks || tracks.length === 0) return;
-        this.musicTracks = tracks;
+    // Fetch all manifests in parallel
+    const sfxManifests = [
+      { category: "missileLaunch", path: "/sfx/missileLaunch" },
+      { category: "explosion", path: "/sfx/explosion" },
+      { category: "death", path: "/sfx/death" },
+    ];
 
-        for (const filename of tracks) {
-          this.load.audio(`music-${filename}`, `/music/${filename}`);
+    const musicFetch = fetch("/music/tracks.json")
+      .then((r) => r.json())
+      .catch(() => []);
+    const sfxFetches = sfxManifests.map((m) =>
+      fetch(`${m.path}/sounds.json`)
+        .then((r) => r.json())
+        .then((files) => ({ ...m, files: files || [] }))
+        .catch(() => ({ ...m, files: [] })),
+    );
+    const engineFetch = fetch("/sfx/engine/sounds.json")
+      .then((r) => r.json())
+      .catch(() => []);
+
+    Promise.all([musicFetch, ...sfxFetches, engineFetch]).then((results) => {
+      const musicFiles = results[0] || [];
+      const sfxResults = results.slice(1, 1 + sfxManifests.length);
+      const engineFiles = results[results.length - 1] || [];
+
+      // Queue music
+      for (const filename of musicFiles) {
+        this.load.audio(`music-${filename}`, `/music/${filename}`);
+      }
+      this.musicTracks = musicFiles;
+
+      // Queue SFX
+      for (const r of sfxResults) {
+        for (const filename of r.files) {
+          this.load.audio(
+            `sfx-${r.category}-${filename}`,
+            `${r.path}/${filename}`,
+          );
         }
-        this.load.once("complete", () => {
-          // Resume again in case it was suspended
-          if (this.sound.context) this.sound.context.resume();
-          this.playRandomTrack();
-        });
-        this.load.start();
-      })
-      .catch(() => {});
+      }
 
-    // If sound is locked by browser, start music as soon as it unlocks
+      // Queue engine
+      let engineKey = null;
+      if (engineFiles.length > 0) {
+        engineKey = `sfx-engine-${engineFiles[0]}`;
+        this.load.audio(engineKey, `/sfx/engine/${engineFiles[0]}`);
+      }
+
+      // Nothing to load
+      if (
+        musicFiles.length === 0 &&
+        engineKey === null &&
+        sfxResults.every((r) => r.files.length === 0)
+      )
+        return;
+
+      // Single load + single complete
+      this.load.once("complete", () => {
+        if (this.sound.context) this.sound.context.resume();
+
+        // Register SFX keys
+        for (const r of sfxResults) {
+          for (const filename of r.files) {
+            this.sfx[r.category].push(`sfx-${r.category}-${filename}`);
+          }
+        }
+
+        // Set up engine
+        if (engineKey) {
+          this.engineKey = engineKey;
+          this.engineA = this.sound.add(engineKey, {
+            volume: 0,
+            loop: false,
+            rate: 0.6,
+          });
+          this.engineB = this.sound.add(engineKey, {
+            volume: 0,
+            loop: false,
+            rate: 0.6,
+          });
+          this.engineActive = null;
+        }
+
+        // Start music
+        if (this.musicTracks.length > 0) {
+          this.playRandomTrack();
+        }
+      });
+      this.load.start();
+    });
+
+    // Browser audio unlock fallback
     if (this.sound.locked) {
       this.sound.once("unlocked", () => {
         if (this.musicTracks.length > 0 && !this.musicStarted) {
@@ -1345,8 +1515,8 @@ export class GameScene extends Phaser.Scene {
 
   playRandomTrack() {
     if (this.musicTracks.length === 0) return;
+    this.musicStarted = true;
 
-    // Pick a track that isn't the last one played
     let candidates = this.musicTracks.filter(
       (t) => `music-${t}` !== this.lastTrackKey,
     );
@@ -1354,76 +1524,15 @@ export class GameScene extends Phaser.Scene {
     const filename = Phaser.Utils.Array.GetRandom(candidates);
     const key = `music-${filename}`;
 
-    // Stop current track
-    if (this.currentTrack) {
-      this.currentTrack.stop();
-    }
+    if (this.currentTrack) this.currentTrack.stop();
 
     this.currentTrack = this.sound.add(key, { volume: 0.4 });
     this.currentTrack.play();
     this.lastTrackKey = key;
 
-    // When it ends, play another
     this.currentTrack.once("complete", () => {
       this.playRandomTrack();
     });
-  }
-
-  initSfx() {
-    this.sfx = { missileLaunch: [], explosion: [] };
-
-    const loadCategory = (category, path) => {
-      fetch(`${path}/sounds.json`)
-        .then((res) => res.json())
-        .then((files) => {
-          if (!files || files.length === 0) return;
-          for (const filename of files) {
-            const key = `sfx-${category}-${filename}`;
-            this.load.audio(key, `${path}/${filename}`);
-          }
-          this.load.once("complete", () => {
-            for (const filename of files) {
-              this.sfx[category].push(`sfx-${category}-${filename}`);
-            }
-          });
-          this.load.start();
-        })
-        .catch(() => {});
-    };
-
-    loadCategory("missileLaunch", "/sfx/missileLaunch");
-    loadCategory("explosion", "/sfx/explosion");
-
-    // Engine loop — two instances crossfaded for seamless looping
-    this.engineKey = null;
-    this.engineA = null;
-    this.engineB = null;
-    this.engineActive = null; // which instance is currently primary
-    this.engineCrossfade = 0.5; // seconds of crossfade overlap
-    fetch("/sfx/engine/sounds.json")
-      .then((res) => res.json())
-      .then((files) => {
-        if (!files || files.length === 0) return;
-        const filename = files[0];
-        const key = `sfx-engine-${filename}`;
-        this.engineKey = key;
-        this.load.audio(key, `/sfx/engine/${filename}`);
-        this.load.once("complete", () => {
-          this.engineA = this.sound.add(key, {
-            volume: 0,
-            loop: false,
-            rate: 0.6,
-          });
-          this.engineB = this.sound.add(key, {
-            volume: 0,
-            loop: false,
-            rate: 0.6,
-          });
-          this.engineActive = null;
-        });
-        this.load.start();
-      })
-      .catch(() => {});
   }
 
   playSfx(category, volume = 0.5) {
@@ -1464,6 +1573,34 @@ export class GameScene extends Phaser.Scene {
   skinTex(p, type) {
     if (p.teamSkin) return `${p.teamSkin}-${type}`;
     return `person-${type}-${p.skinId}`;
+  }
+
+  playDeathSfxAt(x, y) {
+    if (this.deathSfxActive >= 5) return;
+    const keys = this.sfx.death;
+    if (!keys || keys.length === 0) return;
+
+    this.deathSfxActive++;
+    const delay = (this.deathSfxActive - 1) * 120; // stagger 120ms apart
+
+    this.time.delayedCall(delay, () => {
+      const key = Phaser.Utils.Array.GetRandom(keys);
+      const ds = this.droneState;
+      const dist = Phaser.Math.Distance.Between(ds.x, ds.y, x, y);
+      const maxDist = 2000;
+      const volume = 0.35 * Phaser.Math.Clamp(1 - dist / maxDist, 0.05, 1);
+      const angleToSound = Phaser.Math.Angle.Between(ds.x, ds.y, x, y);
+      const droneRad = Phaser.Math.DegToRad(ds.angle - 90);
+      const relAngle = angleToSound - droneRad;
+      const pan = Phaser.Math.Clamp(Math.sin(relAngle) * 0.25, -0.25, 0.25);
+
+      const sfx = this.sound.add(key, { volume });
+      sfx.play({ pan });
+      sfx.once("complete", () => {
+        sfx.destroy();
+        this.deathSfxActive--;
+      });
+    });
   }
 
   playIntroCutscene() {
@@ -1856,13 +1993,24 @@ export class GameScene extends Phaser.Scene {
       .setDepth(9);
     this.hudCam.ignore(missile);
 
+    // Missile shadow on the ground
+    const missileShadow = this.add
+      .image(startX, startY, "missile")
+      .setScale(SCALE * 0.6)
+      .setDepth(1.5)
+      .setAlpha(0.25)
+      .setTint(0x000000);
+    this.hudCam.ignore(missileShadow);
+
     // Missile starts heading in the drone's direction
     const heading = launchRad;
     missile.setRotation(heading + Math.PI / 2);
+    missileShadow.setRotation(heading + Math.PI / 2);
     this.playSfx("missileLaunch", 0.25);
 
     this.missiles.push({
       sprite: missile,
+      shadow: missileShadow,
       target: { x: this.targetPos.x, y: this.targetPos.y },
       speed: 280,
       heading, // current direction of travel (radians)
@@ -1914,6 +2062,18 @@ export class GameScene extends Phaser.Scene {
       m.sprite.y += Math.sin(m.heading) * m.speed * dt;
       m.sprite.setRotation(m.heading + Math.PI / 2);
 
+      // Update shadow — lerps from under missile toward target as altitude drops
+      if (m.shadow) {
+        const altFrac = m.launchAlt > 0 ? m.altitude / m.launchAlt : 0;
+        // Shadow on ground: starts under missile, converges on target
+        const shadowX = Phaser.Math.Linear(m.target.x, m.sprite.x, altFrac);
+        const shadowY = Phaser.Math.Linear(m.target.y, m.sprite.y, altFrac);
+        m.shadow.setPosition(shadowX, shadowY);
+        m.shadow.setRotation(m.heading + Math.PI / 2);
+        m.shadow.setScale(SCALE * (0.3 + altFrac * 0.3));
+        m.shadow.setAlpha(0.1 + (1 - altFrac) * 0.25);
+      }
+
       // Smoke trail
       m.smokeTimer = (m.smokeTimer || 0) + dt * 1000;
       if (m.smokeTimer > 40) {
@@ -1947,14 +2107,14 @@ export class GameScene extends Phaser.Scene {
       m.sprite.setScale(mScale);
 
       if (dist < 15) {
-        // Direct hit on target
         this.missileImpact(m.target.x, m.target.y);
         m.sprite.destroy();
+        if (m.shadow) m.shadow.destroy();
         this.missiles.splice(i, 1);
       } else if (m.altitude <= 0) {
-        // Ran out of altitude — impact where the missile actually is
         this.missileImpact(m.sprite.x, m.sprite.y);
         m.sprite.destroy();
+        if (m.shadow) m.shadow.destroy();
         this.missiles.splice(i, 1);
       }
     }
@@ -2037,8 +2197,10 @@ export class GameScene extends Phaser.Scene {
           // Oil infrastructure burns forever with black smoke
           if (b.isOilInfra) {
             // Persistent fire
-            const permFire = this.add.image(b.x, b.y - 5, "fire")
-              .setScale(SCALE * 1.5).setDepth(3);
+            const permFire = this.add
+              .image(b.x, b.y - 5, "fire")
+              .setScale(SCALE * 1.5)
+              .setDepth(3);
             this.hudCam.ignore(permFire);
             this.tweens.add({
               targets: permFire,
@@ -2054,11 +2216,12 @@ export class GameScene extends Phaser.Scene {
               delay: 300,
               loop: true,
               callback: () => {
-                const smoke = this.add.image(
-                  b.x + Phaser.Math.Between(-10, 10),
-                  b.y - 10,
-                  "smoke",
-                ).setScale(SCALE * 0.6).setDepth(12).setAlpha(0.7).setTint(0x222222);
+                const smoke = this.add
+                  .image(b.x + Phaser.Math.Between(-10, 10), b.y - 10, "smoke")
+                  .setScale(SCALE * 0.6)
+                  .setDepth(12)
+                  .setAlpha(0.7)
+                  .setTint(0x222222);
                 this.hudCam.ignore(smoke);
                 this.tweens.add({
                   targets: smoke,
@@ -2135,26 +2298,41 @@ export class GameScene extends Phaser.Scene {
     // Kill town cars — ghosts float out
     for (const car of this.townCars) {
       if (!car.alive) continue;
-      const dist = Phaser.Math.Distance.Between(x, y, car.sprite.x, car.sprite.y);
+      const dist = Phaser.Math.Distance.Between(
+        x,
+        y,
+        car.sprite.x,
+        car.sprite.y,
+      );
       if (dist < 40) {
         car.alive = false;
         car.sprite.setTexture("car-dead");
         this.kills += car.passengers;
+        for (let di = 0; di < car.passengers; di++) {
+          this.playDeathSfxAt(car.sprite.x, car.sprite.y);
+        }
         // Explosion
-        const carExp = this.add.sprite(car.sprite.x, car.sprite.y, "explosion-sheet", 0)
-          .setScale(SCALE * 1.5).setDepth(11);
+        const carExp = this.add
+          .sprite(car.sprite.x, car.sprite.y, "explosion-sheet", 0)
+          .setScale(SCALE * 1.5)
+          .setDepth(11);
         this.hudCam.ignore(carExp);
         carExp.play("explode");
         carExp.once("animationcomplete", () => carExp.destroy());
         // Spawn ghosts for each passenger
         for (let gi = 0; gi < car.passengers; gi++) {
-          const spawnAngle = (gi / car.passengers) * Math.PI * 2 + Math.random() * 0.5;
+          const spawnAngle =
+            (gi / car.passengers) * Math.PI * 2 + Math.random() * 0.5;
           this.time.delayedCall(gi * 250, () => {
-            const ghost = this.add.image(
-              car.sprite.x + Math.cos(spawnAngle) * 15,
-              car.sprite.y + Math.sin(spawnAngle) * 15,
-              "ghost",
-            ).setScale(SCALE).setDepth(13).setAlpha(0.8);
+            const ghost = this.add
+              .image(
+                car.sprite.x + Math.cos(spawnAngle) * 15,
+                car.sprite.y + Math.sin(spawnAngle) * 15,
+                "ghost",
+              )
+              .setScale(SCALE)
+              .setDepth(13)
+              .setAlpha(0.8);
             this.hudCam.ignore(ghost);
             const line = Phaser.Utils.Array.GetRandom(ghostLines);
             const bubble = this.add
@@ -2165,7 +2343,8 @@ export class GameScene extends Phaser.Scene {
                 backgroundColor: "#000000aa",
                 padding: { x: 4, y: 3 },
               })
-              .setScale(SCALE * 0.5).setDepth(14);
+              .setScale(SCALE * 0.5)
+              .setDepth(14);
             this.hudCam.ignore(bubble);
             const driftX = Math.cos(spawnAngle) * (15 + Math.random() * 25);
             const driftY = -(20 + Math.random() * 20);
@@ -2199,9 +2378,12 @@ export class GameScene extends Phaser.Scene {
       if (dist < 60) {
         bk.alive = false;
         this.kills++;
+        this.playDeathSfxAt(bk.sprite.x, bk.sprite.y);
         // Explosion at biker position
-        const bkExp = this.add.sprite(bk.sprite.x, bk.sprite.y, "explosion-sheet", 0)
-          .setScale(SCALE * 1.5).setDepth(11);
+        const bkExp = this.add
+          .sprite(bk.sprite.x, bk.sprite.y, "explosion-sheet", 0)
+          .setScale(SCALE * 1.5)
+          .setDepth(11);
         this.hudCam.ignore(bkExp);
         bkExp.play("explode");
         bkExp.once("animationcomplete", () => bkExp.destroy());
@@ -2209,7 +2391,12 @@ export class GameScene extends Phaser.Scene {
         bk.sprite.setTexture("ghost");
         bk.sprite.setAlpha(0.8);
         bk.sprite.setDepth(13);
-        const awayAngle = Phaser.Math.Angle.Between(x, y, bk.sprite.x, bk.sprite.y);
+        const awayAngle = Phaser.Math.Angle.Between(
+          x,
+          y,
+          bk.sprite.x,
+          bk.sprite.y,
+        );
         bk.ghostDriftX = Math.cos(awayAngle) * (15 + Math.random() * 25);
         bk.ghostDriftY = -(20 + Math.random() * 20);
         bk.ghostWobble = Math.random() * Math.PI * 2;
@@ -2250,6 +2437,7 @@ export class GameScene extends Phaser.Scene {
         // Killed — become ghost
         p.state = "ghost";
         this.kills++;
+        this.playDeathSfxAt(p.sprite.x, p.sprite.y);
         if (p.bubble) {
           p.bubble.destroy();
           p.bubble = null;
@@ -2350,6 +2538,7 @@ export class GameScene extends Phaser.Scene {
       this.time.delayedCall(idx * 300, () => {
         p.state = "ghost";
         this.kills++;
+        this.playDeathSfxAt(building.x, building.y);
         // Spread starting positions around the building
         const spawnAngle =
           (idx / Math.max(ghostIdx, 1)) * Math.PI * 2 + Math.random() * 0.5;
@@ -2416,7 +2605,32 @@ export class GameScene extends Phaser.Scene {
     const panicSpeed = 60;
 
     for (const p of this.people) {
-      if (p.state === "gone" || p.state === "hiding") continue;
+      if (p.state === "gone") continue;
+
+      // People hiding in buildings — exit after timeout
+      if (p.state === "hiding") {
+        p.hideTimer = (p.hideTimer || 0) + dt;
+        if (p.hideTimer > 10) {
+          p.hideTimer = 0;
+          p.state = "idle";
+          p.sprite.setVisible(true);
+          p.sprite.setTexture(this.skinTex(p, "stand"));
+          // Place them just outside the building they hid in
+          if (p.hideTarget && !p.hideTarget.destroyed) {
+            p.sprite.setPosition(
+              p.hideTarget.x + Phaser.Math.Between(-40, 40),
+              p.hideTarget.y + p.hideTarget.radius + 15,
+            );
+          }
+          p.hideTarget = null;
+          p.noGreet = false;
+          if (!p.greeting) {
+            p.greeting = Phaser.Utils.Array.GetRandom(greetings);
+          }
+        }
+        continue;
+      }
+
       // Soccer players/spectators in idle state are controlled by updateSoccer
       if ((p.isSoccerPlayer || p.isSoccerSpectator) && p.state === "idle")
         continue;
@@ -2437,8 +2651,16 @@ export class GameScene extends Phaser.Scene {
           // Only show bubble if no other bubble is within 150px
           let tooClose = false;
           for (const other of this.people) {
-            if (other === p || !other.bubble || other.state !== "waving") continue;
-            if (Phaser.Math.Distance.Between(p.sprite.x, p.sprite.y, other.sprite.x, other.sprite.y) < 150) {
+            if (other === p || !other.bubble || other.state !== "waving")
+              continue;
+            if (
+              Phaser.Math.Distance.Between(
+                p.sprite.x,
+                p.sprite.y,
+                other.sprite.x,
+                other.sprite.y,
+              ) < 150
+            ) {
               tooClose = true;
               break;
             }
@@ -2505,7 +2727,9 @@ export class GameScene extends Phaser.Scene {
         if (p.waveTimer > 250) {
           p.waveTimer = 0;
           p.waveFrame = 1 - p.waveFrame;
-          p.sprite.setTexture(this.skinTex(p, p.waveFrame === 0 ? "wave1" : "wave2"));
+          p.sprite.setTexture(
+            this.skinTex(p, p.waveFrame === 0 ? "wave1" : "wave2"),
+          );
         }
         if (distToDrone > droneDetectRadius * 1.5 || ds.altitude <= 0) {
           p.state = "idle";
@@ -2523,7 +2747,9 @@ export class GameScene extends Phaser.Scene {
         if (p.runTimer > 120) {
           p.runTimer = 0;
           p.runFrame = 1 - p.runFrame;
-          p.sprite.setTexture(this.skinTex(p, p.runFrame === 0 ? "run1" : "run2"));
+          p.sprite.setTexture(
+            this.skinTex(p, p.runFrame === 0 ? "run1" : "run2"),
+          );
         }
 
         // Update angle toward hide target if it exists
@@ -2856,8 +3082,10 @@ export class GameScene extends Phaser.Scene {
         a.sprite.setVisible(false);
         const meatCount = Phaser.Math.Between(3, 6);
         for (let m = 0; m < meatCount; m++) {
-          const meat = this.add.image(a.sprite.x, a.sprite.y, "meat")
-            .setScale(SCALE * 0.7).setDepth(12);
+          const meat = this.add
+            .image(a.sprite.x, a.sprite.y, "meat")
+            .setScale(SCALE * 0.7)
+            .setDepth(12);
           this.hudCam.ignore(meat);
           const angle = Math.random() * Math.PI * 2;
           const flingDist = 30 + Math.random() * 60;
@@ -2875,7 +3103,12 @@ export class GameScene extends Phaser.Scene {
         }
       } else if (dist < panicRadius && a.state !== "panicking") {
         a.state = "panicking";
-        const awayAngle = Phaser.Math.Angle.Between(x, y, a.sprite.x, a.sprite.y);
+        const awayAngle = Phaser.Math.Angle.Between(
+          x,
+          y,
+          a.sprite.x,
+          a.sprite.y,
+        );
         a.runAngle = awayAngle + (Math.random() - 0.5) * 1.0;
         a.panicTimer = 0;
       }
@@ -2890,8 +3123,9 @@ export class GameScene extends Phaser.Scene {
       if (a.state === "dead") continue;
 
       // Determine if animal is inside its corral
-      const insideCorral = Math.abs(a.sprite.x - a.corral.x) < a.corral.hw &&
-                           Math.abs(a.sprite.y - a.corral.y) < a.corral.hh;
+      const insideCorral =
+        Math.abs(a.sprite.x - a.corral.x) < a.corral.hw &&
+        Math.abs(a.sprite.y - a.corral.y) < a.corral.hh;
 
       if (a.state === "idle") {
         // Wander
@@ -2907,7 +3141,10 @@ export class GameScene extends Phaser.Scene {
           const speed = a.type === "chicken" ? 15 : 10;
           // Steer around buildings
           const steered = this.steerAroundBuildings(
-            a.sprite.x, a.sprite.y, a.wanderAngle, dt,
+            a.sprite.x,
+            a.sprite.y,
+            a.wanderAngle,
+            dt,
           );
           if (steered !== a.wanderAngle) a.wanderAngle = steered;
 
@@ -2915,30 +3152,46 @@ export class GameScene extends Phaser.Scene {
           const ny = a.sprite.y + Math.sin(a.wanderAngle) * speed * dt;
 
           if (insideCorral) {
-            if (Math.abs(nx - a.corral.x) < a.corral.hw - 10 &&
-                Math.abs(ny - a.corral.y) < a.corral.hh - 10) {
+            if (
+              Math.abs(nx - a.corral.x) < a.corral.hw - 10 &&
+              Math.abs(ny - a.corral.y) < a.corral.hh - 10
+            ) {
               a.sprite.x = nx;
               a.sprite.y = ny;
             } else {
-              a.wanderAngle = Phaser.Math.Angle.Between(
-                a.sprite.x, a.sprite.y, a.corral.x, a.corral.y,
-              ) + (Math.random() - 0.5) * 1.0;
+              a.wanderAngle =
+                Phaser.Math.Angle.Between(
+                  a.sprite.x,
+                  a.sprite.y,
+                  a.corral.x,
+                  a.corral.y,
+                ) +
+                (Math.random() - 0.5) * 1.0;
             }
           } else {
             const wanderRadius = 60;
             if (!a.freeRoamOrigin) {
               a.freeRoamOrigin = { x: a.sprite.x, y: a.sprite.y };
             }
-            if (Math.abs(nx - a.freeRoamOrigin.x) < wanderRadius &&
-                Math.abs(ny - a.freeRoamOrigin.y) < wanderRadius &&
-                nx > 10 && nx < worldW - 10 &&
-                ny > 10 && ny < worldH - 10) {
+            if (
+              Math.abs(nx - a.freeRoamOrigin.x) < wanderRadius &&
+              Math.abs(ny - a.freeRoamOrigin.y) < wanderRadius &&
+              nx > 10 &&
+              nx < worldW - 10 &&
+              ny > 10 &&
+              ny < worldH - 10
+            ) {
               a.sprite.x = nx;
               a.sprite.y = ny;
             } else {
-              a.wanderAngle = Phaser.Math.Angle.Between(
-                a.sprite.x, a.sprite.y, a.freeRoamOrigin.x, a.freeRoamOrigin.y,
-              ) + (Math.random() - 0.5) * 1.0;
+              a.wanderAngle =
+                Phaser.Math.Angle.Between(
+                  a.sprite.x,
+                  a.sprite.y,
+                  a.freeRoamOrigin.x,
+                  a.freeRoamOrigin.y,
+                ) +
+                (Math.random() - 0.5) * 1.0;
             }
           }
           a.sprite.setFlipX(Math.cos(a.wanderAngle) < 0);
@@ -2948,7 +3201,7 @@ export class GameScene extends Phaser.Scene {
           if (a.runTimer > 0.15) {
             a.runTimer = 0;
             a.runFrame = 1 - a.runFrame;
-            a.sprite.setTexture(a.runFrame === 0 ? a.type : a.type + '2');
+            a.sprite.setTexture(a.runFrame === 0 ? a.type : a.type + "2");
           }
         } else {
           // Standing still: reset to base frame
@@ -2962,7 +3215,10 @@ export class GameScene extends Phaser.Scene {
         const speed = a.type === "chicken" ? 80 : a.type === "camel" ? 50 : 60;
         // Steer around buildings
         a.runAngle = this.steerAroundBuildings(
-          a.sprite.x, a.sprite.y, a.runAngle, dt,
+          a.sprite.x,
+          a.sprite.y,
+          a.runAngle,
+          dt,
         );
         a.sprite.x += Math.cos(a.runAngle) * speed * dt;
         a.sprite.y += Math.sin(a.runAngle) * speed * dt;
@@ -2973,15 +3229,27 @@ export class GameScene extends Phaser.Scene {
         if (a.runTimer > 0.15) {
           a.runTimer = 0;
           a.runFrame = 1 - a.runFrame;
-          a.sprite.setTexture(a.runFrame === 0 ? a.type : a.type + '2');
+          a.sprite.setTexture(a.runFrame === 0 ? a.type : a.type + "2");
         }
 
         // Bounce off world edges
         const margin = 50;
-        if (a.sprite.x < margin) { a.sprite.x = margin; a.runAngle = Math.PI - a.runAngle; }
-        if (a.sprite.x > worldW - margin) { a.sprite.x = worldW - margin; a.runAngle = Math.PI - a.runAngle; }
-        if (a.sprite.y < margin) { a.sprite.y = margin; a.runAngle = -a.runAngle; }
-        if (a.sprite.y > worldH - margin) { a.sprite.y = worldH - margin; a.runAngle = -a.runAngle; }
+        if (a.sprite.x < margin) {
+          a.sprite.x = margin;
+          a.runAngle = Math.PI - a.runAngle;
+        }
+        if (a.sprite.x > worldW - margin) {
+          a.sprite.x = worldW - margin;
+          a.runAngle = Math.PI - a.runAngle;
+        }
+        if (a.sprite.y < margin) {
+          a.sprite.y = margin;
+          a.runAngle = -a.runAngle;
+        }
+        if (a.sprite.y > worldH - margin) {
+          a.sprite.y = worldH - margin;
+          a.runAngle = -a.runAngle;
+        }
 
         // Calm down after a while
         a.panicTimer += dt;
@@ -3001,7 +3269,9 @@ export class GameScene extends Phaser.Scene {
       if (well.pumpTimer > well.pumpSpeed) {
         well.pumpTimer = 0;
         well.pumpFrame = 1 - well.pumpFrame;
-        well.sprite.setTexture(well.pumpFrame === 0 ? "oil-well1" : "oil-well2");
+        well.sprite.setTexture(
+          well.pumpFrame === 0 ? "oil-well1" : "oil-well2",
+        );
       }
     }
   }
@@ -3016,7 +3286,9 @@ export class GameScene extends Phaser.Scene {
       if (bk.isGhost) {
         if (!bk.sprite.active) continue;
         bk.sprite.y += (bk.ghostDriftY || -30) * dt;
-        bk.sprite.x += (bk.ghostDriftX || 0) * dt + Math.sin(bk.sprite.y * 0.04 + (bk.ghostWobble || 0)) * 15 * dt;
+        bk.sprite.x +=
+          (bk.ghostDriftX || 0) * dt +
+          Math.sin(bk.sprite.y * 0.04 + (bk.ghostWobble || 0)) * 15 * dt;
         bk.sprite.setAlpha(bk.sprite.alpha - 0.08 * dt);
         if (bk.bubble) {
           bk.bubble.setPosition(bk.sprite.x + 20, bk.sprite.y - 20);
@@ -3024,7 +3296,10 @@ export class GameScene extends Phaser.Scene {
         }
         if (bk.sprite.alpha <= 0) {
           bk.sprite.destroy();
-          if (bk.bubble) { bk.bubble.destroy(); bk.bubble = null; }
+          if (bk.bubble) {
+            bk.bubble.destroy();
+            bk.bubble = null;
+          }
         }
         continue;
       }
@@ -3040,7 +3315,10 @@ export class GameScene extends Phaser.Scene {
 
       // Steer toward target, avoiding buildings
       const targetAngle = Phaser.Math.Angle.Between(
-        bk.sprite.x, bk.sprite.y, bk.targetX, bk.targetY,
+        bk.sprite.x,
+        bk.sprite.y,
+        bk.targetX,
+        bk.targetY,
       );
 
       // Smooth turn toward target
@@ -3050,7 +3328,10 @@ export class GameScene extends Phaser.Scene {
 
       // Steer around buildings
       bk.heading = this.steerAroundBuildings(
-        bk.sprite.x, bk.sprite.y, bk.heading, dt,
+        bk.sprite.x,
+        bk.sprite.y,
+        bk.heading,
+        dt,
       );
 
       // Move
@@ -3072,11 +3353,16 @@ export class GameScene extends Phaser.Scene {
       bk.dustTimer += delta;
       if (bk.dustTimer > 80) {
         bk.dustTimer = 0;
-        const dust = this.add.image(
-          bk.sprite.x - Math.cos(bk.heading) * 15,
-          bk.sprite.y - Math.sin(bk.heading) * 15,
-          "smoke",
-        ).setScale(SCALE * 0.3).setDepth(1).setAlpha(0.4).setTint(0xccaa88);
+        const dust = this.add
+          .image(
+            bk.sprite.x - Math.cos(bk.heading) * 15,
+            bk.sprite.y - Math.sin(bk.heading) * 15,
+            "smoke",
+          )
+          .setScale(SCALE * 0.3)
+          .setDepth(1)
+          .setAlpha(0.4)
+          .setTint(0xccaa88);
         this.hudCam.ignore(dust);
         this.tweens.add({
           targets: dust,
@@ -3090,8 +3376,12 @@ export class GameScene extends Phaser.Scene {
       // Keep on map
       bk.sprite.x = Phaser.Math.Clamp(bk.sprite.x, margin, worldW - margin);
       bk.sprite.y = Phaser.Math.Clamp(bk.sprite.y, margin, worldH - margin);
-      if (bk.sprite.x <= margin || bk.sprite.x >= worldW - margin ||
-          bk.sprite.y <= margin || bk.sprite.y >= worldH - margin) {
+      if (
+        bk.sprite.x <= margin ||
+        bk.sprite.x >= worldW - margin ||
+        bk.sprite.y <= margin ||
+        bk.sprite.y >= worldH - margin
+      ) {
         // Redirect toward center
         bk.targetX = worldW / 2 + Phaser.Math.Between(-1000, 1000);
         bk.targetY = worldH / 2 + Phaser.Math.Between(-1000, 1000);
@@ -3108,8 +3398,10 @@ export class GameScene extends Phaser.Scene {
       const dx = Math.abs(n.x - node.x);
       const dy = Math.abs(n.y - node.y);
       // Adjacent = exactly one step away on one axis, same on the other
-      if ((dx < 5 && Math.abs(dy - step) < 5) ||
-          (dy < 5 && Math.abs(dx - step) < 5)) {
+      if (
+        (dx < 5 && Math.abs(dy - step) < 5) ||
+        (dy < 5 && Math.abs(dx - step) < 5)
+      ) {
         neighbors.push(n);
       }
     }
@@ -3128,22 +3420,40 @@ export class GameScene extends Phaser.Scene {
         const best = neighbors.filter((n) => {
           for (const other of this.townCars) {
             if (other === car || !other.alive) continue;
-            if (Phaser.Math.Distance.Between(n.x, n.y, other.sprite.x, other.sprite.y) < 30) {
+            if (
+              Phaser.Math.Distance.Between(
+                n.x,
+                n.y,
+                other.sprite.x,
+                other.sprite.y,
+              ) < 30
+            ) {
               return false;
             }
           }
           return true;
         });
-        car.targetNode = best.length > 0
-          ? Phaser.Utils.Array.GetRandom(best)
-          : Phaser.Utils.Array.GetRandom(neighbors);
+        car.targetNode =
+          best.length > 0
+            ? Phaser.Utils.Array.GetRandom(best)
+            : Phaser.Utils.Array.GetRandom(neighbors);
       }
 
       // Drive toward target node
       const tx = car.targetNode.x;
       const ty = car.targetNode.y;
-      const angle = Phaser.Math.Angle.Between(car.sprite.x, car.sprite.y, tx, ty);
-      const dist = Phaser.Math.Distance.Between(car.sprite.x, car.sprite.y, tx, ty);
+      const angle = Phaser.Math.Angle.Between(
+        car.sprite.x,
+        car.sprite.y,
+        tx,
+        ty,
+      );
+      const dist = Phaser.Math.Distance.Between(
+        car.sprite.x,
+        car.sprite.y,
+        tx,
+        ty,
+      );
 
       // Slow down or stop for cars and people ahead
       let speed = car.speed;
@@ -3151,9 +3461,19 @@ export class GameScene extends Phaser.Scene {
       // Check other cars
       for (const other of this.townCars) {
         if (other === car || !other.alive) continue;
-        const d = Phaser.Math.Distance.Between(car.sprite.x, car.sprite.y, other.sprite.x, other.sprite.y);
+        const d = Phaser.Math.Distance.Between(
+          car.sprite.x,
+          car.sprite.y,
+          other.sprite.x,
+          other.sprite.y,
+        );
         if (d < 60) {
-          const aToOther = Phaser.Math.Angle.Between(car.sprite.x, car.sprite.y, other.sprite.x, other.sprite.y);
+          const aToOther = Phaser.Math.Angle.Between(
+            car.sprite.x,
+            car.sprite.y,
+            other.sprite.x,
+            other.sprite.y,
+          );
           const angleDiff = Math.abs(Phaser.Math.Angle.Wrap(aToOther - angle));
           if (angleDiff < 1.0) {
             speed = Math.min(speed, Math.max(0, (d - 30) * 0.8));
@@ -3163,10 +3483,21 @@ export class GameScene extends Phaser.Scene {
       }
       // Check people on the road
       for (const p of this.people) {
-        if (p.state === "gone" || p.state === "hiding" || p.state === "ghost") continue;
-        const d = Phaser.Math.Distance.Between(car.sprite.x, car.sprite.y, p.sprite.x, p.sprite.y);
+        if (p.state === "gone" || p.state === "hiding" || p.state === "ghost")
+          continue;
+        const d = Phaser.Math.Distance.Between(
+          car.sprite.x,
+          car.sprite.y,
+          p.sprite.x,
+          p.sprite.y,
+        );
         if (d < 50) {
-          const aToPerson = Phaser.Math.Angle.Between(car.sprite.x, car.sprite.y, p.sprite.x, p.sprite.y);
+          const aToPerson = Phaser.Math.Angle.Between(
+            car.sprite.x,
+            car.sprite.y,
+            p.sprite.x,
+            p.sprite.y,
+          );
           const angleDiff = Math.abs(Phaser.Math.Angle.Wrap(aToPerson - angle));
           if (angleDiff < 0.8) {
             speed = Math.min(speed, Math.max(0, (d - 25) * 0.6));
