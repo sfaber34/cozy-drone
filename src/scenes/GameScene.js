@@ -348,6 +348,7 @@ export class GameScene extends Phaser.Scene {
           homeX: px,
           homeY: py,
           isSoccerPlayer: true,
+          teamSkin: teams[t],
         };
         this.people.push(personEntry);
         player.personEntry = personEntry;
@@ -1032,6 +1033,15 @@ export class GameScene extends Phaser.Scene {
     const sfx = this.sound.add(key, { volume });
     sfx.play({ pan });
     sfx.once("complete", () => sfx.destroy());
+  }
+
+  // Get the correct texture prefix for a person (team jersey or regular skin)
+  skinPrefix(p) {
+    return p.teamSkin || `person`;
+  }
+  skinTex(p, type) {
+    if (p.teamSkin) return `${p.teamSkin}-${type}`;
+    return `person-${type}-${p.skinId}`;
   }
 
   playIntroCutscene() {
@@ -1893,7 +1903,7 @@ export class GameScene extends Phaser.Scene {
               );
             }
           } else {
-            p.sprite.setTexture(`person-stand-${p.skinId}`);
+            p.sprite.setTexture(this.skinTex(p, "stand"));
           }
           // Clamp to world
           p.sprite.x = Phaser.Math.Clamp(p.sprite.x, 50, WORLD_W * SCALE - 50);
@@ -1907,15 +1917,11 @@ export class GameScene extends Phaser.Scene {
         if (p.waveTimer > 250) {
           p.waveTimer = 0;
           p.waveFrame = 1 - p.waveFrame;
-          p.sprite.setTexture(
-            p.waveFrame === 0
-              ? `person-wave1-${p.skinId}`
-              : `person-wave2-${p.skinId}`,
-          );
+          p.sprite.setTexture(this.skinTex(p, p.waveFrame === 0 ? "wave1" : "wave2"));
         }
         if (distToDrone > droneDetectRadius * 1.5 || ds.altitude <= 0) {
           p.state = "idle";
-          p.sprite.setTexture(`person-stand-${p.skinId}`);
+          p.sprite.setTexture(this.skinTex(p, "stand"));
           if (p.bubble) {
             p.bubble.destroy();
             p.bubble = null;
@@ -1929,11 +1935,7 @@ export class GameScene extends Phaser.Scene {
         if (p.runTimer > 120) {
           p.runTimer = 0;
           p.runFrame = 1 - p.runFrame;
-          p.sprite.setTexture(
-            p.runFrame === 0
-              ? `person-run1-${p.skinId}`
-              : `person-run2-${p.skinId}`,
-          );
+          p.sprite.setTexture(this.skinTex(p, p.runFrame === 0 ? "run1" : "run2"));
         }
 
         // Update angle toward hide target if it exists
@@ -2001,7 +2003,7 @@ export class GameScene extends Phaser.Scene {
           if (!p.greeting) {
             p.greeting = Phaser.Utils.Array.GetRandom(greetings);
           }
-          p.sprite.setTexture(`person-stand-${p.skinId}`);
+          p.sprite.setTexture(this.skinTex(p, "stand"));
         }
         // Reset calm-down timer if drone is nearby
         if (distToDrone <= 800) {

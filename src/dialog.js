@@ -101,7 +101,6 @@ export const ghostLines = [
   "10/10!",
   "Yasss!",
   "I love you\ndrone!",
-  "My therapist\nwas right!",
   "Zero regrets!",
   "Better than\ncoffee!",
   "I can fly now!",
@@ -115,12 +114,16 @@ export const ghostLines = [
   "Free at last!",
   "Who's going to feed the goat?",
   "Shoot\nI left the stove on",
-  "Better than working",
+  "No more work!",
   "Sure, why not.",
   "Finally, a vacation.",
   "Mission accomplished.",
   "That was fun.",
   "Somebody\nfeed my cat!",
+  "Grandma??",
+  "Ah so relaxing!",
+  "I was asking for it.",
+  "I deserved that.",
 ];
 
 export const buildingGhostLines = [
