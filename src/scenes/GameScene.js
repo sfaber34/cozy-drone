@@ -1,5 +1,11 @@
 import Phaser from "phaser";
-import { introLines, greetings, ghostLines, buildingGhostLines, cheerPhrases } from "../dialog.js";
+import {
+  introLines,
+  greetings,
+  ghostLines,
+  buildingGhostLines,
+  cheerPhrases,
+} from "../dialog.js";
 
 const WORLD_W = 3200;
 const WORLD_H = 3200;
@@ -695,21 +701,6 @@ export class GameScene extends Phaser.Scene {
         .setDepth(1.5);
     }
 
-    // --- Tanks ---
-    this.tanks = this.physics.add.group();
-    this.tankData = [];
-    for (let i = 0; i < 12; i++) {
-      const tx = rng.between(200, WORLD_W * SCALE - 200);
-      const ty = rng.between(200, WORLD_H * SCALE - 200);
-      const tank = this.physics.add
-        .sprite(tx, ty, "tank")
-        .setScale(SCALE)
-        .setDepth(2)
-        .setAngle(rng.between(0, 3) * 90);
-      tank.alive = true;
-      this.tanks.add(tank);
-      this.tankData.push(tank);
-    }
 
     // --- People (random wanderers) ---
     // greetings imported from dialog.js
@@ -776,7 +767,7 @@ export class GameScene extends Phaser.Scene {
       speed: 0, // start stationary on runway
       altitude: 0, // on the ground
       minAlt: 0,
-      maxAlt: 15000,
+      maxAlt: 8000,
       minSpeed: 0,
       maxSpeed: 300,
     };
@@ -824,7 +815,6 @@ export class GameScene extends Phaser.Scene {
     });
 
     // Also allow arrow keys
-    this.arrows = this.input.keyboard.createCursorKeys();
 
     // Click to set target
     this.input.on("pointerdown", (pointer) => {
@@ -850,18 +840,13 @@ export class GameScene extends Phaser.Scene {
       .setDepth(100);
 
     this.controlsText = this.add
-      .text(
-        10,
-        0,
-        "WASD/Arrows:turn/speed  E/Q:alt  Click:target  Space:fire",
-        {
-          fontFamily: "monospace",
-          fontSize: "11px",
-          color: "#0f0",
-          backgroundColor: "#000000aa",
-          padding: { x: 6, y: 4 },
-        },
-      )
+      .text(10, 0, "WASD:turn/speed  E/Q:alt  Click:target  Space:fire", {
+        fontFamily: "monospace",
+        fontSize: "11px",
+        color: "#0f0",
+        backgroundColor: "#000000aa",
+        padding: { x: 6, y: 4 },
+      })
       .setDepth(100);
 
     // Main camera ignores HUD, HUD camera only sees HUD
@@ -1124,19 +1109,19 @@ export class GameScene extends Phaser.Scene {
 
     // --- Input: turn ---
     const turnRate = 120; // degrees/sec
-    if (this.cursors.left.isDown || this.arrows.left.isDown) {
+    if (this.cursors.left.isDown) {
       ds.angle -= turnRate * dt;
     }
-    if (this.cursors.right.isDown || this.arrows.right.isDown) {
+    if (this.cursors.right.isDown) {
       ds.angle += turnRate * dt;
     }
 
     // --- Input: speed ---
     const accel = 100; // px/s^2
-    if (this.cursors.up.isDown || this.arrows.up.isDown) {
+    if (this.cursors.up.isDown) {
       ds.speed = Math.min(ds.maxSpeed, ds.speed + accel * dt);
     }
-    if (this.cursors.down.isDown || this.arrows.down.isDown) {
+    if (this.cursors.down.isDown) {
       const minSpd = isAirborne ? 80 : 0; // 40 kts min when flying
       ds.speed = Math.max(minSpd, ds.speed - accel * dt);
     }
@@ -1203,7 +1188,7 @@ export class GameScene extends Phaser.Scene {
       this.drone.setScale(SCALE);
     } else {
       const t = (ds.altitude - 2000) / (ds.maxAlt - 2000);
-      const zoom = Phaser.Math.Linear(1.0, 0.35, t);
+      const zoom = Phaser.Math.Linear(1.0, 0.65, t);
       this.cameras.main.setZoom(zoom);
       this.drone.setScale(SCALE / zoom);
     }
@@ -1255,34 +1240,11 @@ export class GameScene extends Phaser.Scene {
       stateLabel = ds.speed === 0 ? "PARKED" : "TAXIING";
       if (speedKnots >= 40) stateLabel = "READY (E to take off)";
     } else {
-      stateLabel = this.targetPos ? "TGT LOCK" : "NO TGT";
+      stateLabel = "";
     }
-    const wDist = Math.round(
-      Phaser.Math.Distance.Between(
-        ds.x,
-        ds.y,
-        this.weddingPos.x,
-        this.weddingPos.y,
-      ),
-    );
-    const wBearing =
-      ((Math.round(
-        Phaser.Math.RadToDeg(
-          Phaser.Math.Angle.Between(
-            ds.x,
-            ds.y,
-            this.weddingPos.x,
-            this.weddingPos.y,
-          ),
-        ) + 90,
-      ) %
-        360) +
-        360) %
-      360;
     this.hudText.setText(
-      `ALT: ${Math.round(ds.altitude)} ft  SPD: ${spdDisplay} kts  HDG: ${(((ds.angle % 360) + 360) % 360) | 0}°\n` +
-        `KILLS: ${this.kills}  ${stateLabel}\n` +
-        `WEDDING: ${wBearing}° ${wDist}px`,
+      `ALT: ${Math.round(ds.altitude)} ft  SPD: ${spdDisplay} kts\n` +
+        `FREEDOMS: ${this.kills}  ${stateLabel}`,
     );
   }
 
@@ -1363,8 +1325,11 @@ export class GameScene extends Phaser.Scene {
       m.smokeTimer = (m.smokeTimer || 0) + dt * 1000;
       if (m.smokeTimer > 40) {
         m.smokeTimer = 0;
+        // Offset smoke to the back of the missile (opposite of heading)
+        const smokeX = m.sprite.x - Math.cos(m.heading) * 12;
+        const smokeY = m.sprite.y - Math.sin(m.heading) * 12;
         const puff = this.add
-          .image(m.sprite.x, m.sprite.y, "smoke")
+          .image(smokeX, smokeY, "smoke")
           .setScale(SCALE * (0.4 + Math.random() * 0.3))
           .setDepth(8)
           .setAlpha(0.6);
@@ -1436,29 +1401,6 @@ export class GameScene extends Phaser.Scene {
 
     // Screen shake
     this.cameras.main.shake(200, 0.005);
-
-    // Check tank hits
-    const hitRadius = 40;
-    for (const tank of this.tankData) {
-      if (!tank.alive) continue;
-      const dist = Phaser.Math.Distance.Between(x, y, tank.x, tank.y);
-      if (dist < hitRadius) {
-        tank.alive = false;
-        tank.setTexture("tank-dead");
-        this.kills++;
-
-        // Secondary explosion on tank
-        this.time.delayedCall(150, () => {
-          const exp2 = this.add
-            .sprite(tank.x, tank.y, "explosion-sheet", 0)
-            .setScale(SCALE * 1.5)
-            .setDepth(11);
-          this.hudCam.ignore(exp2);
-          exp2.play("explode");
-          exp2.once("animationcomplete", () => exp2.destroy());
-        });
-      }
-    }
 
     // Check building hits
     for (const b of this.buildings) {
@@ -1872,10 +1814,22 @@ export class GameScene extends Phaser.Scene {
         const margin = 100;
         const worldW = WORLD_W * SCALE;
         const worldH = WORLD_H * SCALE;
-        if (p.sprite.x < margin) { p.sprite.x = margin; p.runAngle = Math.PI - p.runAngle; }
-        if (p.sprite.x > worldW - margin) { p.sprite.x = worldW - margin; p.runAngle = Math.PI - p.runAngle; }
-        if (p.sprite.y < margin) { p.sprite.y = margin; p.runAngle = -p.runAngle; }
-        if (p.sprite.y > worldH - margin) { p.sprite.y = worldH - margin; p.runAngle = -p.runAngle; }
+        if (p.sprite.x < margin) {
+          p.sprite.x = margin;
+          p.runAngle = Math.PI - p.runAngle;
+        }
+        if (p.sprite.x > worldW - margin) {
+          p.sprite.x = worldW - margin;
+          p.runAngle = Math.PI - p.runAngle;
+        }
+        if (p.sprite.y < margin) {
+          p.sprite.y = margin;
+          p.runAngle = -p.runAngle;
+        }
+        if (p.sprite.y > worldH - margin) {
+          p.sprite.y = worldH - margin;
+          p.runAngle = -p.runAngle;
+        }
 
         // Calm down if drone is far away for a while
         p.panicTimer = (p.panicTimer || 0) + dt;
