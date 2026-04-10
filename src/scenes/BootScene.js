@@ -2053,6 +2053,100 @@ export class BootScene extends Phaser.Scene {
     db2.fillRect(1, 9, 3, 1);
     bike2Canvas.refresh();
 
+    // --- Cars (top-down, 12x18, multiple colors) ---
+    const carColors = [
+      { name: 'car-white', body: '#eee', roof: '#ddd', shade: '#ccc' },
+      { name: 'car-black', body: '#333', roof: '#222', shade: '#111' },
+      { name: 'car-grey', body: '#888', roof: '#777', shade: '#666' },
+      { name: 'car-red', body: '#cc2222', roof: '#aa1111', shade: '#881111' },
+      { name: 'car-blue', body: '#2244aa', roof: '#1a3388', shade: '#112266' },
+      { name: 'car-green', body: '#338833', roof: '#226622', shade: '#115511' },
+      { name: 'car-tan', body: '#ccaa77', roof: '#bbaa66', shade: '#aa8855' },
+    ];
+    for (const cc of carColors) {
+      const carCanvas = this.textures.createCanvas(cc.name, 12, 18);
+      const ctx = carCanvas.context;
+      // Body
+      ctx.fillStyle = cc.body;
+      ctx.fillRect(1, 1, 10, 16);
+      ctx.fillRect(0, 4, 12, 10);
+      // Hood
+      ctx.fillStyle = cc.body;
+      ctx.fillRect(2, 1, 8, 4);
+      // Roof
+      ctx.fillStyle = cc.roof;
+      ctx.fillRect(2, 5, 8, 7);
+      // Windshield
+      ctx.fillStyle = '#88bbdd';
+      ctx.fillRect(2, 4, 8, 2);
+      // Side windows
+      ctx.fillStyle = '#7aaacc';
+      ctx.fillRect(1, 6, 1, 4);
+      ctx.fillRect(10, 6, 1, 4);
+      // Rear window
+      ctx.fillStyle = '#6699aa';
+      ctx.fillRect(3, 12, 6, 1);
+      // Headlights
+      ctx.fillStyle = '#ffee88';
+      ctx.fillRect(1, 1, 3, 1);
+      ctx.fillRect(8, 1, 3, 1);
+      // Bumper
+      ctx.fillStyle = '#999';
+      ctx.fillRect(1, 0, 10, 1);
+      ctx.fillRect(1, 17, 10, 1);
+      // Taillights
+      ctx.fillStyle = '#ff3333';
+      ctx.fillRect(1, 16, 3, 1);
+      ctx.fillRect(8, 16, 3, 1);
+      // Side shade
+      ctx.fillStyle = cc.shade;
+      ctx.fillRect(0, 5, 1, 8);
+      ctx.fillRect(11, 5, 1, 8);
+      // Wheels
+      ctx.fillStyle = '#222';
+      ctx.fillRect(0, 2, 1, 3);
+      ctx.fillRect(11, 2, 1, 3);
+      ctx.fillRect(0, 13, 1, 3);
+      ctx.fillRect(11, 13, 1, 3);
+      // Wheel detail
+      ctx.fillStyle = '#444';
+      ctx.fillRect(0, 3, 1, 1);
+      ctx.fillRect(11, 3, 1, 1);
+      ctx.fillRect(0, 14, 1, 1);
+      ctx.fillRect(11, 14, 1, 1);
+      // Door lines
+      ctx.fillStyle = cc.shade;
+      ctx.fillRect(2, 5, 8, 1);
+      ctx.fillRect(5, 6, 1, 6);
+      carCanvas.refresh();
+    }
+
+    // --- Car destroyed (12x18) ---
+    const carDeadCanvas = this.textures.createCanvas('car-dead', 12, 18);
+    const cdc = carDeadCanvas.context;
+    cdc.fillStyle = '#333';
+    cdc.fillRect(1, 1, 10, 16);
+    cdc.fillRect(0, 4, 12, 10);
+    cdc.fillStyle = '#222';
+    cdc.fillRect(2, 5, 8, 7);
+    cdc.fillStyle = '#f80';
+    cdc.fillRect(3, 6, 3, 3);
+    cdc.fillStyle = '#f00';
+    cdc.fillRect(6, 8, 3, 3);
+    cdc.fillStyle = '#ff0';
+    cdc.fillRect(5, 7, 2, 2);
+    cdc.fillStyle = '#444';
+    cdc.fillRect(0, 2, 1, 3);
+    cdc.fillRect(11, 2, 1, 3);
+    cdc.fillRect(0, 13, 1, 3);
+    cdc.fillRect(11, 13, 1, 3);
+    // Broken glass
+    cdc.fillStyle = '#556';
+    cdc.fillRect(2, 4, 8, 2);
+    cdc.fillRect(3, 12, 6, 1);
+    cdc.fillRect(1, 17, 10, 1);
+    carDeadCanvas.refresh();
+
     // --- Meat chunk (6x5) ---
     const meatCanvas = this.textures.createCanvas('meat', 6, 5);
     const mtc = meatCanvas.context;

@@ -1103,6 +1103,48 @@ export class GameScene extends Phaser.Scene {
       });
     }
 
+    // --- Town cars ---
+    this.townCars = [];
+    const carNames = ["car-white", "car-black", "car-grey", "car-red", "car-blue", "car-green", "car-tan"];
+
+    // Build road waypoint grid (intersections)
+    this.townRoadNodes = [];
+    const townRoadNodes = this.townRoadNodes;
+    this.townRoadSpacing = roadSpacing;
+    this.townRoadTile = roadTile;
+    this.townStartX = townStartX;
+    this.townStartY = townStartY;
+    this.townGridCols = gridCols;
+    this.townGridRows = gridRows;
+    for (let ry = 0; ry <= gridRows; ry++) {
+      for (let rx = 0; rx <= gridCols; rx++) {
+        townRoadNodes.push({
+          x: townStartX + rx * roadSpacing * roadTile + roadTile / 2,
+          y: townStartY + ry * roadSpacing * roadTile + roadTile / 2,
+        });
+      }
+    }
+
+    for (let ci = 0; ci < 15; ci++) {
+      // Start at a random intersection
+      const startNode = Phaser.Utils.Array.GetRandom(townRoadNodes);
+      const carTex = Phaser.Utils.Array.GetRandom(carNames);
+      const passengers = Phaser.Math.Between(1, 4);
+      const sprite = this.add.image(startNode.x, startNode.y, carTex)
+        .setScale(SCALE).setDepth(2);
+      this.townCars.push({
+        sprite,
+        tex: carTex,
+        passengers,
+        alive: true,
+        // Current position on road grid
+        currentNode: { ...startNode },
+        targetNode: null,
+        speed: 40 + Math.random() * 30,
+        heading: 0,
+      });
+    }
+
     // --- Dirt bikers ---
     this.dirtBikers = [];
     for (let bi = 0; bi < 8; bi++) {
@@ -1781,6 +1823,7 @@ export class GameScene extends Phaser.Scene {
     this.updateAnimals(dt);
     this.updateOilWells(delta);
     this.updateDirtBikers(dt, delta);
+    this.updateTownCars(dt);
 
     // --- HUD ---
     const spdDisplay = Math.round(speedKnots);
@@ -2084,6 +2127,66 @@ export class GameScene extends Phaser.Scene {
             duration: 800,
             ease: "Quad.easeOut",
             onComplete: () => smoke.destroy(),
+          });
+        }
+      }
+    }
+
+    // Kill town cars — ghosts float out
+    for (const car of this.townCars) {
+      if (!car.alive) continue;
+      const dist = Phaser.Math.Distance.Between(x, y, car.sprite.x, car.sprite.y);
+      if (dist < 40) {
+        car.alive = false;
+        car.sprite.setTexture("car-dead");
+        this.kills += car.passengers;
+        // Explosion
+        const carExp = this.add.sprite(car.sprite.x, car.sprite.y, "explosion-sheet", 0)
+          .setScale(SCALE * 1.5).setDepth(11);
+        this.hudCam.ignore(carExp);
+        carExp.play("explode");
+        carExp.once("animationcomplete", () => carExp.destroy());
+        // Spawn ghosts for each passenger
+        for (let gi = 0; gi < car.passengers; gi++) {
+          const spawnAngle = (gi / car.passengers) * Math.PI * 2 + Math.random() * 0.5;
+          this.time.delayedCall(gi * 250, () => {
+            const ghost = this.add.image(
+              car.sprite.x + Math.cos(spawnAngle) * 15,
+              car.sprite.y + Math.sin(spawnAngle) * 15,
+              "ghost",
+            ).setScale(SCALE).setDepth(13).setAlpha(0.8);
+            this.hudCam.ignore(ghost);
+            const line = Phaser.Utils.Array.GetRandom(ghostLines);
+            const bubble = this.add
+              .text(ghost.x + 20, ghost.y - 20, line, {
+                fontFamily: "monospace",
+                fontSize: "8px",
+                color: "#aaccff",
+                backgroundColor: "#000000aa",
+                padding: { x: 4, y: 3 },
+              })
+              .setScale(SCALE * 0.5).setDepth(14);
+            this.hudCam.ignore(bubble);
+            const driftX = Math.cos(spawnAngle) * (15 + Math.random() * 25);
+            const driftY = -(20 + Math.random() * 20);
+            const wobble = Math.random() * Math.PI * 2;
+            // Animate ghost manually via tween
+            this.tweens.add({
+              targets: ghost,
+              alpha: 0,
+              y: ghost.y - 150,
+              duration: 5000,
+              onUpdate: () => {
+                ghost.x += driftX * 0.016;
+                ghost.x += Math.sin(ghost.y * 0.04 + wobble) * 0.3;
+                bubble.setPosition(ghost.x + 20, ghost.y - 20);
+                bubble.setAlpha(ghost.alpha);
+              },
+              onComplete: () => {
+                ghost.destroy();
+                bubble.destroy();
+              },
+            });
           });
         }
       }
@@ -2993,6 +3096,108 @@ export class GameScene extends Phaser.Scene {
         bk.targetX = worldW / 2 + Phaser.Math.Between(-1000, 1000);
         bk.targetY = worldH / 2 + Phaser.Math.Between(-1000, 1000);
         bk.retargetTimer = 0;
+      }
+    }
+  }
+
+  getAdjacentRoadNodes(node) {
+    // Find road intersection nodes adjacent to the given node (up/down/left/right)
+    const step = this.townRoadSpacing * this.townRoadTile;
+    const neighbors = [];
+    for (const n of this.townRoadNodes) {
+      const dx = Math.abs(n.x - node.x);
+      const dy = Math.abs(n.y - node.y);
+      // Adjacent = exactly one step away on one axis, same on the other
+      if ((dx < 5 && Math.abs(dy - step) < 5) ||
+          (dy < 5 && Math.abs(dx - step) < 5)) {
+        neighbors.push(n);
+      }
+    }
+    return neighbors;
+  }
+
+  updateTownCars(dt) {
+    for (const car of this.townCars) {
+      if (!car.alive) continue;
+
+      // Pick next intersection to drive to
+      if (!car.targetNode) {
+        const neighbors = this.getAdjacentRoadNodes(car.currentNode);
+        if (neighbors.length === 0) continue;
+        // Avoid nodes with other cars nearby
+        const best = neighbors.filter((n) => {
+          for (const other of this.townCars) {
+            if (other === car || !other.alive) continue;
+            if (Phaser.Math.Distance.Between(n.x, n.y, other.sprite.x, other.sprite.y) < 30) {
+              return false;
+            }
+          }
+          return true;
+        });
+        car.targetNode = best.length > 0
+          ? Phaser.Utils.Array.GetRandom(best)
+          : Phaser.Utils.Array.GetRandom(neighbors);
+      }
+
+      // Drive toward target node
+      const tx = car.targetNode.x;
+      const ty = car.targetNode.y;
+      const angle = Phaser.Math.Angle.Between(car.sprite.x, car.sprite.y, tx, ty);
+      const dist = Phaser.Math.Distance.Between(car.sprite.x, car.sprite.y, tx, ty);
+
+      // Slow down or stop for cars and people ahead
+      let speed = car.speed;
+      let blocked = false;
+      // Check other cars
+      for (const other of this.townCars) {
+        if (other === car || !other.alive) continue;
+        const d = Phaser.Math.Distance.Between(car.sprite.x, car.sprite.y, other.sprite.x, other.sprite.y);
+        if (d < 60) {
+          const aToOther = Phaser.Math.Angle.Between(car.sprite.x, car.sprite.y, other.sprite.x, other.sprite.y);
+          const angleDiff = Math.abs(Phaser.Math.Angle.Wrap(aToOther - angle));
+          if (angleDiff < 1.0) {
+            speed = Math.min(speed, Math.max(0, (d - 30) * 0.8));
+            if (d < 35) blocked = true;
+          }
+        }
+      }
+      // Check people on the road
+      for (const p of this.people) {
+        if (p.state === "gone" || p.state === "hiding" || p.state === "ghost") continue;
+        const d = Phaser.Math.Distance.Between(car.sprite.x, car.sprite.y, p.sprite.x, p.sprite.y);
+        if (d < 50) {
+          const aToPerson = Phaser.Math.Angle.Between(car.sprite.x, car.sprite.y, p.sprite.x, p.sprite.y);
+          const angleDiff = Math.abs(Phaser.Math.Angle.Wrap(aToPerson - angle));
+          if (angleDiff < 0.8) {
+            speed = Math.min(speed, Math.max(0, (d - 25) * 0.6));
+            if (d < 30) blocked = true;
+          }
+        }
+      }
+      // If blocked, pick a new target direction
+      if (blocked && !car._blockTimer) {
+        car._blockTimer = 0;
+      }
+      if (blocked) {
+        car._blockTimer += dt;
+        if (car._blockTimer > 1.5) {
+          car.targetNode = null; // will pick a new direction next frame
+          car._blockTimer = 0;
+        }
+      } else {
+        car._blockTimer = 0;
+      }
+
+      if (dist > 5) {
+        car.sprite.x += Math.cos(angle) * speed * dt;
+        car.sprite.y += Math.sin(angle) * speed * dt;
+        // Rotate car to face direction (top-down, 0 = facing up)
+        car.heading = angle;
+        car.sprite.setRotation(angle + Math.PI / 2);
+      } else {
+        // Arrived at node
+        car.currentNode = { x: car.targetNode.x, y: car.targetNode.y };
+        car.targetNode = null;
       }
     }
   }
