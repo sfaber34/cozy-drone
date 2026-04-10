@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { introLines, greetings, ghostLines, buildingGhostLines, cheerPhrases } from "../dialog.js";
 
 const WORLD_W = 3200;
 const WORLD_H = 3200;
@@ -350,18 +351,7 @@ export class GameScene extends Phaser.Scene {
 
     // Spectators around the field (cheering/clapping)
     this.soccerSpectators = [];
-    const cheerPhrases = [
-      "GOOOL!",
-      "Come on!",
-      "Yalla!",
-      "Offside!",
-      "Pass it!",
-      "Shoot!",
-      "Defense!",
-      "Nice one!",
-      "Ref!!",
-      "Ole!",
-    ];
+    // cheerPhrases imported from dialog.js
     // Rows of spectators on both long sides
     for (let side = -1; side <= 1; side += 2) {
       for (let s = 0; s < 12; s++) {
@@ -722,45 +712,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     // --- People (random wanderers) ---
-    const greetings = [
-      "Hi there!",
-      "Oh a drone!",
-      "Drones are neat!",
-      "Hello!",
-      "So cool!",
-      "Wow look!",
-      "Hey friend!",
-      "Up here!",
-      "Heyyy!",
-      "Nice drone!",
-      "Is that a Predator?",
-      "Come closer!",
-      "Do a flip!",
-      "Wave back!",
-      "I love drones!",
-      "Fly safe!",
-      "You're amazing!",
-      "Take my photo!",
-      "Over here!",
-      "Wooooo!",
-      "Go go go!",
-      "So majestic!",
-      "Beautiful!",
-      "I want one!",
-      "How high\nare you?",
-      "Incredible!",
-      "Zoom zoom!",
-      "Big bird!",
-      "Living the\ndream!",
-      "Can I get\na ride?",
-      "Show off!",
-      "Tell the CIA\nI said hi!",
-      "Top Gun\nvibes!",
-      "Brrrrt!",
-      "You seeing\nthis?!",
-      "Look mom!",
-      "The future\nis now!",
-    ];
+    // greetings imported from dialog.js
     const droneStartX = rwX;
     const droneStartY = rwBottom - 80;
     for (let i = 0; i < 60; i++) {
@@ -1066,34 +1018,7 @@ export class GameScene extends Phaser.Scene {
         }
 
         // Speech bubble — cycles through lines
-        const allIntroLines = [
-          "Time to get to work!",
-          "Go get 'em!",
-          "You're my best drone!",
-          "Make me proud!",
-          "Bring everyone\npeace and love!",
-          "Have fun out there!",
-          "Don't scratch\nthe paint!",
-          "Remember your\ntraining!",
-          "You were born\nfor this!",
-          "I believe in you!",
-          "Fly high, friend!",
-          "Stay safe up there!",
-          "Show 'em what\nyou've got!",
-          "You're cleared\nfor takeoff!",
-          "The sky is yours!",
-          "Spread those wings!",
-          "I packed your\nfavorite missiles!",
-          "Knock 'em dead!\n...with love!",
-          "You're the best\nthing on this\nrunway!",
-          "Smooch! Okay\nnow go!",
-          "Watch out for\nbirds!",
-          "No pressure!\n...okay some\npressure!",
-          "Lunch is at noon!\nDon't be late!",
-          "Tell the clouds\nI said hi!",
-          "Time to hand out\nsome freedom!",
-        ];
-        const introLine = Phaser.Utils.Array.GetRandom(allIntroLines);
+        const introLine = Phaser.Utils.Array.GetRandom(introLines);
         const bubble = this.add
           .text(guyTargetX + 40, guyTargetY - 40, introLine, {
             fontFamily: "monospace",
@@ -1626,60 +1551,6 @@ export class GameScene extends Phaser.Scene {
   affectNearbyPeople(x, y) {
     const killRadius = 50;
     const panicRadius = 400;
-    const ghostLines = [
-      "Thanks!",
-      "I hated this\nplace anyway",
-      "Finally!",
-      "Sweet release!",
-      "About time!",
-      "Freedom!",
-      "Weeee!",
-      "Best day ever!",
-      "No more taxes!",
-      "Tell my wife\nI said bye!",
-      "5 stars!",
-      "Do it again!",
-      "That was fun!",
-      "I needed that!",
-      "Cozy!",
-      "Worth it!",
-      "Bye bye legs!",
-      "I feel so light!",
-      "Rent free now!",
-      "GG!",
-      "This rules!",
-      "My back doesn't\nhurt anymore!",
-      "Totally worth\nthe wait!",
-      "I was so bored!",
-      "Incredible!",
-      "Much appreciated!",
-      "That tickled!",
-      "10/10!",
-      "Yasss!",
-      "I love you\ndrone!",
-      "My therapist\nwas right!",
-      "Zero regrets!",
-      "Better than\ncoffee!",
-      "I can fly now!",
-      "See you\nin heaven!",
-      "Cloud nine\nliterally!",
-      "I'm free!",
-      "Delete my\nbrowser history!",
-      "Nice shot tho!",
-      "...Was that it?",
-      "I'm outta here!",
-      "Free at last!",
-      "I'm free!",
-      "I've had worse",
-      "Who's going to feed the goat?",
-      "Shoot\nI left the stove on",
-      "Better than working",
-      "Sure, why not.",
-      "Finally, a vacation.",
-      "Mission accomplished.",
-      "That was fun.",
-      "Somebody\nfeed my cat!",
-    ];
 
     for (const p of this.people) {
       if (p.state === "ghost" || p.state === "gone" || p.state === "hiding")
@@ -1780,21 +1651,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   killPeopleInBuilding(building) {
-    const ghostLines = [
-      "Thanks!",
-      "I hated this\nplace anyway",
-      "Finally!",
-      "Sweet release!",
-      "About time!",
-      "Freedom!",
-      "Weeee!",
-      "Best day ever!",
-      "No more taxes!",
-      "The rent was\ntoo high anyway!",
-      "Worst hiding\nspot ever!",
-      "Should've picked\na different house!",
-      "Not again!",
-    ];
+    // buildingGhostLines imported from dialog.js
     let ghostIdx = 0;
     for (const p of this.people) {
       if (p.state !== "hiding") continue;
@@ -1820,7 +1677,7 @@ export class GameScene extends Phaser.Scene {
         p.ghostDriftY = -(20 + Math.random() * 20); // always float up, but at different speeds
         p.ghostWobbleOffset = Math.random() * Math.PI * 2;
 
-        const line = Phaser.Utils.Array.GetRandom(ghostLines);
+        const line = Phaser.Utils.Array.GetRandom(buildingGhostLines);
         p.bubble = this.add
           .text(p.sprite.x + 20, p.sprite.y - 20, line, {
             fontFamily: "monospace",
@@ -2010,6 +1867,32 @@ export class GameScene extends Phaser.Scene {
         p.sprite.x += Math.cos(p.runAngle) * panicSpeed * dt;
         p.sprite.y += Math.sin(p.runAngle) * panicSpeed * dt;
         p.sprite.setFlipX(Math.cos(p.runAngle) < 0);
+
+        // Bounce off world boundaries
+        const margin = 100;
+        const worldW = WORLD_W * SCALE;
+        const worldH = WORLD_H * SCALE;
+        if (p.sprite.x < margin) { p.sprite.x = margin; p.runAngle = Math.PI - p.runAngle; }
+        if (p.sprite.x > worldW - margin) { p.sprite.x = worldW - margin; p.runAngle = Math.PI - p.runAngle; }
+        if (p.sprite.y < margin) { p.sprite.y = margin; p.runAngle = -p.runAngle; }
+        if (p.sprite.y > worldH - margin) { p.sprite.y = worldH - margin; p.runAngle = -p.runAngle; }
+
+        // Calm down if drone is far away for a while
+        p.panicTimer = (p.panicTimer || 0) + dt;
+        if (distToDrone > 800 && p.panicTimer > 5) {
+          p.state = "idle";
+          p.panicTimer = 0;
+          p.hideTarget = null;
+          p.noGreet = false; // allow greeting after surviving a scare
+          if (!p.greeting) {
+            p.greeting = Phaser.Utils.Array.GetRandom(greetings);
+          }
+          p.sprite.setTexture(`person-stand-${p.skinId}`);
+        }
+        // Reset calm-down timer if drone is nearby
+        if (distToDrone <= 800) {
+          p.panicTimer = 0;
+        }
       }
 
       // --- GHOST ---
