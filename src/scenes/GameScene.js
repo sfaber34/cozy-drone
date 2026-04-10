@@ -137,6 +137,7 @@ export class GameScene extends Phaser.Scene {
       loop: true,
       callback: () => {
         if (!brideSprite.active || !groomSprite.active) return;
+        if (this.brideEntry.state !== "idle" || this.groomEntry.state !== "idle") return;
         const hx = (brideSprite.x + groomSprite.x) / 2;
         const hy = brideSprite.y - 10;
         const heart = this.add
@@ -201,8 +202,9 @@ export class GameScene extends Phaser.Scene {
       { sprite: groomSprite },
       { sprite: priestSprite },
     ];
+    const weddingEntries = [];
     for (const wp of weddingPeople) {
-      this.people.push({
+      const entry = {
         sprite: wp.sprite,
         skinId: 0,
         state: "idle",
@@ -221,8 +223,12 @@ export class GameScene extends Phaser.Scene {
         hideTarget: null,
         homeX: wp.sprite.x,
         homeY: wp.sprite.y,
-      });
+      };
+      this.people.push(entry);
+      weddingEntries.push(entry);
     }
+    this.brideEntry = weddingEntries[0];
+    this.groomEntry = weddingEntries[1];
 
     // ==========================================
     // SOCCER GAME (to the right of the wedding)
