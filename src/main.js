@@ -19,6 +19,14 @@ const config = {
       debug: false,
     },
   },
+  audio: {
+    noAudio: false,
+  },
 };
 
-new Phaser.Game(config);
+const game = new Phaser.Game(config);
+
+// Try to unlock audio context as early as possible
+if (game.sound && game.sound.context) {
+  game.sound.context.resume();
+}
