@@ -964,6 +964,37 @@ export class GameScene extends Phaser.Scene {
 
     loadCategory("missileLaunch", "/sfx/missileLaunch");
     loadCategory("explosion", "/sfx/explosion");
+
+    // Engine loop — two instances crossfaded for seamless looping
+    this.engineKey = null;
+    this.engineA = null;
+    this.engineB = null;
+    this.engineActive = null; // which instance is currently primary
+    this.engineCrossfade = 0.5; // seconds of crossfade overlap
+    fetch("/sfx/engine/sounds.json")
+      .then((res) => res.json())
+      .then((files) => {
+        if (!files || files.length === 0) return;
+        const filename = files[0];
+        const key = `sfx-engine-${filename}`;
+        this.engineKey = key;
+        this.load.audio(key, `/sfx/engine/${filename}`);
+        this.load.once("complete", () => {
+          this.engineA = this.sound.add(key, {
+            volume: 0,
+            loop: false,
+            rate: 0.6,
+          });
+          this.engineB = this.sound.add(key, {
+            volume: 0,
+            loop: false,
+            rate: 0.6,
+          });
+          this.engineActive = null;
+        });
+        this.load.start();
+      })
+      .catch(() => {});
   }
 
   playSfx(category, volume = 0.5) {
@@ -971,6 +1002,30 @@ export class GameScene extends Phaser.Scene {
     if (!keys || keys.length === 0) return;
     const key = Phaser.Utils.Array.GetRandom(keys);
     this.sound.play(key, { volume });
+  }
+
+  playSfxAt(category, x, y, maxVolume = 0.7) {
+    const keys = this.sfx[category];
+    if (!keys || keys.length === 0) return;
+    const key = Phaser.Utils.Array.GetRandom(keys);
+
+    const ds = this.droneState;
+    const dist = Phaser.Math.Distance.Between(ds.x, ds.y, x, y);
+
+    // Volume falls off with distance (full at 0, silent at ~2000px)
+    const maxDist = 2000;
+    const volume = maxVolume * Phaser.Math.Clamp(1 - dist / maxDist, 0.05, 1);
+
+    // Pan based on horizontal angle from drone (-1 left, +1 right)
+    // Account for drone's heading so it's relative to the drone's facing direction
+    const angleToExplosion = Phaser.Math.Angle.Between(ds.x, ds.y, x, y);
+    const droneRad = Phaser.Math.DegToRad(ds.angle - 90);
+    const relAngle = angleToExplosion - droneRad;
+    const pan = Phaser.Math.Clamp(Math.sin(relAngle) * 0.25, -0.25, 0.25);
+
+    const sfx = this.sound.add(key, { volume });
+    sfx.play({ pan });
+    sfx.once("complete", () => sfx.destroy());
   }
 
   playIntroCutscene() {
@@ -1092,6 +1147,11 @@ export class GameScene extends Phaser.Scene {
     this.drone.setVisible(false);
     this.droneShadow.setVisible(false);
 
+    // Stop engine sound
+    if (this.engineA && this.engineA.isPlaying) this.engineA.stop();
+    if (this.engineB && this.engineB.isPlaying) this.engineB.stop();
+    this.engineActive = null;
+
     // Explosion at crash site
     this.missileImpact(this.droneState.x, this.droneState.y);
     this.cameras.main.shake(500, 0.015);
@@ -1130,6 +1190,7 @@ export class GameScene extends Phaser.Scene {
     // --- Crashed state ---
     if (this.flightState === "crashed") {
       if (this.restartKey && Phaser.Input.Keyboard.JustDown(this.restartKey)) {
+        this.sound.stopAll();
         this.scene.restart();
       }
       this.updateMissiles(dt);
@@ -1234,6 +1295,62 @@ export class GameScene extends Phaser.Scene {
         this.propTimer = 0;
         this.propFrame = 1 - this.propFrame;
         this.drone.setTexture(this.propFrame === 0 ? "drone" : "drone2");
+      }
+    }
+
+    // --- Engine sound (crossfaded loop, pitch shifts with speed) ---
+    if (this.engineA && this.engineB) {
+      const speedFrac = ds.speed / ds.maxSpeed;
+      const targetRate = 0.6 + speedFrac * 0.8;
+      const targetVol = ds.speed > 0 ? 0.04 + speedFrac * 0.07 : 0;
+      const fade = this.engineCrossfade;
+
+      // Start the first instance if nothing is playing and speed > 0
+      if (ds.speed > 0 && !this.engineA.isPlaying && !this.engineB.isPlaying) {
+        this.engineA.setRate(targetRate);
+        this.engineA.setVolume(targetVol);
+        this.engineA.play();
+        this.engineActive = this.engineA;
+      }
+
+      // Update rate on both instances
+      if (this.engineA.isPlaying) this.engineA.setRate(targetRate);
+      if (this.engineB.isPlaying) this.engineB.setRate(targetRate);
+
+      // Crossfade: when active instance nears its end, start the other and fade
+      const active = this.engineActive;
+      const other = active === this.engineA ? this.engineB : this.engineA;
+      if (active && active.isPlaying && active.duration > 0) {
+        const remaining = active.duration - active.seek;
+        const fadeSec = fade / active.rate; // adjust for playback rate
+        if (remaining < fadeSec && !other.isPlaying) {
+          // Start the other instance and crossfade
+          other.setRate(targetRate);
+          other.setVolume(0);
+          other.play();
+          this.engineActive = other;
+        }
+        // Fade out active if near end
+        if (remaining < fadeSec) {
+          const t = remaining / fadeSec;
+          active.setVolume(targetVol * t);
+        } else {
+          active.setVolume(targetVol);
+        }
+        // Fade in other if just started
+        if (other.isPlaying && other.seek < fadeSec) {
+          const t = other.seek / fadeSec;
+          other.setVolume(targetVol * t);
+        } else if (other.isPlaying && other === this.engineActive) {
+          other.setVolume(targetVol);
+        }
+      }
+
+      // Stop both if speed is 0
+      if (ds.speed === 0) {
+        if (this.engineA.isPlaying) this.engineA.stop();
+        if (this.engineB.isPlaying) this.engineB.stop();
+        this.engineActive = null;
       }
     }
 
@@ -1433,8 +1550,8 @@ export class GameScene extends Phaser.Scene {
       });
     }
 
-    // Explosion SFX
-    this.playSfx("explosion", 0.3);
+    // Explosion SFX — directional relative to drone
+    this.playSfxAt("explosion", x, y, 0.7);
 
     // Screen shake
     this.cameras.main.shake(200, 0.005);
