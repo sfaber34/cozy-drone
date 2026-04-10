@@ -1544,23 +1544,26 @@ export class GameScene extends Phaser.Scene {
     exp.play("explode");
     exp.once("animationcomplete", () => exp.destroy());
 
-    // Spawn cute symbols
+    // Spawn cute symbols (randomized count, types, directions)
     const symbols = ["heart", "flower", "smiley", "star", "rainbow"];
-    for (let i = 0; i < 8; i++) {
+    const count = Phaser.Math.Between(3, 12);
+    for (let i = 0; i < count; i++) {
       const tex = Phaser.Utils.Array.GetRandom(symbols);
-      const sym = this.add.image(x, y, tex).setScale(SCALE).setDepth(12);
+      const s = SCALE * 0.5;
+      const sym = this.add.image(x, y, tex).setScale(s).setDepth(12);
       this.hudCam.ignore(sym);
       const angle = Math.random() * Math.PI * 2;
-      const dist = 60 + Math.random() * 80;
-      const duration = 600 + Math.random() * 600;
+      const dist = 30 + Math.random() * 120;
+      const duration = 400 + Math.random() * 800;
       this.tweens.add({
         targets: sym,
         x: x + Math.cos(angle) * dist,
-        y: y + Math.sin(angle) * dist - 30,
-        scale: SCALE * (0.5 + Math.random() * 0.8),
+        y: y + Math.sin(angle) * dist - 20 - Math.random() * 30,
+        scale: s * (0.3 + Math.random() * 0.7),
         alpha: 0,
-        angle: Phaser.Math.Between(-180, 180),
+        angle: Phaser.Math.Between(-270, 270),
         duration,
+        delay: Math.random() * 150,
         ease: "Quad.easeOut",
         onComplete: () => sym.destroy(),
       });
