@@ -1580,11 +1580,20 @@ export class GameScene extends Phaser.Scene {
     const keys = this.sfx.death;
     if (!keys || keys.length === 0) return;
 
+    // Track recent plays — don't repeat until 3 others have played
+    if (!this.deathSfxRecent) this.deathSfxRecent = [];
+
     this.deathSfxActive++;
-    const delay = (this.deathSfxActive - 1) * 120; // stagger 120ms apart
+    const delay = (this.deathSfxActive - 1) * 120;
 
     this.time.delayedCall(delay, () => {
-      const key = Phaser.Utils.Array.GetRandom(keys);
+      // Filter out recently played
+      let candidates = keys.filter((k) => !this.deathSfxRecent.includes(k));
+      if (candidates.length === 0) candidates = keys;
+      const key = candidates[Math.floor(Math.random() * candidates.length)];
+      // Track it — keep last 3
+      this.deathSfxRecent.push(key);
+      if (this.deathSfxRecent.length > 3) this.deathSfxRecent.shift();
       const ds = this.droneState;
       const dist = Phaser.Math.Distance.Between(ds.x, ds.y, x, y);
       const maxDist = 2000;
@@ -1666,7 +1675,7 @@ export class GameScene extends Phaser.Scene {
         }
 
         // Speech bubble — cycles through lines
-        const introLine = Phaser.Utils.Array.GetRandom(introLines);
+        const introLine = introLines[Math.floor(Math.random() * introLines.length)];
         const bubble = this.add
           .text(guyTargetX + 40, guyTargetY - 40, introLine, {
             fontFamily: "monospace",
@@ -3505,14 +3514,14 @@ export class GameScene extends Phaser.Scene {
           }
         }
       }
-      // If blocked, pick a new target direction
-      if (blocked && !car._blockTimer) {
-        car._blockTimer = 0;
-      }
+      // If blocked, reverse to previous node
       if (blocked) {
-        car._blockTimer += dt;
-        if (car._blockTimer > 1.5) {
-          car.targetNode = null; // will pick a new direction next frame
+        car._blockTimer = (car._blockTimer || 0) + dt;
+        if (car._blockTimer > 0.8) {
+          // Reverse: swap current and target
+          const prev = { ...car.currentNode };
+          car.currentNode = { x: car.targetNode.x, y: car.targetNode.y };
+          car.targetNode = prev;
           car._blockTimer = 0;
         }
       } else {
@@ -3520,11 +3529,19 @@ export class GameScene extends Phaser.Scene {
       }
 
       if (dist > 5) {
-        car.sprite.x += Math.cos(angle) * speed * dt;
-        car.sprite.y += Math.sin(angle) * speed * dt;
-        // Rotate car to face direction (top-down, 0 = facing up)
-        car.heading = angle;
-        car.sprite.setRotation(angle + Math.PI / 2);
+        // Constrain movement to axis (horizontal or vertical) to stay on roads
+        const dx = tx - car.sprite.x;
+        const dy = ty - car.sprite.y;
+        let moveAngle;
+        if (Math.abs(dx) > Math.abs(dy)) {
+          moveAngle = dx > 0 ? 0 : Math.PI;
+        } else {
+          moveAngle = dy > 0 ? Math.PI / 2 : -Math.PI / 2;
+        }
+        car.sprite.x += Math.cos(moveAngle) * speed * dt;
+        car.sprite.y += Math.sin(moveAngle) * speed * dt;
+        car.heading = moveAngle;
+        car.sprite.setRotation(moveAngle + Math.PI / 2);
       } else {
         // Arrived at node
         car.currentNode = { x: car.targetNode.x, y: car.targetNode.y };
