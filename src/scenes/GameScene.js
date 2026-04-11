@@ -1339,6 +1339,8 @@ export class GameScene extends Phaser.Scene {
 
     // Click to set target
     this.input.on("pointerdown", (pointer) => {
+      if (this.introPlaying) return;
+      if (this.flightState === "crashed") return;
       const worldX = pointer.worldX;
       const worldY = pointer.worldY;
       this.targetPos = { x: worldX, y: worldY };
@@ -1399,6 +1401,7 @@ export class GameScene extends Phaser.Scene {
   initAudio() {
     // State
     this.musicTracks = [];
+    this.audioLoaded = false;
     this.musicStarted = false;
     this.currentTrack = null;
     this.lastTrackKey = null;
@@ -1470,6 +1473,7 @@ export class GameScene extends Phaser.Scene {
 
       // Single load + single complete
       this.load.once("complete", () => {
+        this.audioLoaded = true;
         if (this.sound.context) this.sound.context.resume();
 
         // Register SFX keys
@@ -1515,6 +1519,8 @@ export class GameScene extends Phaser.Scene {
 
   playRandomTrack() {
     if (this.musicTracks.length === 0) return;
+    // Don't try to play if audio hasn't finished loading
+    if (!this.audioLoaded) return;
     this.musicStarted = true;
 
     let candidates = this.musicTracks.filter(
@@ -1597,7 +1603,7 @@ export class GameScene extends Phaser.Scene {
       const ds = this.droneState;
       const dist = Phaser.Math.Distance.Between(ds.x, ds.y, x, y);
       const maxDist = 2000;
-      const volume = 0.35 * Phaser.Math.Clamp(1 - dist / maxDist, 0.05, 1);
+      const volume = 0.45 * Phaser.Math.Clamp(1 - dist / maxDist, 0.14, 1);
       const angleToSound = Phaser.Math.Angle.Between(ds.x, ds.y, x, y);
       const droneRad = Phaser.Math.DegToRad(ds.angle - 90);
       const relAngle = angleToSound - droneRad;
@@ -1675,7 +1681,8 @@ export class GameScene extends Phaser.Scene {
         }
 
         // Speech bubble — cycles through lines
-        const introLine = introLines[Math.floor(Math.random() * introLines.length)];
+        const introLine =
+          introLines[Math.floor(Math.random() * introLines.length)];
         const bubble = this.add
           .text(guyTargetX + 40, guyTargetY - 40, introLine, {
             fontFamily: "monospace",
@@ -2527,6 +2534,8 @@ export class GameScene extends Phaser.Scene {
     let bestDist = Infinity;
     for (const b of this.buildings) {
       if (b.destroyed) continue;
+      // Can't hide in oil wells, oil tanks, or silos
+      if (b.isOilInfra || b.isOilWell || b.tex === "silo") continue;
       const d = Phaser.Math.Distance.Between(px, py, b.x, b.y);
       if (d < bestDist) {
         bestDist = d;
