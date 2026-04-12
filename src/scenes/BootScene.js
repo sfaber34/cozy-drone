@@ -254,28 +254,47 @@ export class BootScene extends Phaser.Scene {
 
     // --- Person skins (10 variants with Middle Eastern clothing) ---
     // Each skin: {skin, robe, headwear, headColor, shoes}
-    const personSkins = [
-      // 1: White thobe, red keffiyeh
-      { skin: '#d4a574', robe: '#f0ece0', head: '#cc3333', headType: 'keffiyeh', shoes: '#8a6a3a', accent: '#aa2222' },
-      // 2: Beige dishdasha, white keffiyeh
-      { skin: '#c49a6c', robe: '#e8dcc8', head: '#fff', headType: 'keffiyeh', shoes: '#5a3a1a', accent: '#222' },
-      // 3: Blue thobe, white kufi cap
-      { skin: '#d4a574', robe: '#4477aa', head: '#eee', headType: 'kufi', shoes: '#333', accent: '#335588' },
-      // 4: Dark robe, black agal+keffiyeh
-      { skin: '#c49a6c', robe: '#3a3a3a', head: '#ddd', headType: 'keffiyeh', shoes: '#222', accent: '#111' },
-      // 5: Green thobe, brown kufi
-      { skin: '#b8885c', robe: '#5a7a4a', head: '#8a6a3a', headType: 'kufi', shoes: '#4a3a1a', accent: '#3a5a2a' },
-      // 6: Woman — dark abaya, colored hijab
-      { skin: '#d4a574', robe: '#2a2a2a', head: '#884488', headType: 'hijab', shoes: '#333', accent: '#2a2a2a' },
-      // 7: Woman — navy abaya, blue hijab
-      { skin: '#c49a6c', robe: '#2a3a5a', head: '#4466aa', headType: 'hijab', shoes: '#2a2a3a', accent: '#1a2a4a' },
-      // 8: Light brown robe, orange keffiyeh
-      { skin: '#b8885c', robe: '#c8b088', head: '#dd8833', headType: 'keffiyeh', shoes: '#6a4a2a', accent: '#bb6622' },
-      // 9: Woman — maroon abaya, cream hijab
-      { skin: '#d4a574', robe: '#6a2a2a', head: '#e8dcc8', headType: 'hijab', shoes: '#4a2a1a', accent: '#5a1a1a' },
-      // 10: White thobe, white kufi, older (grey beard hint)
-      { skin: '#c49a6c', robe: '#f0ece0', head: '#ddd', headType: 'kufi', shoes: '#6a5a3a', accent: '#bbb' },
+    // Procedural person skin generation — combine attribute arrays for huge variety
+    const skinTones = ['#d4a574', '#c49a6c', '#b8885c', '#dbb08a', '#c8946a', '#a07850'];
+    const headTypes = ['keffiyeh', 'keffiyeh', 'kufi', 'kufi', 'hijab', 'hijab'];
+    const headColors = [
+      '#fff', '#eee', '#ddd', '#cc3333', '#aa2222', '#dd8833', '#cc9944',
+      '#557744', '#882222', '#884488', '#4466aa', '#44aaaa', '#ddaa44',
+      '#e8dcc8', '#cc66aa', '#88cc88', '#aaccee', '#ffcc88', '#dd6644',
+      '#ffcc44', '#88bb88', '#cc88cc', '#eedd88',
     ];
+    const robeColors = [
+      '#f0ece0', '#e8dcc8', '#4477aa', '#3a3a3a', '#5a7a4a', '#2a2a2a',
+      '#2a3a5a', '#c8b088', '#6a2a2a', '#cc8844', '#888', '#446688',
+      '#996633', '#2a4a2a', '#cc4444', '#4488cc', '#44aa44', '#ddaa33',
+      '#887766', '#665544', '#aa8866', '#7a6a5a', '#bbaa88', '#d8c8a8',
+      '#555', '#4a2a4a', '#1a3a3a', '#5a2a3a', '#224422', '#442244',
+      '#553322', '#1a2a3a', '#8844aa', '#556644', '#2a2a4a', '#3a2a1a',
+    ];
+    const shoeColors = ['#8a6a3a', '#5a3a1a', '#333', '#222', '#4a3a1a', '#6a4a2a', '#3a3a2a', '#2a2a2a', '#6a5a3a'];
+    const accentColors = [
+      '#aa2222', '#222', '#335588', '#111', '#3a5a2a', '#bb6622',
+      '#5a1a1a', '#bbb', '#cc3333', '#aa7722', '#661111', '#333',
+      '#aa6633', '#666', '#775522', '#ddd', '#eee', '#776644',
+    ];
+
+    // Generate 60 unique combos with seeded randomness for consistency
+    const skinRng = new Phaser.Math.RandomDataGenerator(['skins']);
+    const personSkins = [];
+    const NUM_SKINS = 200;
+    for (let i = 0; i < NUM_SKINS; i++) {
+      const headType = skinRng.pick(headTypes);
+      // Pick accent that roughly matches headwear
+      const accent = skinRng.pick(accentColors);
+      personSkins.push({
+        skin: skinRng.pick(skinTones),
+        robe: skinRng.pick(robeColors),
+        head: skinRng.pick(headColors),
+        headType,
+        shoes: skinRng.pick(shoeColors),
+        accent,
+      });
+    }
 
     const drawPersonHead = (ctx, s, yOff) => {
       // Head
@@ -1941,13 +1960,19 @@ export class BootScene extends Phaser.Scene {
     wellBurnCanvas.refresh();
 
     // --- Hard hat worker skin (index 10 and 11) ---
-    const hardHatSkins = [
-      { skin: '#c49a6c', hat: '#ffcc00', vest: '#ff6600', pants: '#335588' },
-      { skin: '#d4a574', hat: '#fff', vest: '#ff6600', pants: '#445588' },
-    ];
-    for (let hi = 0; hi < hardHatSkins.length; hi++) {
-      const h = hardHatSkins[hi];
-      const idx = 10 + hi;
+    const workerHats = ['#ffcc00', '#fff', '#ff8800', '#ff4444', '#44aaff', '#44cc44'];
+    const workerVests = ['#ff6600', '#ff8800', '#ffcc00'];
+    const workerPants = ['#335588', '#445588', '#333', '#555', '#443322', '#2a3a5a', '#4a4a4a', '#224422', '#3a3a3a', '#665544'];
+    const workerRng = new Phaser.Math.RandomDataGenerator(['workers']);
+    const NUM_WORKER_SKINS = 20;
+    for (let hi = 0; hi < NUM_WORKER_SKINS; hi++) {
+      const h = {
+        skin: workerRng.pick(skinTones),
+        hat: workerRng.pick(workerHats),
+        vest: workerRng.pick(workerVests),
+        pants: workerRng.pick(workerPants),
+      };
+      const idx = NUM_SKINS + hi;
 
       // Standing
       const hsCanvas = this.textures.createCanvas(`person-stand-${idx}`, 10, 14);
@@ -2083,128 +2108,95 @@ export class BootScene extends Phaser.Scene {
       hr2Canvas.refresh();
     }
 
-    // --- Dirt bike with rider (side view, 18x16) ---
-    const bikeCanvas = this.textures.createCanvas('dirtbike', 18, 16);
-    const dbc = bikeCanvas.context;
-    // Wheels
-    dbc.fillStyle = '#333';
-    dbc.fillRect(1, 11, 4, 4);
-    dbc.fillRect(13, 11, 4, 4);
-    dbc.fillStyle = '#555';
-    dbc.fillRect(2, 12, 2, 2);
-    dbc.fillRect(14, 12, 2, 2);
-    // Spokes
-    dbc.fillStyle = '#777';
-    dbc.fillRect(3, 13, 1, 1);
-    dbc.fillRect(15, 13, 1, 1);
-    // Frame
-    dbc.fillStyle = '#cc3333';
-    dbc.fillRect(4, 9, 10, 3);
-    dbc.fillRect(6, 8, 6, 1);
-    // Engine block
-    dbc.fillStyle = '#888';
-    dbc.fillRect(6, 11, 4, 2);
-    dbc.fillStyle = '#666';
-    dbc.fillRect(7, 12, 2, 1);
-    // Handlebars
-    dbc.fillStyle = '#666';
-    dbc.fillRect(13, 7, 3, 2);
-    // Exhaust pipe
-    dbc.fillStyle = '#777';
-    dbc.fillRect(2, 10, 3, 1);
-    dbc.fillStyle = '#888';
-    dbc.fillRect(1, 10, 1, 1);
-    // Rider head
-    dbc.fillStyle = '#c49a6c';
-    dbc.fillRect(9, 2, 3, 3);
-    // Helmet
-    dbc.fillStyle = '#222';
-    dbc.fillRect(9, 1, 3, 2);
-    dbc.fillStyle = '#444';
-    dbc.fillRect(9, 1, 3, 1);
-    // Visor
-    dbc.fillStyle = '#4488cc';
-    dbc.fillRect(11, 2, 1, 1);
-    // Torso
-    dbc.fillStyle = '#3366cc';
-    dbc.fillRect(9, 5, 3, 4);
-    // Arms reaching to handlebars
-    dbc.fillStyle = '#c49a6c';
-    dbc.fillRect(12, 6, 2, 1);
-    dbc.fillRect(11, 5, 1, 1);
-    // Legs straddling bike
-    dbc.fillStyle = '#335588';
-    dbc.fillRect(8, 8, 2, 3);
-    dbc.fillRect(11, 8, 2, 3);
-    // Boots
-    dbc.fillStyle = '#333';
-    dbc.fillRect(8, 10, 2, 1);
-    dbc.fillRect(11, 10, 2, 1);
-    // Fender
-    dbc.fillStyle = '#aa2222';
-    dbc.fillRect(14, 10, 3, 1);
-    dbc.fillRect(1, 10, 3, 1);
-    bikeCanvas.refresh();
+    // --- Dirt bikes (procedural color variants) ---
+    const bikeFrameColors = ['#cc3333', '#3366cc', '#33aa33', '#cc8833', '#333', '#8833aa', '#cc3388', '#44aaaa', '#cccc33', '#888'];
+    const bikeShirtColors = ['#3366cc', '#cc3333', '#33aa44', '#ccaa33', '#aa33cc', '#333', '#cc6633', '#3388aa', '#cc3388', '#888'];
+    const bikePantsColors = ['#335588', '#333', '#555', '#443322', '#2a3a5a', '#224422', '#4a4a4a', '#553344'];
+    const bikeRng = new Phaser.Math.RandomDataGenerator(['bikes']);
+    const NUM_BIKES = 10;
 
-    // --- Dirt bike frame 2 (bounce — wheels down, body up) ---
-    const bike2Canvas = this.textures.createCanvas('dirtbike2', 18, 16);
-    const db2 = bike2Canvas.context;
-    // Wheels (lower)
-    db2.fillStyle = '#333';
-    db2.fillRect(1, 12, 4, 4);
-    db2.fillRect(13, 12, 4, 4);
-    db2.fillStyle = '#555';
-    db2.fillRect(2, 13, 2, 2);
-    db2.fillRect(14, 13, 2, 2);
-    db2.fillStyle = '#777';
-    db2.fillRect(3, 14, 1, 1);
-    db2.fillRect(15, 14, 1, 1);
-    // Frame (higher)
-    db2.fillStyle = '#cc3333';
-    db2.fillRect(4, 8, 10, 3);
-    db2.fillRect(6, 7, 6, 1);
-    // Engine
-    db2.fillStyle = '#888';
-    db2.fillRect(6, 10, 4, 2);
-    db2.fillStyle = '#666';
-    db2.fillRect(7, 11, 2, 1);
-    // Handlebars
-    db2.fillStyle = '#666';
-    db2.fillRect(13, 6, 3, 2);
-    // Exhaust
-    db2.fillStyle = '#777';
-    db2.fillRect(2, 9, 3, 1);
-    db2.fillStyle = '#888';
-    db2.fillRect(1, 9, 1, 1);
-    // Rider head
-    db2.fillStyle = '#c49a6c';
-    db2.fillRect(9, 1, 3, 3);
-    db2.fillStyle = '#222';
-    db2.fillRect(9, 0, 3, 2);
-    db2.fillStyle = '#444';
-    db2.fillRect(9, 0, 3, 1);
-    db2.fillStyle = '#4488cc';
-    db2.fillRect(11, 1, 1, 1);
-    // Torso
-    db2.fillStyle = '#3366cc';
-    db2.fillRect(9, 4, 3, 4);
-    // Arms
-    db2.fillStyle = '#c49a6c';
-    db2.fillRect(12, 5, 2, 1);
-    db2.fillRect(11, 4, 1, 1);
-    // Legs
-    db2.fillStyle = '#335588';
-    db2.fillRect(8, 7, 2, 3);
-    db2.fillRect(11, 7, 2, 3);
-    // Boots
-    db2.fillStyle = '#333';
-    db2.fillRect(8, 9, 2, 1);
-    db2.fillRect(11, 9, 2, 1);
-    // Fender
-    db2.fillStyle = '#aa2222';
-    db2.fillRect(14, 9, 3, 1);
-    db2.fillRect(1, 9, 3, 1);
-    bike2Canvas.refresh();
+    const drawBike = (ctx, bColor, fColor, shirt, pants, frameIdx) => {
+      const wy = frameIdx === 0 ? 11 : 12; // wheel Y
+      const fy = frameIdx === 0 ? 9 : 8;   // frame Y
+      const ry = frameIdx === 0 ? 2 : 1;   // rider head Y
+      const ty = frameIdx === 0 ? 5 : 4;   // torso Y
+      const ly = frameIdx === 0 ? 8 : 7;   // legs Y
+      const hby = frameIdx === 0 ? 7 : 6;  // handlebar Y
+      const exY = frameIdx === 0 ? 10 : 9; // exhaust/fender Y
+      // Wheels
+      ctx.fillStyle = '#333';
+      ctx.fillRect(1, wy, 4, 4);
+      ctx.fillRect(13, wy, 4, 4);
+      ctx.fillStyle = '#555';
+      ctx.fillRect(2, wy + 1, 2, 2);
+      ctx.fillRect(14, wy + 1, 2, 2);
+      ctx.fillStyle = '#777';
+      ctx.fillRect(3, wy + 2, 1, 1);
+      ctx.fillRect(15, wy + 2, 1, 1);
+      // Frame
+      ctx.fillStyle = bColor;
+      ctx.fillRect(4, fy, 10, 3);
+      ctx.fillRect(6, fy - 1, 6, 1);
+      // Engine
+      ctx.fillStyle = '#888';
+      ctx.fillRect(6, fy + 2, 4, 2);
+      ctx.fillStyle = '#666';
+      ctx.fillRect(7, fy + 3, 2, 1);
+      // Handlebars
+      ctx.fillStyle = '#666';
+      ctx.fillRect(13, hby, 3, 2);
+      // Exhaust
+      ctx.fillStyle = '#777';
+      ctx.fillRect(2, exY, 3, 1);
+      ctx.fillStyle = '#888';
+      ctx.fillRect(1, exY, 1, 1);
+      // Fender
+      ctx.fillStyle = fColor;
+      ctx.fillRect(14, exY, 3, 1);
+      ctx.fillRect(1, exY, 3, 1);
+      // Rider head
+      ctx.fillStyle = bikeRng.pick(skinTones);
+      ctx.fillRect(9, ry, 3, 3);
+      // Helmet
+      ctx.fillStyle = '#222';
+      ctx.fillRect(9, ry - 1, 3, 2);
+      ctx.fillStyle = '#444';
+      ctx.fillRect(9, ry - 1, 3, 1);
+      ctx.fillStyle = '#4488cc';
+      ctx.fillRect(11, ry, 1, 1);
+      // Torso
+      ctx.fillStyle = shirt;
+      ctx.fillRect(9, ty, 3, 4);
+      // Arms
+      ctx.fillStyle = bikeRng.pick(skinTones);
+      ctx.fillRect(12, ty + 1, 2, 1);
+      ctx.fillRect(11, ty, 1, 1);
+      // Legs
+      ctx.fillStyle = pants;
+      ctx.fillRect(8, ly, 2, 3);
+      ctx.fillRect(11, ly, 2, 3);
+      // Boots
+      ctx.fillStyle = '#333';
+      ctx.fillRect(8, ly + 2, 2, 1);
+      ctx.fillRect(11, ly + 2, 2, 1);
+    };
+
+    for (let bi = 0; bi < NUM_BIKES; bi++) {
+      const bColor = bikeRng.pick(bikeFrameColors);
+      const fColor = bColor; // fender matches frame
+      const shirt = bikeRng.pick(bikeShirtColors);
+      const pants = bikeRng.pick(bikePantsColors);
+      // Frame 1
+      const c1 = this.textures.createCanvas(`dirtbike-${bi}`, 18, 16);
+      drawBike(c1.context, bColor, fColor, shirt, pants, 0);
+      c1.refresh();
+      // Frame 2 (bounce)
+      const c2 = this.textures.createCanvas(`dirtbike2-${bi}`, 18, 16);
+      drawBike(c2.context, bColor, fColor, shirt, pants, 1);
+      c2.refresh();
+    }
+    // Default aliases for backward compat
+    this.textures.get('dirtbike-0').key;  // just ensure it exists
 
     // --- Cars (top-down, 12x18, multiple colors) ---
     const carColors = [

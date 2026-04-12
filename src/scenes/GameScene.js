@@ -66,7 +66,21 @@ export class GameScene extends Phaser.Scene {
     const townEndPy = halfH * SCALE; // town occupies y < this
     const worldPxW = WORLD_W * SCALE;
     const worldPxH = WORLD_H * SCALE;
-    const desertProps = ["rock", "rock2", "rock3", "rock4", "brush", "bush2", "bush3", "tumbleweed", "cactus", "skull", "bones", "pottery", "deadtree", "palmstump"];
+    const desertProps = [
+      "rock",
+      "rock2",
+      "rock3",
+      "rock4",
+      "brush",
+      "bush2",
+      "bush3",
+      "tumbleweed",
+      "skull",
+      "bones",
+      "pottery",
+      "deadtree",
+      "palmstump",
+    ];
     for (let i = 0; i < 2500; i++) {
       let x, y;
       // Keep trying until we get a position outside the town (NW quadrant)
@@ -183,7 +197,7 @@ export class GameScene extends Phaser.Scene {
         for (let seat = 0; seat < 4; seat++) {
           const gx = weddingX + side * (80 + seat * 22);
           const gy = weddingY - 30 + row * 30;
-          const skinId = rng.between(0, 9);
+          const skinId = rng.between(0, 199);
           const sprite = this.add
             .image(gx, gy, `person-stand-${skinId}`)
             .setScale(SCALE)
@@ -387,7 +401,7 @@ export class GameScene extends Phaser.Scene {
       for (let s = 0; s < 12; s++) {
         const sx = soccerX - fieldW / 2 + 20 + s * (fieldW / 12);
         const sy = soccerY + side * (fieldH / 2 + 35 + rng.between(0, 20));
-        const skinId = rng.between(0, 9);
+        const skinId = rng.between(0, 199);
         const sprite = this.add
           .image(sx, sy, `person-wave1-${skinId}`)
           .setScale(SCALE)
@@ -429,7 +443,7 @@ export class GameScene extends Phaser.Scene {
       for (let s = 0; s < 4; s++) {
         const sx = soccerX + side * (fieldW / 2 + 35 + rng.between(0, 15));
         const sy = soccerY - 60 + s * 40;
-        const skinId = rng.between(0, 9);
+        const skinId = rng.between(0, 199);
         const sprite = this.add
           .image(sx, sy, `person-wave1-${skinId}`)
           .setScale(SCALE)
@@ -701,7 +715,7 @@ export class GameScene extends Phaser.Scene {
       for (let m = 0; m < 3; m++) {
         const mx = blkX + (m * 2 + 1) * roadTile;
         const my = blkY + roadTile * 0.5;
-        const skinId = rng.between(0, 9);
+        const skinId = rng.between(0, 199);
         const sprite = this.add
           .image(mx, my, `person-stand-${skinId}`)
           .setScale(SCALE)
@@ -730,7 +744,7 @@ export class GameScene extends Phaser.Scene {
       for (let s = 0; s < 6; s++) {
         const sx = blkX + Math.random() * blkW;
         const sy = blkY + Math.random() * blkH;
-        const skinId = rng.between(0, 9);
+        const skinId = rng.between(0, 199);
         const sprite = this.add
           .image(sx, sy, `person-stand-${skinId}`)
           .setScale(SCALE)
@@ -931,7 +945,7 @@ export class GameScene extends Phaser.Scene {
       { x: flockX - 200, y: flockY - 20 },
     ];
     for (const sp of shepherdPositions) {
-      const skinId = rng.pick([4, 5, 7, 9]); // earthy/pastoral skin variants
+      const skinId = rng.between(0, 199); // any skin for shepherds
       const sprite = this.add
         .image(sp.x, sp.y, `person-stand-${skinId}`)
         .setScale(SCALE)
@@ -1057,7 +1071,7 @@ export class GameScene extends Phaser.Scene {
     for (let w = 0; w < 25; w++) {
       const wx = oilX + Phaser.Math.Between(-600, 600);
       const wy = oilY + Phaser.Math.Between(-250, 500);
-      const skinId = 10 + (w % 2);
+      const skinId = 200 + (w % 20);
       const sprite = this.add
         .image(wx, wy, `person-stand-${skinId}`)
         .setScale(SCALE)
@@ -1139,7 +1153,7 @@ export class GameScene extends Phaser.Scene {
       } while (
         Phaser.Math.Distance.Between(px, py, droneStartX, droneStartY) < 2000
       );
-      const skinId = rng.between(0, 9);
+      const skinId = rng.between(0, 199);
       const sprite = this.add
         .image(px, py, `person-stand-${skinId}`)
         .setScale(SCALE)
@@ -1172,7 +1186,7 @@ export class GameScene extends Phaser.Scene {
         townStartX + 50 + Math.random() * (townEndX - townStartX - 100);
       const py =
         townStartY + 50 + Math.random() * (townEndY - townStartY - 100);
-      const skinId = rng.between(0, 9);
+      const skinId = rng.between(0, 199);
       const sprite = this.add
         .image(px, py, `person-stand-${skinId}`)
         .setScale(SCALE)
@@ -1254,13 +1268,15 @@ export class GameScene extends Phaser.Scene {
     for (let bi = 0; bi < 8; bi++) {
       const bx = Phaser.Math.Between(500, WORLD_W * SCALE - 500);
       const by = Phaser.Math.Between(500, WORLD_H * SCALE - 500);
+      const bikeVariant = Phaser.Math.Between(0, 9);
       const sprite = this.add
-        .image(bx, by, "dirtbike")
+        .image(bx, by, `dirtbike-${bikeVariant}`)
         .setScale(SCALE)
         .setDepth(3);
       // Dust trail emitter reference
       this.dirtBikers.push({
         sprite,
+        bikeVariant,
         heading: Math.random() * Math.PI * 2,
         speed: 100 + Math.random() * 60,
         targetX: bx,
@@ -3377,7 +3393,7 @@ export class GameScene extends Phaser.Scene {
       if (bk.bounceTimer > 120) {
         bk.bounceTimer = 0;
         bk.bounceFrame = 1 - bk.bounceFrame;
-        bk.sprite.setTexture(bk.bounceFrame === 0 ? "dirtbike" : "dirtbike2");
+        bk.sprite.setTexture(bk.bounceFrame === 0 ? `dirtbike-${bk.bikeVariant}` : `dirtbike2-${bk.bikeVariant}`);
       }
 
       // Dust trail
