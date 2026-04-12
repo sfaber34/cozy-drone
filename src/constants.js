@@ -94,6 +94,8 @@ export const PEOPLE_PANIC_RADIUS = 400;
 export const PEOPLE_CALM_DISTANCE = 800;
 export const PEOPLE_CALM_TIME = 5;
 export const PEOPLE_HIDE_TIMEOUT = 10;
+export const PEOPLE_RETURN_WAIT_MIN = 3;           // min seconds event people stand idle before walking back
+export const PEOPLE_RETURN_WAIT_RANGE = 12;         // random range added to min (total max = MIN + RANGE)
 export const PEOPLE_GREETING_MIN_DIST = 150;
 export const PEOPLE_SPAWN_COUNT = 60;
 export const PEOPLE_TOWN_SPAWN_COUNT = 80;

@@ -256,6 +256,11 @@ export class GameScene extends Phaser.Scene {
 
     // Kill counter
     this.kills = 0;
+    // Total people on map: people array + dirt biker riders + car passengers
+    let totalPeople = this.people.length;
+    for (const bk of this.dirtBikers) totalPeople++;
+    for (const car of this.townCars) totalPeople += car.passengers;
+    this.totalPeople = totalPeople;
 
     // --- Audio (music + SFX + engine, loaded in one batch) ---
     initAudio(this);
@@ -425,7 +430,7 @@ export class GameScene extends Phaser.Scene {
     }
     this.hudText.setText(
       `ALT: ${Math.round(ds.altitude)} ft  SPD: ${spdDisplay} kts\n` +
-        `FREEDOMS: ${this.kills}  ${stateLabel}`,
+        `FREEDOMS: ${this.kills}/${this.totalPeople}  ${stateLabel}`,
     );
   }
 }

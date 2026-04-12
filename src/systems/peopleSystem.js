@@ -3,7 +3,8 @@ import {
   WORLD_W, WORLD_H, TILE, SCALE,
   PEOPLE_DETECT_RADIUS, PEOPLE_WANDER_SPEED, PEOPLE_PANIC_SPEED,
   PEOPLE_KILL_RADIUS, PEOPLE_PANIC_RADIUS, PEOPLE_CALM_DISTANCE,
-  PEOPLE_CALM_TIME, PEOPLE_HIDE_TIMEOUT, PEOPLE_GREETING_MIN_DIST,
+  PEOPLE_CALM_TIME, PEOPLE_HIDE_TIMEOUT, PEOPLE_RETURN_WAIT_MIN, PEOPLE_RETURN_WAIT_RANGE,
+  PEOPLE_GREETING_MIN_DIST,
   PEOPLE_SPAWN_COUNT, PEOPLE_TOWN_SPAWN_COUNT, PEOPLE_SPAWN_AVOID_DIST,
 } from "../constants.js";
 import { greetings, ghostLines } from "../dialog.js";
@@ -197,7 +198,6 @@ export function updatePeople(scene, dt, delta) {
       p.hideTimer = (p.hideTimer || 0) + dt;
       if (p.hideTimer > PEOPLE_HIDE_TIMEOUT) {
         p.hideTimer = 0;
-        p.state = "idle";
         p.sprite.setVisible(true);
         p.sprite.setTexture(skinTex(p, "stand"));
         // Place them just outside the building they hid in
@@ -208,7 +208,15 @@ export function updatePeople(scene, dt, delta) {
           );
         }
         p.hideTarget = null;
-        p.noGreet = false;
+        if (p.returnHome) {
+          // Event people — stand idle for a random delay before returning
+          p.state = "waitToReturn";
+          p.waitTimer = 0;
+          p.waitDuration = PEOPLE_RETURN_WAIT_MIN + Math.random() * PEOPLE_RETURN_WAIT_RANGE;
+        } else {
+          p.state = "idle";
+          p.noGreet = false;
+        }
         if (!p.greeting) {
           p.greeting = Phaser.Utils.Array.GetRandom(greetings);
         }
@@ -396,18 +404,68 @@ export function updatePeople(scene, dt, delta) {
       // Calm down if drone is far away for a while
       p.panicTimer = (p.panicTimer || 0) + dt;
       if (distToDrone > PEOPLE_CALM_DISTANCE && p.panicTimer > PEOPLE_CALM_TIME) {
-        p.state = "idle";
         p.panicTimer = 0;
         p.hideTarget = null;
-        p.noGreet = false; // allow greeting after surviving a scare
-        if (!p.greeting) {
-          p.greeting = Phaser.Utils.Array.GetRandom(greetings);
+        if (p.returnHome) {
+          // Event people — stand idle for a random delay before returning
+          p.state = "waitToReturn";
+          p.waitTimer = 0;
+          p.waitDuration = PEOPLE_RETURN_WAIT_MIN + Math.random() * PEOPLE_RETURN_WAIT_RANGE; // 3-15 seconds
+        } else {
+          p.state = "idle";
+          p.noGreet = false;
+          if (!p.greeting) {
+            p.greeting = Phaser.Utils.Array.GetRandom(greetings);
+          }
         }
         p.sprite.setTexture(skinTex(p, "stand"));
       }
       // Reset calm-down timer if drone is nearby
       if (distToDrone <= PEOPLE_CALM_DISTANCE) {
         p.panicTimer = 0;
+      }
+    }
+
+    // --- WAITING TO RETURN (standing idle before walking back) ---
+    if (p.state === "waitToReturn") {
+      p.waitTimer += dt;
+      if (p.waitTimer >= p.waitDuration) {
+        p.state = "returning";
+      }
+    }
+
+    // --- RETURNING HOME (wedding/soccer people walking back) ---
+    if (p.state === "returning" && p.returnHome) {
+      const homeX = p.returnHome.x;
+      const homeY = p.returnHome.y;
+      const distHome = Phaser.Math.Distance.Between(
+        p.sprite.x, p.sprite.y, homeX, homeY,
+      );
+
+      if (distHome < 10) {
+        // Arrived home — resume original behavior
+        p.state = "idle";
+        p.sprite.setPosition(homeX, homeY);
+        p.noGreet = true;
+        p.wanderDuration = 999;
+        p.wanderAngle = null;
+        p.sprite.setTexture(skinTex(p, "stand"));
+      } else {
+        // Walk toward home
+        const angle = Phaser.Math.Angle.Between(
+          p.sprite.x, p.sprite.y, homeX, homeY,
+        );
+        const steered = steerAroundBuildings(scene, p.sprite.x, p.sprite.y, angle, dt);
+        p.sprite.x += Math.cos(steered) * wanderSpeed * 1.5 * dt;
+        p.sprite.y += Math.sin(steered) * wanderSpeed * 1.5 * dt;
+        p.sprite.setFlipX(Math.cos(steered) < 0);
+        // Walk animation
+        p.runTimer = (p.runTimer || 0) + delta;
+        if (p.runTimer > 200) {
+          p.runTimer = 0;
+          p.runFrame = 1 - p.runFrame;
+          p.sprite.setTexture(skinTex(p, p.runFrame === 0 ? "run1" : "run2"));
+        }
       }
     }
 

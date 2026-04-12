@@ -5,6 +5,14 @@ export function createWedding(scene, rng) {
   const weddingY = WEDDING_Y * TILE * SCALE;
   scene.weddingPos = { x: weddingX, y: weddingY };
 
+  // Flat desert-colored ground to cover desert props under the wedding
+  const groundW = 500;
+  const groundH = 350;
+  const ground = scene.add.graphics();
+  ground.fillStyle(0xd2b48c, 1);
+  ground.fillRect(weddingX - groundW / 2, weddingY - groundH / 2, groundW, groundH);
+  ground.setDepth(1.1);
+
   // Wedding rug (aisle)
   for (let r = -2; r <= 2; r++) {
     scene.add
@@ -45,19 +53,22 @@ export function createWedding(scene, rng) {
     }
   }
 
-  // Priest at the arch
+  // Priest, Bride, Groom — each gets a unique person skin
+  const priestSkinId = rng.between(0, 199);
+  const brideSkinId = rng.between(0, 199);
+  const groomSkinId = rng.between(0, 199);
+
   const priestSprite = scene.add
-    .image(weddingX, weddingY - 3 * 12 * SCALE + 20, "priest")
+    .image(weddingX, weddingY - 3 * 12 * SCALE + 20, `person-stand-${priestSkinId}`)
     .setScale(SCALE)
     .setDepth(3);
 
-  // Bride & Groom in front of the arch
   const brideSprite = scene.add
-    .image(weddingX - 25, weddingY - 2 * 12 * SCALE, "bride")
+    .image(weddingX - 25, weddingY - 2 * 12 * SCALE, `person-stand-${brideSkinId}`)
     .setScale(SCALE)
     .setDepth(3);
   const groomSprite = scene.add
-    .image(weddingX + 25, weddingY - 2 * 12 * SCALE, "groom")
+    .image(weddingX + 25, weddingY - 2 * 12 * SCALE, `person-stand-${groomSkinId}`)
     .setScale(SCALE)
     .setDepth(3);
 
@@ -112,7 +123,7 @@ export function createWedding(scene, rng) {
           greeting: "",
           noGreet: true,
           scatterPanic: true,
-          scatterPanic: true,
+          returnHome: { x: gx, y: gy, event: "wedding" },
           bubble: null,
           waveTimer: 0,
           waveFrame: 0,
@@ -132,19 +143,20 @@ export function createWedding(scene, rng) {
 
   // Also add bride, groom, priest to people array so they can react
   const weddingPeople = [
-    { sprite: brideSprite },
-    { sprite: groomSprite },
-    { sprite: priestSprite },
+    { sprite: brideSprite, skinId: brideSkinId },
+    { sprite: groomSprite, skinId: groomSkinId },
+    { sprite: priestSprite, skinId: priestSkinId },
   ];
   const weddingEntries = [];
   for (const wp of weddingPeople) {
     const entry = {
       sprite: wp.sprite,
-      skinId: 0,
+      skinId: wp.skinId,
       state: "idle",
       greeting: "",
       noGreet: true,
       scatterPanic: true,
+      returnHome: { x: wp.sprite.x, y: wp.sprite.y, event: "wedding" },
       bubble: null,
       waveTimer: 0,
       waveFrame: 0,
