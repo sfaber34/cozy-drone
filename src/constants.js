@@ -42,6 +42,14 @@ export const CHICKEN_FIGHT_SPECTATORS = 30;       // number of spectators around
 export const CHICKEN_FIGHT_SPEED = 60;            // how fast the fighting chickens move (px/s)
 export const CHICKEN_FIGHT_DIRECTION_CHANGE = 0.3; // seconds between direction changes
 
+// Camel race — oval track with racing camels + spectators
+export const CAMEL_RACE_X = 115;
+export const CAMEL_RACE_Y = 98;
+export const CAMEL_RACE_CAMELS = 6;               // number of racing camels
+export const CAMEL_RACE_SPECTATORS = 30;           // spectators around the track
+export const CAMEL_RACE_SPEED_MIN = 50;            // slowest camel (px/s)
+export const CAMEL_RACE_SPEED_RANGE = 40;          // speed variance (total max = MIN + RANGE)
+
 // --- Dirt biker no-go zones (in tiles — center x, center y, half-width, half-height) ---
 // Bikers steer around these areas to stay in open desert
 export const BIKER_NO_GO_ZONES = [
@@ -53,6 +61,7 @@ export const BIKER_NO_GO_ZONES = [
   { x: SOCCER_X, y: SOCCER_Y, hw: 10, hh: 8 },                // Soccer
   { x: AIRFIELD_X, y: AIRFIELD_Y, hw: 12, hh: 20 },           // Airfield
   { x: CHICKEN_FIGHT_X, y: CHICKEN_FIGHT_Y, hw: 5, hh: 5 },   // Chicken fight
+  { x: CAMEL_RACE_X, y: CAMEL_RACE_Y, hw: 8, hh: 6 },        // Camel race
 ];
 
 // --- Music ---

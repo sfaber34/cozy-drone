@@ -232,7 +232,8 @@ export function updatePeople(scene, dt, delta) {
     }
 
     // Soccer players/spectators in idle state are controlled by updateSoccer
-    if ((p.isSoccerPlayer || p.isSoccerSpectator || p.isChickenFightSpectator) && p.state === "idle")
+    // People managed by a set piece system skip generic AI when idle
+    if (p.managedBySetPiece && p.state === "idle")
       continue;
 
     const distToDrone = Phaser.Math.Distance.Between(

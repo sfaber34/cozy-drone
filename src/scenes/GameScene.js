@@ -29,6 +29,7 @@ import {
 } from "../systems/vehicleSystem.js";
 import { isOnRunway, crashDrone } from "../systems/droneSystem.js";
 import { createChickenFight, updateChickenFight } from "../systems/chickenFightSystem.js";
+import { createCamelRace, updateCamelRace } from "../systems/camelRaceSystem.js";
 
 export class GameScene extends Phaser.Scene {
   constructor() {
@@ -80,6 +81,7 @@ export class GameScene extends Phaser.Scene {
     createAnimals(this, rng);
     createOilfield(this, rng);
     createChickenFight(this, rng);
+    createCamelRace(this, rng);
 
     // --- Runway (6 tiles long) ---
     const rwX = AIRFIELD_X * TILE * SCALE;
@@ -417,6 +419,7 @@ export class GameScene extends Phaser.Scene {
     updateDirtBikers(this, dt, delta);
     updateTownCars(this, dt);
     updateChickenFight(this, dt);
+    updateCamelRace(this, dt);
 
     // --- HUD ---
     const spdDisplay = Math.round(speedKnots);

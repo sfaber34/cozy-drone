@@ -122,6 +122,7 @@ export function createSoccer(scene, rng) {
         homeX: px,
         homeY: py,
         isSoccerPlayer: true,
+        managedBySetPiece: true,
         teamSkin: teams[t],
       };
       scene.people.push(personEntry);
@@ -157,6 +158,7 @@ export function createSoccer(scene, rng) {
         scatterPanic: true,
         returnHome: { x: sx, y: sy, event: "soccer" },
         isSoccerSpectator: true,
+        managedBySetPiece: true,
         bubble: null,
         waveTimer: 0,
         waveFrame: 0,
@@ -200,6 +202,7 @@ export function createSoccer(scene, rng) {
         scatterPanic: true,
         returnHome: { x: sx, y: sy, event: "soccer" },
         isSoccerSpectator: true,
+        managedBySetPiece: true,
         bubble: null,
         waveTimer: 0,
         waveFrame: 0,

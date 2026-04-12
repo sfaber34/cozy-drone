@@ -131,7 +131,7 @@ export function updateAnimals(scene, dt) {
   for (const a of scene.animals) {
     if (a.state === "dead") continue;
     // Chicken fighters in idle state are controlled by chickenFightSystem
-    if (a.isChickenFighter && a.state === "idle") continue;
+    if ((a.isChickenFighter || a.isRaceCamel) && a.state === "idle") continue;
 
     // Determine if animal is inside its corral
     const insideCorral =
