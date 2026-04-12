@@ -39,38 +39,38 @@ export class GameScene extends Phaser.Scene {
     const halfW = (WORLD_W * TILE) / 2;
     const halfH = (WORLD_H * TILE) / 2;
 
+    // Entire world is desert ground
     for (let y = 0; y < WORLD_H * TILE; y += TILE) {
       for (let x = 0; x < WORLD_W * TILE; x += TILE) {
-        let tex, frame;
-        if (y < halfH && x < halfW) {
-          // Town — grass base
-          tex = "grass";
-          frame = undefined;
-        } else if (y < halfH && x >= halfW) {
-          // Farm — grass with crop patches
-          if ((Math.floor(x / TILE) + Math.floor(y / TILE)) % 7 < 4) {
-            tex = "crop-tiles";
-            frame = rng.between(0, 3);
-          } else {
-            tex = "grass";
-            frame = undefined;
-          }
-        } else {
-          // Desert
-          tex = "desert-tiles";
-          frame = rng.between(0, 3);
-        }
-        const tile =
-          frame !== undefined
-            ? this.add.image(x, y, tex, frame).setOrigin(0, 0).setScale(SCALE)
-            : this.add.image(x, y, tex).setOrigin(0, 0).setScale(SCALE);
+        const frame = rng.between(0, 3);
+        const tile = this.add
+          .image(x, y, "desert-tiles", frame)
+          .setOrigin(0, 0)
+          .setScale(SCALE);
         this.groundLayer.add(tile);
       }
     }
 
-    // --- Desert props (everywhere except the town NW quadrant) ---
-    const townEndPx = halfW * SCALE; // town occupies x < this
-    const townEndPy = halfH * SCALE; // town occupies y < this
+    // Town gets grass overlay on top of desert
+    for (let y = 0; y < halfH; y += TILE) {
+      for (let x = 0; x < halfW; x += TILE) {
+        this.add.image(x, y, "grass").setOrigin(0, 0).setScale(SCALE).setDepth(0.5);
+      }
+    }
+
+    // Farm gets crop/grass patches on top of desert
+    for (let y = 0; y < halfH; y += TILE) {
+      for (let x = halfW; x < WORLD_W * TILE; x += TILE) {
+        if ((Math.floor(x / TILE) + Math.floor(y / TILE)) % 7 < 4) {
+          const frame = rng.between(0, 3);
+          this.add.image(x, y, "crop-tiles", frame).setOrigin(0, 0).setScale(SCALE).setDepth(0.5);
+        } else {
+          this.add.image(x, y, "grass").setOrigin(0, 0).setScale(SCALE).setDepth(0.5);
+        }
+      }
+    }
+
+    // --- Desert props (scattered across the entire map) ---
     const worldPxW = WORLD_W * TILE * SCALE;
     const worldPxH = WORLD_H * TILE * SCALE;
     const desertProps = [
@@ -89,12 +89,8 @@ export class GameScene extends Phaser.Scene {
       "palmstump",
     ];
     for (let i = 0; i < 2500; i++) {
-      let x, y;
-      // Keep trying until we get a position outside the town (NW quadrant)
-      do {
-        x = Math.random() * worldPxW;
-        y = Math.random() * worldPxH;
-      } while (x < townEndPx && y < townEndPy);
+      const x = Math.random() * worldPxW;
+      const y = Math.random() * worldPxH;
       const tex = desertProps[Math.floor(Math.random() * desertProps.length)];
       this.add.image(x, y, tex).setScale(SCALE).setDepth(1);
     }
@@ -168,7 +164,7 @@ export class GameScene extends Phaser.Scene {
     this.drone = this.add
       .image(rwX, rwBottom - 80, "drone")
       .setScale(SCALE)
-      .setDepth(10);
+      .setDepth(20);
 
     // Propeller animation timer
     this.propFrame = 0;
