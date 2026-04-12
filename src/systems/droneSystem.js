@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { SCALE } from "../constants.js";
+import { SCALE, CRASH_SHAKE_DURATION, CRASH_SHAKE_INTENSITY } from "../constants.js";
 import { missileImpact } from "./missileSystem.js";
 
 export function isOnRunway(scene, x, y) {
@@ -21,7 +21,7 @@ export function crashDrone(scene) {
 
   // Explosion at crash site
   missileImpact(scene, scene.droneState.x, scene.droneState.y);
-  scene.cameras.main.shake(500, 0.015);
+  scene.cameras.main.shake(CRASH_SHAKE_DURATION, CRASH_SHAKE_INTENSITY);
 
   // Show crash message
   scene.crashText = scene.add

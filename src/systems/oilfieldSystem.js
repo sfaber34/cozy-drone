@@ -1,5 +1,8 @@
 import Phaser from "phaser";
-import { TILE, SCALE, OIL_X, OIL_Y } from "../constants.js";
+import {
+  TILE, SCALE, OIL_X, OIL_Y,
+  OIL_WORKERS_COUNT, OIL_PUMP_SPEED_MIN, OIL_PUMP_SPEED_RANGE,
+} from "../constants.js";
 import { workerGreetings } from "../dialog.js";
 
 export function createOilfield(scene, rng) {
@@ -54,7 +57,7 @@ export function createOilfield(scene, rng) {
       alive: true,
       pumpFrame: 0,
       pumpTimer: 0,
-      pumpSpeed: 600 + Math.random() * 400,
+      pumpSpeed: OIL_PUMP_SPEED_MIN + Math.random() * OIL_PUMP_SPEED_RANGE,
     };
     scene.oilWells.push(well);
     scene.buildings.push({
@@ -97,7 +100,7 @@ export function createOilfield(scene, rng) {
   }
 
   // Oil field workers (hard hat skins 10-11)
-  for (let w = 0; w < 25; w++) {
+  for (let w = 0; w < OIL_WORKERS_COUNT; w++) {
     const wx = oilX + Phaser.Math.Between(-600, 600);
     const wy = oilY + Phaser.Math.Between(-250, 500);
     const skinId = 200 + (w % 20);

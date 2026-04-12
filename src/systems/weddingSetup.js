@@ -1,4 +1,4 @@
-import { TILE, SCALE, WEDDING_X, WEDDING_Y } from "../constants.js";
+import { TILE, SCALE, WEDDING_X, WEDDING_Y, WEDDING_HEART_INTERVAL } from "../constants.js";
 
 export function createWedding(scene, rng) {
   const weddingX = WEDDING_X * TILE * SCALE;
@@ -63,7 +63,7 @@ export function createWedding(scene, rng) {
 
   // Hearts floating from the couple
   scene.time.addEvent({
-    delay: 800,
+    delay: WEDDING_HEART_INTERVAL,
     loop: true,
     callback: () => {
       if (!brideSprite.active || !groomSprite.active) return;

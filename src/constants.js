@@ -62,3 +62,94 @@ export const ENGINE_CROSSFADE_SEC = 0.5; // seconds of overlap when crossfading 
 export const SFX_MAX_DISTANCE = 2000; // distance in px at which spatial SFX reaches minimum volume
 export const SFX_MIN_VOLUME_FRAC = 0.05; // volume fraction at SFX_MAX_DISTANCE (0.05 = 5% of max)
 export const SFX_PAN_AMOUNT = 0.25; // max stereo pan amount (0 = center, 1 = hard left/right)
+
+// --- Drone physics ---
+export const DRONE_TURN_RATE = 120; // degrees/sec
+export const DRONE_ACCEL = 100; // px/s^2
+export const DRONE_MIN_SPEED_AIRBORNE = 80; // px/s (40 knots)
+export const DRONE_ALT_RATE = 300; // feet/sec
+export const DRONE_TAKEOFF_SPEED = 40; // knots
+export const DRONE_ZOOM_ALT_THRESHOLD = 2000; // feet, zoom starts above this
+export const DRONE_ZOOM_MIN = 0.65; // max zoom out
+export const DRONE_ZOOM_MAX = 1.0; // no zoom
+export const DRONE_MAX_SPEED = 300; // px/s
+export const DRONE_MAX_ALT = 15000; // feet
+
+// --- Missile ---
+export const MISSILE_SPEED = 280;
+export const MISSILE_TURN_RATE = 3.0;
+export const MISSILE_BOOST_TIME = 0.3;
+export const MISSILE_MAX_SPEED = 400;
+export const MISSILE_ACCEL = 240;
+export const MISSILE_DESCENT_RATE = 600;
+export const MISSILE_HIT_RADIUS = 15;
+export const MISSILE_SMOKE_INTERVAL = 40;
+
+// --- People AI ---
+export const PEOPLE_DETECT_RADIUS = 600;
+export const PEOPLE_WANDER_SPEED = 30;
+export const PEOPLE_PANIC_SPEED = 60;
+export const PEOPLE_KILL_RADIUS = 50;
+export const PEOPLE_PANIC_RADIUS = 400;
+export const PEOPLE_CALM_DISTANCE = 800;
+export const PEOPLE_CALM_TIME = 5;
+export const PEOPLE_HIDE_TIMEOUT = 10;
+export const PEOPLE_GREETING_MIN_DIST = 150;
+export const PEOPLE_SPAWN_COUNT = 60;
+export const PEOPLE_TOWN_SPAWN_COUNT = 80;
+export const PEOPLE_SPAWN_AVOID_DIST = 2000;
+
+// --- Animal AI ---
+export const ANIMAL_KILL_RADIUS = 50;
+export const ANIMAL_PANIC_RADIUS = 300;
+export const ANIMAL_PANIC_TIMEOUT = 8;
+export const ANIMAL_FLOCK_RADIUS = 500;
+export const ANIMAL_FREE_ROAM_RADIUS = 60;
+
+// --- Vehicles ---
+export const CAR_COUNT = 15;
+export const CAR_SPEED_MIN = 40;
+export const CAR_SPEED_RANGE = 30;
+export const CAR_PASSENGERS_MIN = 1;
+export const CAR_PASSENGERS_MAX = 4;
+export const BIKER_COUNT = 8;
+export const BIKER_SPEED_MIN = 100;
+export const BIKER_SPEED_RANGE = 60;
+export const BIKER_TURN_RATE = 2.0;
+
+// --- Soccer ---
+export const SOCCER_FIELD_W = 300;
+export const SOCCER_FIELD_H = 200;
+export const SOCCER_PLAYERS_PER_TEAM = 5;
+
+// --- Buildings ---
+export const BUILDING_HP_SMALL = 2;
+export const BUILDING_HP_MEDIUM = 3;
+export const BUILDING_HP_LARGE = 4;
+export const BUILDING_RADIUS_SMALL = 30;
+export const BUILDING_RADIUS_MEDIUM = 50;
+export const BUILDING_RADIUS_LARGE = 60;
+export const TOWN_GRID_COLS = 8;
+export const TOWN_GRID_ROWS = 8;
+export const TOWN_BLOCK_SIZE = 6;
+
+// --- Oil field ---
+export const OIL_WORKERS_COUNT = 25;
+export const OIL_PUMP_SPEED_MIN = 600;
+export const OIL_PUMP_SPEED_RANGE = 400;
+
+// --- Wedding ---
+export const WEDDING_HEART_INTERVAL = 800;
+
+// --- Effects ---
+export const SCREEN_SHAKE_DURATION = 200;
+export const SCREEN_SHAKE_INTENSITY = 0.005;
+export const CRASH_SHAKE_DURATION = 500;
+export const CRASH_SHAKE_INTENSITY = 0.015;
+
+// --- Flock ---
+export const FLOCK_GOAT_COUNT = 40;
+export const FLOCK_SHEPHERD_COUNT = 9;
+
+// --- Camera ---
+export const CAMERA_FOLLOW_LERP = 0.08;

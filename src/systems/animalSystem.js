@@ -1,5 +1,10 @@
 import Phaser from "phaser";
-import { WORLD_W, WORLD_H, TILE, SCALE, FARM_X, FARM_Y, FLOCK_X, FLOCK_Y } from "../constants.js";
+import {
+  WORLD_W, WORLD_H, TILE, SCALE, FARM_X, FARM_Y, FLOCK_X, FLOCK_Y,
+  ANIMAL_KILL_RADIUS, ANIMAL_PANIC_RADIUS, ANIMAL_PANIC_TIMEOUT,
+  ANIMAL_FLOCK_RADIUS, ANIMAL_FREE_ROAM_RADIUS,
+  FLOCK_GOAT_COUNT, FLOCK_SHEPHERD_COUNT,
+} from "../constants.js";
 import { shepherdGreetings } from "../dialog.js";
 import { steerAroundBuildings } from "./buildingSystem.js";
 
@@ -53,10 +58,10 @@ export function createAnimals(scene, rng) {
   // ==========================================
   const flockX = FLOCK_X * TILE * SCALE;
   const flockY = FLOCK_Y * TILE * SCALE;
-  const flockRadius = 500;
+  const flockRadius = ANIMAL_FLOCK_RADIUS;
 
-  // Large goat flock (75 goats)
-  for (let g = 0; g < 75; g++) {
+  // Large goat flock
+  for (let g = 0; g < FLOCK_GOAT_COUNT; g++) {
     const angle = Math.random() * Math.PI * 2;
     const dist = Math.random() * flockRadius * 0.8;
     const gx = flockX + Math.cos(angle) * dist;
@@ -89,7 +94,7 @@ export function createAnimals(scene, rng) {
     { x: flockX - 100, y: flockY - 160 },
     { x: flockX + 50, y: flockY + 190 },
     { x: flockX - 200, y: flockY - 20 },
-  ];
+  ].slice(0, FLOCK_SHEPHERD_COUNT);
   for (const sp of shepherdPositions) {
     const skinId = rng.between(0, 199); // any skin for shepherds
     const sprite = scene.add
@@ -174,7 +179,7 @@ export function updateAnimals(scene, dt) {
               (Math.random() - 0.5) * 1.0;
           }
         } else {
-          const wanderRadius = 60;
+          const wanderRadius = ANIMAL_FREE_ROAM_RADIUS;
           if (!a.freeRoamOrigin) {
             a.freeRoamOrigin = { x: a.sprite.x, y: a.sprite.y };
           }
@@ -259,7 +264,7 @@ export function updateAnimals(scene, dt) {
 
       // Calm down after a while
       a.panicTimer += dt;
-      if (a.panicTimer > 8) {
+      if (a.panicTimer > ANIMAL_PANIC_TIMEOUT) {
         a.state = "idle";
         a.panicTimer = 0;
         a.freeRoamOrigin = null; // Reset so it picks up current position if outside corral
@@ -269,8 +274,8 @@ export function updateAnimals(scene, dt) {
 }
 
 export function affectNearbyAnimals(scene, x, y) {
-  const killRadius = 50;
-  const panicRadius = 300;
+  const killRadius = ANIMAL_KILL_RADIUS;
+  const panicRadius = ANIMAL_PANIC_RADIUS;
 
   for (const a of scene.animals) {
     if (a.state === "dead") continue;

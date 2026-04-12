@@ -1,5 +1,10 @@
 import Phaser from "phaser";
-import { WORLD_W, WORLD_H, TILE, SCALE } from "../constants.js";
+import {
+  WORLD_W, WORLD_H, TILE, SCALE,
+  CAR_COUNT, CAR_SPEED_MIN, CAR_SPEED_RANGE,
+  CAR_PASSENGERS_MIN, CAR_PASSENGERS_MAX,
+  BIKER_COUNT, BIKER_SPEED_MIN, BIKER_SPEED_RANGE, BIKER_TURN_RATE,
+} from "../constants.js";
 import { steerAroundBuildings } from "./buildingSystem.js";
 
 export function createVehicles(scene, rng) {
@@ -17,11 +22,11 @@ export function createVehicles(scene, rng) {
 
   const townRoadNodes = scene.townRoadNodes;
 
-  for (let ci = 0; ci < 15; ci++) {
+  for (let ci = 0; ci < CAR_COUNT; ci++) {
     // Start at a random intersection
     const startNode = Phaser.Utils.Array.GetRandom(townRoadNodes);
     const carTex = Phaser.Utils.Array.GetRandom(carNames);
-    const passengers = Phaser.Math.Between(1, 4);
+    const passengers = Phaser.Math.Between(CAR_PASSENGERS_MIN, CAR_PASSENGERS_MAX);
     const sprite = scene.add
       .image(startNode.x, startNode.y, carTex)
       .setScale(SCALE)
@@ -34,14 +39,14 @@ export function createVehicles(scene, rng) {
       // Current position on road grid
       currentNode: { ...startNode },
       targetNode: null,
-      speed: 40 + Math.random() * 30,
+      speed: CAR_SPEED_MIN + Math.random() * CAR_SPEED_RANGE,
       heading: 0,
     });
   }
 
   // --- Dirt bikers ---
   scene.dirtBikers = [];
-  for (let bi = 0; bi < 8; bi++) {
+  for (let bi = 0; bi < BIKER_COUNT; bi++) {
     const bx = Phaser.Math.Between(500, WORLD_W * TILE * SCALE - 500);
     const by = Phaser.Math.Between(500, WORLD_H * TILE * SCALE - 500);
     const bikeVariant = Phaser.Math.Between(0, 9);
@@ -54,7 +59,7 @@ export function createVehicles(scene, rng) {
       sprite,
       bikeVariant,
       heading: Math.random() * Math.PI * 2,
-      speed: 100 + Math.random() * 60,
+      speed: BIKER_SPEED_MIN + Math.random() * BIKER_SPEED_RANGE,
       targetX: bx,
       targetY: by,
       retargetTimer: 0,
@@ -264,7 +269,7 @@ export function updateDirtBikers(scene, dt, delta) {
 
     // Smooth turn toward target
     let diff = Phaser.Math.Angle.Wrap(targetAngle - bk.heading);
-    const maxTurn = 2.0 * dt;
+    const maxTurn = BIKER_TURN_RATE * dt;
     bk.heading += Phaser.Math.Clamp(diff, -maxTurn, maxTurn);
 
     // Steer around buildings

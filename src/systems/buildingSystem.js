@@ -1,12 +1,17 @@
 import Phaser from "phaser";
-import { WORLD_W, WORLD_H, TILE, SCALE, TOWN_X, TOWN_Y, FARM_X, FARM_Y } from "../constants.js";
+import {
+  WORLD_W, WORLD_H, TILE, SCALE, TOWN_X, TOWN_Y, FARM_X, FARM_Y,
+  BUILDING_HP_SMALL, BUILDING_HP_MEDIUM, BUILDING_HP_LARGE,
+  BUILDING_RADIUS_SMALL, BUILDING_RADIUS_MEDIUM, BUILDING_RADIUS_LARGE,
+  TOWN_GRID_COLS, TOWN_GRID_ROWS, TOWN_BLOCK_SIZE,
+} from "../constants.js";
 import { merchantGreetings, shopperGreetings, buildingGhostLines } from "../dialog.js";
 import { playDeathSfxAt } from "./audioSystem.js";
 
 export function createBuildings(scene, rng) {
   scene.buildings = [];
-  const bldgHp = { small: 2, medium: 3, large: 4 };
-  const bldgRadius = { small: 30, medium: 50, large: 60 };
+  const bldgHp = { small: BUILDING_HP_SMALL, medium: BUILDING_HP_MEDIUM, large: BUILDING_HP_LARGE };
+  const bldgRadius = { small: BUILDING_RADIUS_SMALL, medium: BUILDING_RADIUS_MEDIUM, large: BUILDING_RADIUS_LARGE };
 
   const addBuilding = (x, y, tex, size, tint) => {
     const sprite = scene.add.image(x, y, tex).setScale(SCALE).setDepth(2);
@@ -37,9 +42,9 @@ export function createBuildings(scene, rng) {
   const roadTile = TILE * SCALE;
   const townStartX = TOWN_X * TILE * SCALE;
   const townStartY = TOWN_Y * TILE * SCALE;
-  const blockSize = 6;
-  const gridCols = 8;
-  const gridRows = 8;
+  const blockSize = TOWN_BLOCK_SIZE;
+  const gridCols = TOWN_GRID_COLS;
+  const gridRows = TOWN_GRID_ROWS;
   const roadSpacing = blockSize + 1;
 
   // Lay roads

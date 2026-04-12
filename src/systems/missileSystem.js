@@ -1,5 +1,11 @@
 import Phaser from "phaser";
-import { SCALE, MISSILE_LAUNCH_VOLUME, EXPLOSION_VOLUME } from "../constants.js";
+import {
+  SCALE, MISSILE_LAUNCH_VOLUME, EXPLOSION_VOLUME,
+  MISSILE_SPEED, MISSILE_TURN_RATE, MISSILE_BOOST_TIME,
+  MISSILE_MAX_SPEED, MISSILE_ACCEL, MISSILE_DESCENT_RATE,
+  MISSILE_HIT_RADIUS, MISSILE_SMOKE_INTERVAL,
+  SCREEN_SHAKE_DURATION, SCREEN_SHAKE_INTENSITY,
+} from "../constants.js";
 import { ghostLines } from "../dialog.js";
 import { playSfx, playSfxAt, playDeathSfxAt } from "./audioSystem.js";
 import { affectNearbyPeople } from "./peopleSystem.js";
@@ -41,10 +47,10 @@ export function fireMissile(scene) {
     sprite: missile,
     shadow: missileShadow,
     target: { x: scene.targetPos.x, y: scene.targetPos.y },
-    speed: 280,
+    speed: MISSILE_SPEED,
     heading, // current direction of travel (radians)
-    turnRate: 3.0, // radians/sec max turn
-    boostTime: 0.3, // seconds of straight flight before turning
+    turnRate: MISSILE_TURN_RATE, // radians/sec max turn
+    boostTime: MISSILE_BOOST_TIME, // seconds of straight flight before turning
     elapsed: 0,
     altitude: ds.altitude,
     launchAlt: ds.altitude, // remember starting altitude for scale calc
@@ -84,7 +90,7 @@ export function updateMissiles(scene, dt) {
 
     // Accelerate after boost phase
     if (m.elapsed > m.boostTime) {
-      m.speed = Math.min(400, m.speed + 240 * dt);
+      m.speed = Math.min(MISSILE_MAX_SPEED, m.speed + MISSILE_ACCEL * dt);
     }
 
     m.sprite.x += Math.cos(m.heading) * m.speed * dt;
@@ -105,7 +111,7 @@ export function updateMissiles(scene, dt) {
 
     // Smoke trail
     m.smokeTimer = (m.smokeTimer || 0) + dt * 1000;
-    if (m.smokeTimer > 40) {
+    if (m.smokeTimer > MISSILE_SMOKE_INTERVAL) {
       m.smokeTimer = 0;
       // Offset smoke to the back of the missile (opposite of heading)
       const smokeX = m.sprite.x - Math.cos(m.heading) * 12;
@@ -128,14 +134,14 @@ export function updateMissiles(scene, dt) {
     }
 
     // Missile descends
-    m.altitude = Math.max(0, m.altitude - 600 * dt);
+    m.altitude = Math.max(0, m.altitude - MISSILE_DESCENT_RATE * dt);
 
     // Scale missile: full size at launch altitude, shrinks as it descends to ground
     const altFrac = m.launchAlt > 0 ? m.altitude / m.launchAlt : 0;
     const mScale = SCALE * (0.3 + altFrac * 0.7);
     m.sprite.setScale(mScale);
 
-    if (dist < 15) {
+    if (dist < MISSILE_HIT_RADIUS) {
       missileImpact(scene, m.target.x, m.target.y);
       m.sprite.destroy();
       if (m.shadow) m.shadow.destroy();
@@ -188,7 +194,7 @@ export function missileImpact(scene, x, y) {
   playSfxAt(scene, "explosion", x, y, EXPLOSION_VOLUME);
 
   // Screen shake
-  scene.cameras.main.shake(200, 0.005);
+  scene.cameras.main.shake(SCREEN_SHAKE_DURATION, SCREEN_SHAKE_INTENSITY);
 
   // Check building hits
   for (const b of scene.buildings) {

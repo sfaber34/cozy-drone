@@ -1,5 +1,11 @@
 import Phaser from "phaser";
-import { WORLD_W, WORLD_H, TILE, SCALE, AIRFIELD_X, AIRFIELD_Y } from "../constants.js";
+import {
+  WORLD_W, WORLD_H, TILE, SCALE, AIRFIELD_X, AIRFIELD_Y,
+  DRONE_TURN_RATE, DRONE_ACCEL, DRONE_MIN_SPEED_AIRBORNE,
+  DRONE_ALT_RATE, DRONE_TAKEOFF_SPEED, DRONE_ZOOM_ALT_THRESHOLD,
+  DRONE_ZOOM_MIN, DRONE_ZOOM_MAX, DRONE_MAX_SPEED, DRONE_MAX_ALT,
+  CAMERA_FOLLOW_LERP,
+} from "../constants.js";
 
 import { initAudio, updateEngineSound } from "../systems/audioSystem.js";
 import { playIntroCutscene } from "../systems/introSystem.js";
@@ -149,9 +155,9 @@ export class GameScene extends Phaser.Scene {
       speed: 0, // start stationary on runway
       altitude: 0, // on the ground
       minAlt: 0,
-      maxAlt: 8000,
+      maxAlt: DRONE_MAX_ALT,
       minSpeed: 0,
-      maxSpeed: 300,
+      maxSpeed: DRONE_MAX_SPEED,
     };
 
     // --- Targeting ---
@@ -182,7 +188,7 @@ export class GameScene extends Phaser.Scene {
 
     // --- Camera ---
     this.cameras.main.setBounds(0, 0, WORLD_W * TILE * SCALE, WORLD_H * TILE * SCALE);
-    this.cameras.main.startFollow(this.drone, true, 0.08, 0.08);
+    this.cameras.main.startFollow(this.drone, true, CAMERA_FOLLOW_LERP, CAMERA_FOLLOW_LERP);
     this.cameras.main.setZoom(1);
 
     // --- Input ---
@@ -281,37 +287,34 @@ export class GameScene extends Phaser.Scene {
     const speedKnots = ds.speed * 0.5;
 
     // --- Input: turn ---
-    const turnRate = 120; // degrees/sec
     if (this.cursors.left.isDown) {
-      ds.angle -= turnRate * dt;
+      ds.angle -= DRONE_TURN_RATE * dt;
     }
     if (this.cursors.right.isDown) {
-      ds.angle += turnRate * dt;
+      ds.angle += DRONE_TURN_RATE * dt;
     }
 
     // --- Input: speed ---
-    const accel = 100; // px/s^2
     if (this.cursors.up.isDown) {
-      ds.speed = Math.min(ds.maxSpeed, ds.speed + accel * dt);
+      ds.speed = Math.min(ds.maxSpeed, ds.speed + DRONE_ACCEL * dt);
     }
     if (this.cursors.down.isDown) {
-      const minSpd = isAirborne ? 80 : 0; // 40 kts min when flying
-      ds.speed = Math.max(minSpd, ds.speed - accel * dt);
+      const minSpd = isAirborne ? DRONE_MIN_SPEED_AIRBORNE : 0;
+      ds.speed = Math.max(minSpd, ds.speed - DRONE_ACCEL * dt);
     }
 
     // --- Input: altitude ---
-    const altRate = 300; // feet/sec
     if (this.cursors.altUp.isDown) {
-      // Can only gain altitude if speed >= 40 kts
-      if (speedKnots >= 40) {
-        ds.altitude = Math.min(ds.maxAlt, ds.altitude + altRate * dt);
+      // Can only gain altitude if speed >= takeoff speed
+      if (speedKnots >= DRONE_TAKEOFF_SPEED) {
+        ds.altitude = Math.min(ds.maxAlt, ds.altitude + DRONE_ALT_RATE * dt);
         if (isGrounded) {
           this.flightState = "airborne";
         }
       }
     }
     if (this.cursors.altDown.isDown && isAirborne) {
-      ds.altitude = Math.max(0, ds.altitude - altRate * dt);
+      ds.altitude = Math.max(0, ds.altitude - DRONE_ALT_RATE * dt);
     }
 
     // --- Check if drone touched down ---
@@ -355,13 +358,13 @@ export class GameScene extends Phaser.Scene {
       this.droneShadow.setVisible(false);
     }
 
-    // --- Camera zoom (zoom out above 2000 ft, drone compensates to stay same size) ---
-    if (ds.altitude <= 2000) {
-      this.cameras.main.setZoom(1);
+    // --- Camera zoom (zoom out above threshold, drone compensates to stay same size) ---
+    if (ds.altitude <= DRONE_ZOOM_ALT_THRESHOLD) {
+      this.cameras.main.setZoom(DRONE_ZOOM_MAX);
       this.drone.setScale(SCALE);
     } else {
-      const t = (ds.altitude - 2000) / (ds.maxAlt - 2000);
-      const zoom = Phaser.Math.Linear(1.0, 0.65, t);
+      const t = (ds.altitude - DRONE_ZOOM_ALT_THRESHOLD) / (ds.maxAlt - DRONE_ZOOM_ALT_THRESHOLD);
+      const zoom = Phaser.Math.Linear(DRONE_ZOOM_MAX, DRONE_ZOOM_MIN, t);
       this.cameras.main.setZoom(zoom);
       this.drone.setScale(SCALE / zoom);
     }
@@ -416,7 +419,7 @@ export class GameScene extends Phaser.Scene {
     let stateLabel = "";
     if (isGrounded) {
       stateLabel = ds.speed === 0 ? "PARKED" : "TAXIING";
-      if (speedKnots >= 40) stateLabel = "READY (E to take off)";
+      if (speedKnots >= DRONE_TAKEOFF_SPEED) stateLabel = "READY (E to take off)";
     } else {
       stateLabel = "";
     }

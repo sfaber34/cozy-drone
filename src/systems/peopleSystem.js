@@ -1,5 +1,11 @@
 import Phaser from "phaser";
-import { WORLD_W, WORLD_H, TILE, SCALE } from "../constants.js";
+import {
+  WORLD_W, WORLD_H, TILE, SCALE,
+  PEOPLE_DETECT_RADIUS, PEOPLE_WANDER_SPEED, PEOPLE_PANIC_SPEED,
+  PEOPLE_KILL_RADIUS, PEOPLE_PANIC_RADIUS, PEOPLE_CALM_DISTANCE,
+  PEOPLE_CALM_TIME, PEOPLE_HIDE_TIMEOUT, PEOPLE_GREETING_MIN_DIST,
+  PEOPLE_SPAWN_COUNT, PEOPLE_TOWN_SPAWN_COUNT, PEOPLE_SPAWN_AVOID_DIST,
+} from "../constants.js";
 import { greetings, ghostLines } from "../dialog.js";
 import { findNearestBuilding, steerAroundBuildings } from "./buildingSystem.js";
 import { playDeathSfxAt } from "./audioSystem.js";
@@ -19,13 +25,13 @@ export function createPeople(scene, rng) {
   const droneStartX = rwX;
   const droneStartY = rwBottom - 80;
 
-  for (let i = 0; i < 60; i++) {
+  for (let i = 0; i < PEOPLE_SPAWN_COUNT; i++) {
     let px, py;
     do {
       px = rng.between(300, WORLD_W * TILE * SCALE - 300);
       py = rng.between(300, WORLD_H * TILE * SCALE - 300);
     } while (
-      Phaser.Math.Distance.Between(px, py, droneStartX, droneStartY) < 2000
+      Phaser.Math.Distance.Between(px, py, droneStartX, droneStartY) < PEOPLE_SPAWN_AVOID_DIST
     );
     const skinId = rng.between(0, 199);
     const sprite = scene.add
@@ -57,7 +63,7 @@ export function createPeople(scene, rng) {
   const townStartY = scene.townStartY;
   const townEndX = scene.townEndX;
   const townEndY = scene.townEndY;
-  for (let i = 0; i < 80; i++) {
+  for (let i = 0; i < PEOPLE_TOWN_SPAWN_COUNT; i++) {
     const px =
       townStartX + 50 + Math.random() * (townEndX - townStartX - 100);
     const py =
@@ -89,8 +95,8 @@ export function createPeople(scene, rng) {
 }
 
 export function affectNearbyPeople(scene, x, y) {
-  const killRadius = 50;
-  const panicRadius = 400;
+  const killRadius = PEOPLE_KILL_RADIUS;
+  const panicRadius = PEOPLE_PANIC_RADIUS;
 
   for (const p of scene.people) {
     if (p.state === "ghost" || p.state === "gone" || p.state === "hiding")
@@ -179,9 +185,9 @@ export function affectNearbyPeople(scene, x, y) {
 
 export function updatePeople(scene, dt, delta) {
   const ds = scene.droneState;
-  const droneDetectRadius = 600;
-  const wanderSpeed = 30;
-  const panicSpeed = 60;
+  const droneDetectRadius = PEOPLE_DETECT_RADIUS;
+  const wanderSpeed = PEOPLE_WANDER_SPEED;
+  const panicSpeed = PEOPLE_PANIC_SPEED;
 
   for (const p of scene.people) {
     if (p.state === "gone") continue;
@@ -189,7 +195,7 @@ export function updatePeople(scene, dt, delta) {
     // People hiding in buildings — exit after timeout
     if (p.state === "hiding") {
       p.hideTimer = (p.hideTimer || 0) + dt;
-      if (p.hideTimer > 10) {
+      if (p.hideTimer > PEOPLE_HIDE_TIMEOUT) {
         p.hideTimer = 0;
         p.state = "idle";
         p.sprite.setVisible(true);
@@ -238,7 +244,7 @@ export function updatePeople(scene, dt, delta) {
               p.sprite.y,
               other.sprite.x,
               other.sprite.y,
-            ) < 150
+            ) < PEOPLE_GREETING_MIN_DIST
           ) {
             tooClose = true;
             break;
@@ -389,7 +395,7 @@ export function updatePeople(scene, dt, delta) {
 
       // Calm down if drone is far away for a while
       p.panicTimer = (p.panicTimer || 0) + dt;
-      if (distToDrone > 800 && p.panicTimer > 5) {
+      if (distToDrone > PEOPLE_CALM_DISTANCE && p.panicTimer > PEOPLE_CALM_TIME) {
         p.state = "idle";
         p.panicTimer = 0;
         p.hideTarget = null;
@@ -400,7 +406,7 @@ export function updatePeople(scene, dt, delta) {
         p.sprite.setTexture(skinTex(p, "stand"));
       }
       // Reset calm-down timer if drone is nearby
-      if (distToDrone <= 800) {
+      if (distToDrone <= PEOPLE_CALM_DISTANCE) {
         p.panicTimer = 0;
       }
     }

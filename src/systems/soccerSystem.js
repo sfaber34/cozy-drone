@@ -1,12 +1,15 @@
 import Phaser from "phaser";
-import { TILE, SCALE, SOCCER_X, SOCCER_Y } from "../constants.js";
+import {
+  TILE, SCALE, SOCCER_X, SOCCER_Y,
+  SOCCER_FIELD_W, SOCCER_FIELD_H, SOCCER_PLAYERS_PER_TEAM,
+} from "../constants.js";
 import { cheerPhrases } from "../dialog.js";
 
 export function createSoccer(scene, rng) {
   const soccerX = SOCCER_X * TILE * SCALE;
   const soccerY = SOCCER_Y * TILE * SCALE;
-  const fieldW = 300;
-  const fieldH = 200;
+  const fieldW = SOCCER_FIELD_W;
+  const fieldH = SOCCER_FIELD_H;
 
   // Green pitch
   for (let fy = -fieldH / 2; fy < fieldH / 2; fy += TILE * SCALE) {
@@ -80,7 +83,7 @@ export function createSoccer(scene, rng) {
   const teams = ["team-a", "team-b"];
   for (let t = 0; t < 2; t++) {
     const side = t === 0 ? -1 : 1;
-    for (let p = 0; p < 5; p++) {
+    for (let p = 0; p < SOCCER_PLAYERS_PER_TEAM; p++) {
       const px = soccerX + side * (50 + rng.between(0, 80));
       const py = soccerY + rng.between(-80, 80);
       const sprite = scene.add
