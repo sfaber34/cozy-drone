@@ -35,6 +35,13 @@ export const SOCCER_Y = 80;
 export const AIRFIELD_X = 100;
 export const AIRFIELD_Y = 100;
 
+// Chicken fight — cockfighting ring with spectators
+export const CHICKEN_FIGHT_X = 115;
+export const CHICKEN_FIGHT_Y = 108;
+export const CHICKEN_FIGHT_SPECTATORS = 30;       // number of spectators around the ring
+export const CHICKEN_FIGHT_SPEED = 60;            // how fast the fighting chickens move (px/s)
+export const CHICKEN_FIGHT_DIRECTION_CHANGE = 0.3; // seconds between direction changes
+
 // --- Music ---
 export const MUSIC_VOLUME = 0.4; // background music volume (0-1)
 

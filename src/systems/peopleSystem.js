@@ -11,6 +11,13 @@ import { greetings, ghostLines } from "../dialog.js";
 import { findNearestBuilding, steerAroundBuildings } from "./buildingSystem.js";
 import { playDeathSfxAt } from "./audioSystem.js";
 
+export function countTotalPeople(scene) {
+  let total = scene.people.length;
+  for (const bk of scene.dirtBikers) total++;
+  for (const car of scene.townCars) total += car.passengers;
+  return total;
+}
+
 export function skinTex(p, type) {
   if (p.teamSkin) return `${p.teamSkin}-${type}`;
   return `person-${type}-${p.skinId}`;
@@ -225,7 +232,7 @@ export function updatePeople(scene, dt, delta) {
     }
 
     // Soccer players/spectators in idle state are controlled by updateSoccer
-    if ((p.isSoccerPlayer || p.isSoccerSpectator) && p.state === "idle")
+    if ((p.isSoccerPlayer || p.isSoccerSpectator || p.isChickenFightSpectator) && p.state === "idle")
       continue;
 
     const distToDrone = Phaser.Math.Distance.Between(

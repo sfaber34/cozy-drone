@@ -10,6 +10,7 @@ import { generateMarketTextures } from '../textures/marketTextures.js';
 import { generateOilfieldTextures } from '../textures/oilfieldTextures.js';
 import { generatePropTextures } from '../textures/propTextures.js';
 import { generateSoccerTextures } from '../textures/soccerTextures.js';
+import { generateChickenFightTextures } from '../textures/chickenFightTextures.js';
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -28,6 +29,7 @@ export class BootScene extends Phaser.Scene {
     generateOilfieldTextures(this);
     generatePropTextures(this);
     generateSoccerTextures(this);
+    generateChickenFightTextures(this);
 
     this.scene.start('Game');
   }

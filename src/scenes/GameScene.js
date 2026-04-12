@@ -21,13 +21,14 @@ import {
   fireMissile,
   updateMissiles,
 } from "../systems/missileSystem.js";
-import { createPeople, updatePeople } from "../systems/peopleSystem.js";
+import { createPeople, updatePeople, countTotalPeople } from "../systems/peopleSystem.js";
 import {
   createVehicles,
   updateTownCars,
   updateDirtBikers,
 } from "../systems/vehicleSystem.js";
 import { isOnRunway, crashDrone } from "../systems/droneSystem.js";
+import { createChickenFight, updateChickenFight } from "../systems/chickenFightSystem.js";
 
 export class GameScene extends Phaser.Scene {
   constructor() {
@@ -78,6 +79,7 @@ export class GameScene extends Phaser.Scene {
     createSoccer(this, rng);
     createAnimals(this, rng);
     createOilfield(this, rng);
+    createChickenFight(this, rng);
 
     // --- Runway (6 tiles long) ---
     const rwX = AIRFIELD_X * TILE * SCALE;
@@ -256,11 +258,7 @@ export class GameScene extends Phaser.Scene {
 
     // Kill counter
     this.kills = 0;
-    // Total people on map: people array + dirt biker riders + car passengers
-    let totalPeople = this.people.length;
-    for (const bk of this.dirtBikers) totalPeople++;
-    for (const car of this.townCars) totalPeople += car.passengers;
-    this.totalPeople = totalPeople;
+    this.totalPeople = countTotalPeople(this);
 
     // --- Audio (music + SFX + engine, loaded in one batch) ---
     initAudio(this);
@@ -418,6 +416,7 @@ export class GameScene extends Phaser.Scene {
     updateOilWells(this, delta);
     updateDirtBikers(this, dt, delta);
     updateTownCars(this, dt);
+    updateChickenFight(this, dt);
 
     // --- HUD ---
     const spdDisplay = Math.round(speedKnots);
