@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { SCALE } from "../constants.js";
+import { SCALE, MISSILE_LAUNCH_VOLUME, EXPLOSION_VOLUME } from "../constants.js";
 import { ghostLines } from "../dialog.js";
 import { playSfx, playSfxAt, playDeathSfxAt } from "./audioSystem.js";
 import { affectNearbyPeople } from "./peopleSystem.js";
@@ -35,7 +35,7 @@ export function fireMissile(scene) {
   const heading = launchRad;
   missile.setRotation(heading + Math.PI / 2);
   missileShadow.setRotation(heading + Math.PI / 2);
-  playSfx(scene, "missileLaunch", 0.25);
+  playSfx(scene, "missileLaunch", MISSILE_LAUNCH_VOLUME);
 
   scene.missiles.push({
     sprite: missile,
@@ -185,7 +185,7 @@ export function missileImpact(scene, x, y) {
   }
 
   // Explosion SFX — directional relative to drone
-  playSfxAt(scene, "explosion", x, y, 0.7);
+  playSfxAt(scene, "explosion", x, y, EXPLOSION_VOLUME);
 
   // Screen shake
   scene.cameras.main.shake(200, 0.005);
