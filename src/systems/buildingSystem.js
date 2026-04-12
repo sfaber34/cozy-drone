@@ -73,6 +73,18 @@ export function createBuildings(scene, rng) {
     }
   }
 
+  // Helper: fill a block with a ground texture
+  const fillBlockGround = (blkX, blkY, tex, frame) => {
+    for (let py2 = 0; py2 < blockSize; py2++) {
+      for (let px2 = 0; px2 < blockSize; px2++) {
+        const img = frame !== undefined
+          ? scene.add.image(blkX + px2 * roadTile, blkY + py2 * roadTile, tex, frame)
+          : scene.add.image(blkX + px2 * roadTile, blkY + py2 * roadTile, tex);
+        img.setOrigin(0, 0).setScale(SCALE).setDepth(0.5);
+      }
+    }
+  };
+
   // Fill each block with buildings
   const blockTypes = [
     "residential",
@@ -99,60 +111,36 @@ export function createBuildings(scene, rng) {
       const cx = blkX + blkW / 2;
       const cy = blkY + blkH / 2;
 
-      // Skip bazaar blocks — filled separately
-      if (bazaarSet.has(`${bx},${by}`)) continue;
+      // Skip bazaar blocks — filled separately below
+      if (bazaarSet.has(`${bx},${by}`)) {
+        fillBlockGround(blkX, blkY, "grass");
+        continue;
+      }
 
       if (bx === 3 && by === 2) {
+        // Hospital block — parking ground
+        fillBlockGround(blkX, blkY, "parking");
         addBuilding(cx, cy, "hospital", "large");
-        for (let pp = 0; pp < 3; pp++) {
-          scene.add
-            .image(blkX + pp * roadTile, blkY, "parking")
-            .setOrigin(0, 0)
-            .setScale(SCALE)
-            .setDepth(1);
-        }
         continue;
       }
       if (bx === 5 && by === 4) {
+        // Church block — park ground
+        fillBlockGround(blkX, blkY, "park");
         addBuilding(cx, cy, "church", "medium");
-        for (let pp = 0; pp < 3; pp++) {
-          for (let pq = 0; pq < 3; pq++) {
-            scene.add
-              .image(blkX + pp * roadTile, blkY + pq * roadTile, "park")
-              .setOrigin(0, 0)
-              .setScale(SCALE)
-              .setDepth(1);
-          }
-        }
         continue;
       }
 
       const blockType = rng.pick(blockTypes);
 
       if (blockType === "park") {
-        for (let py2 = 0; py2 < blockSize; py2++) {
-          for (let px2 = 0; px2 < blockSize; px2++) {
-            scene.add
-              .image(blkX + px2 * roadTile, blkY + py2 * roadTile, "park")
-              .setOrigin(0, 0)
-              .setScale(SCALE)
-              .setDepth(1);
-          }
-        }
+        fillBlockGround(blkX, blkY, "park");
       } else if (blockType === "parking") {
-        for (let py2 = 0; py2 < blockSize; py2++) {
-          for (let px2 = 0; px2 < blockSize; px2++) {
-            scene.add
-              .image(blkX + px2 * roadTile, blkY + py2 * roadTile, "parking")
-              .setOrigin(0, 0)
-              .setScale(SCALE)
-              .setDepth(1);
-          }
-        }
+        fillBlockGround(blkX, blkY, "parking");
         const tex = rng.pick(["building", "shop", "gas-station"]);
         const sz = tex === "building" ? "medium" : "small";
         addBuilding(blkX + roadTile, blkY + roadTile, tex, sz);
       } else if (blockType === "commercial") {
+        fillBlockGround(blkX, blkY, "grass");
         const spots = [];
         for (let sy = 0; sy < 2; sy++) {
           for (let sx = 0; sx < 2; sx++) {
@@ -175,6 +163,8 @@ export function createBuildings(scene, rng) {
           addBuilding(s.x, s.y, tex, sz);
         }
       } else {
+        // Residential
+        fillBlockGround(blkX, blkY, "grass");
         for (let hy = 0; hy < 3; hy++) {
           for (let hx = 0; hx < 3; hx++) {
             if (rng.frac() < 0.15) continue;

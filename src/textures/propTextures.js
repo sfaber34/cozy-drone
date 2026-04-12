@@ -1,16 +1,18 @@
 import Phaser from 'phaser';
 
 export function generatePropTextures(scene) {
-  // --- Desert tiles (16x16 each, 4 variants) ---
+  // --- Desert tiles (16x16 each, 4 variants — very subtle variation to avoid grid pattern) ---
   const tileCanvas = scene.textures.createCanvas('desert-tiles', 64, 16);
   const dtc = tileCanvas.context;
-  const baseSands = ['#d2b48c', '#c8a878', '#dcc09a', '#bfa06e'];
+  const baseSand = '#d2b48c';
   for (let t = 0; t < 4; t++) {
-    dtc.fillStyle = baseSands[t];
+    // All tiles share the same base color
+    dtc.fillStyle = baseSand;
     dtc.fillRect(t * 16, 0, 16, 16);
+    // Very subtle noise pixels — close to base color so tiles blend seamlessly
     const rng = new Phaser.Math.RandomDataGenerator([`tile${t}`]);
-    for (let i = 0; i < 12; i++) {
-      const shade = rng.pick(['#c8a070', '#b89060', '#dcc898', '#e0d0a0']);
+    for (let i = 0; i < 8; i++) {
+      const shade = rng.pick(['#d0b088', '#d4b490', '#cead85', '#d6b892']);
       dtc.fillStyle = shade;
       dtc.fillRect(t * 16 + rng.between(0, 15), rng.between(0, 15), 1, 1);
     }
