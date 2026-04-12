@@ -61,13 +61,20 @@ export class GameScene extends Phaser.Scene {
       }
     }
 
-    // --- Desert props (spread evenly across bottom half) ---
-    const desertTop = halfH * SCALE;
-    const desertBot = WORLD_H * SCALE;
-    for (let i = 0; i < 500; i++) {
-      const x = Math.random() * WORLD_W * SCALE;
-      const y = desertTop + Math.random() * (desertBot - desertTop);
-      const tex = Math.random() > 0.5 ? "rock" : "brush";
+    // --- Desert props (everywhere except the town NW quadrant) ---
+    const townEndPx = halfW * SCALE; // town occupies x < this
+    const townEndPy = halfH * SCALE; // town occupies y < this
+    const worldPxW = WORLD_W * SCALE;
+    const worldPxH = WORLD_H * SCALE;
+    const desertProps = ["rock", "rock2", "rock3", "rock4", "brush", "bush2", "bush3", "tumbleweed", "cactus", "skull", "bones", "pottery", "deadtree", "palmstump"];
+    for (let i = 0; i < 2500; i++) {
+      let x, y;
+      // Keep trying until we get a position outside the town (NW quadrant)
+      do {
+        x = Math.random() * worldPxW;
+        y = Math.random() * worldPxH;
+      } while (x < townEndPx && y < townEndPy);
+      const tex = desertProps[Math.floor(Math.random() * desertProps.length)];
       this.add.image(x, y, tex).setScale(SCALE).setDepth(1);
     }
 
@@ -243,8 +250,8 @@ export class GameScene extends Phaser.Scene {
     // ==========================================
     // SOCCER GAME (to the right of the wedding)
     // ==========================================
-    const soccerX = weddingX + 500;
-    const soccerY = weddingY;
+    const soccerX = WORLD_W * SCALE * 0.8;
+    const soccerY = WORLD_H * SCALE * 0.4;
     const fieldW = 300;
     const fieldH = 200;
 
@@ -883,12 +890,12 @@ export class GameScene extends Phaser.Scene {
     // ==========================================
     // GOAT FLOCK WITH SHEPHERDS (right of farm)
     // ==========================================
-    const flockX = farmX + 900;
+    const flockX = farmX + 1900;
     const flockY = farmY;
-    const flockRadius = 200;
+    const flockRadius = 500;
 
-    // Large goat flock (20 goats)
-    for (let g = 0; g < 20; g++) {
+    // Large goat flock (75 goats)
+    for (let g = 0; g < 75; g++) {
       const angle = Math.random() * Math.PI * 2;
       const dist = Math.random() * flockRadius * 0.8;
       const gx = flockX + Math.cos(angle) * dist;
@@ -916,6 +923,12 @@ export class GameScene extends Phaser.Scene {
       { x: flockX - 160, y: flockY - 80 },
       { x: flockX + 170, y: flockY + 60 },
       { x: flockX - 40, y: flockY + 170 },
+      { x: flockX + 100, y: flockY - 150 },
+      { x: flockX - 180, y: flockY + 80 },
+      { x: flockX + 200, y: flockY - 30 },
+      { x: flockX - 100, y: flockY - 160 },
+      { x: flockX + 50, y: flockY + 190 },
+      { x: flockX - 200, y: flockY - 20 },
     ];
     for (const sp of shepherdPositions) {
       const skinId = rng.pick([4, 5, 7, 9]); // earthy/pastoral skin variants
