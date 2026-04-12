@@ -1,8 +1,8 @@
-import { WORLD_W, WORLD_H, SCALE } from "../constants.js";
+import { TILE, SCALE, WEDDING_X, WEDDING_Y } from "../constants.js";
 
 export function createWedding(scene, rng) {
-  const weddingX = WORLD_W * SCALE * 0.75;
-  const weddingY = WORLD_H * SCALE * 0.6;
+  const weddingX = WEDDING_X * TILE * SCALE;
+  const weddingY = WEDDING_Y * TILE * SCALE;
   scene.weddingPos = { x: weddingX, y: weddingY };
 
   // Wedding rug (aisle)

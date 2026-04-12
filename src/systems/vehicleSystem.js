@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { WORLD_W, WORLD_H, SCALE } from "../constants.js";
+import { WORLD_W, WORLD_H, TILE, SCALE } from "../constants.js";
 import { steerAroundBuildings } from "./buildingSystem.js";
 
 export function createVehicles(scene, rng) {
@@ -42,8 +42,8 @@ export function createVehicles(scene, rng) {
   // --- Dirt bikers ---
   scene.dirtBikers = [];
   for (let bi = 0; bi < 8; bi++) {
-    const bx = Phaser.Math.Between(500, WORLD_W * SCALE - 500);
-    const by = Phaser.Math.Between(500, WORLD_H * SCALE - 500);
+    const bx = Phaser.Math.Between(500, WORLD_W * TILE * SCALE - 500);
+    const by = Phaser.Math.Between(500, WORLD_H * TILE * SCALE - 500);
     const bikeVariant = Phaser.Math.Between(0, 9);
     const sprite = scene.add
       .image(bx, by, `dirtbike-${bikeVariant}`)
@@ -218,8 +218,8 @@ export function updateTownCars(scene, dt) {
 }
 
 export function updateDirtBikers(scene, dt, delta) {
-  const worldW = WORLD_W * SCALE;
-  const worldH = WORLD_H * SCALE;
+  const worldW = WORLD_W * TILE * SCALE;
+  const worldH = WORLD_H * TILE * SCALE;
   const margin = 200;
 
   for (const bk of scene.dirtBikers) {

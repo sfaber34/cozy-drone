@@ -1,15 +1,13 @@
 import Phaser from "phaser";
-import { WORLD_W, WORLD_H, SCALE } from "../constants.js";
+import { WORLD_W, WORLD_H, TILE, SCALE, FARM_X, FARM_Y, FLOCK_X, FLOCK_Y } from "../constants.js";
 import { shepherdGreetings } from "../dialog.js";
 import { steerAroundBuildings } from "./buildingSystem.js";
 
 export function createAnimals(scene, rng) {
   scene.animals = [];
 
-  const halfW = WORLD_W / 2;
-  const halfH = WORLD_H / 2;
-  const farmX = halfW * SCALE + 600;
-  const farmY = halfH * SCALE * 0.4;
+  const farmX = FARM_X * TILE * SCALE;
+  const farmY = FARM_Y * TILE * SCALE;
 
   const corralDefs = [
     { cx: farmX - 400, cy: farmY - 100, animal: "pig", count: 6 },
@@ -53,8 +51,8 @@ export function createAnimals(scene, rng) {
   // ==========================================
   // GOAT FLOCK WITH SHEPHERDS (right of farm)
   // ==========================================
-  const flockX = farmX + 1900;
-  const flockY = farmY;
+  const flockX = FLOCK_X * TILE * SCALE;
+  const flockY = FLOCK_Y * TILE * SCALE;
   const flockRadius = 500;
 
   // Large goat flock (75 goats)
@@ -122,8 +120,8 @@ export function createAnimals(scene, rng) {
 }
 
 export function updateAnimals(scene, dt) {
-  const worldW = WORLD_W * SCALE;
-  const worldH = WORLD_H * SCALE;
+  const worldW = WORLD_W * TILE * SCALE;
+  const worldH = WORLD_H * TILE * SCALE;
 
   for (const a of scene.animals) {
     if (a.state === "dead") continue;

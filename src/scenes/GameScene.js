@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { WORLD_W, WORLD_H, TILE, SCALE } from "../constants.js";
+import { WORLD_W, WORLD_H, TILE, SCALE, AIRFIELD_X, AIRFIELD_Y } from "../constants.js";
 
 import { initAudio, updateEngineSound } from "../systems/audioSystem.js";
 import { playIntroCutscene } from "../systems/introSystem.js";
@@ -36,11 +36,11 @@ export class GameScene extends Phaser.Scene {
     //   Desert: bottom half (0 - WORLD_W, WORLD_H/2 - WORLD_H) — runway area
     this.groundLayer = this.add.group();
     const rng = new Phaser.Math.RandomDataGenerator(["desert"]);
-    const halfW = WORLD_W / 2;
-    const halfH = WORLD_H / 2;
+    const halfW = (WORLD_W * TILE) / 2;
+    const halfH = (WORLD_H * TILE) / 2;
 
-    for (let y = 0; y < WORLD_H; y += TILE) {
-      for (let x = 0; x < WORLD_W; x += TILE) {
+    for (let y = 0; y < WORLD_H * TILE; y += TILE) {
+      for (let x = 0; x < WORLD_W * TILE; x += TILE) {
         let tex, frame;
         if (y < halfH && x < halfW) {
           // Town — grass base
@@ -71,8 +71,8 @@ export class GameScene extends Phaser.Scene {
     // --- Desert props (everywhere except the town NW quadrant) ---
     const townEndPx = halfW * SCALE; // town occupies x < this
     const townEndPy = halfH * SCALE; // town occupies y < this
-    const worldPxW = WORLD_W * SCALE;
-    const worldPxH = WORLD_H * SCALE;
+    const worldPxW = WORLD_W * TILE * SCALE;
+    const worldPxH = WORLD_H * TILE * SCALE;
     const desertProps = [
       "rock",
       "rock2",
@@ -110,14 +110,14 @@ export class GameScene extends Phaser.Scene {
     createOilfield(this, rng);
 
     // --- Runway (6 tiles long) ---
-    const rwX = (WORLD_W * SCALE) / 2;
+    const rwX = AIRFIELD_X * TILE * SCALE;
     const rwTiles = 6;
     const rwTileH = 128 * SCALE;
     const rwTotalH = rwTiles * rwTileH;
-    // Runway bottom edge
-    const rwBottom = (WORLD_H * SCALE) / 2 + rwTotalH / 2;
-    const rwTop = rwBottom - rwTotalH;
-    const rwCenterY = (rwTop + rwBottom) / 2;
+    // Runway positioned centered on AIRFIELD_Y
+    const rwCenterY = AIRFIELD_Y * TILE * SCALE;
+    const rwTop = rwCenterY - rwTotalH / 2;
+    const rwBottom = rwCenterY + rwTotalH / 2;
     for (let i = 0; i < rwTiles; i++) {
       this.add
         .image(rwX, rwTop + i * rwTileH + rwTileH / 2, "runway")
@@ -217,7 +217,7 @@ export class GameScene extends Phaser.Scene {
     });
 
     // --- Camera ---
-    this.cameras.main.setBounds(0, 0, WORLD_W * SCALE, WORLD_H * SCALE);
+    this.cameras.main.setBounds(0, 0, WORLD_W * TILE * SCALE, WORLD_H * TILE * SCALE);
     this.cameras.main.startFollow(this.drone, true, 0.08, 0.08);
     this.cameras.main.setZoom(1);
 
@@ -369,8 +369,8 @@ export class GameScene extends Phaser.Scene {
     ds.y += Math.sin(rad) * ds.speed * dt;
 
     // Clamp to world bounds
-    ds.x = Phaser.Math.Clamp(ds.x, 0, WORLD_W * SCALE);
-    ds.y = Phaser.Math.Clamp(ds.y, 0, WORLD_H * SCALE);
+    ds.x = Phaser.Math.Clamp(ds.x, 0, WORLD_W * TILE * SCALE);
+    ds.y = Phaser.Math.Clamp(ds.y, 0, WORLD_H * TILE * SCALE);
 
     this.drone.setPosition(ds.x, ds.y);
     this.drone.setAngle(ds.angle);

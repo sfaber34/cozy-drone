@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { WORLD_W, WORLD_H, SCALE } from "../constants.js";
+import { WORLD_W, WORLD_H, TILE, SCALE } from "../constants.js";
 import { greetings, ghostLines } from "../dialog.js";
 import { findNearestBuilding, steerAroundBuildings } from "./buildingSystem.js";
 import { playDeathSfxAt } from "./audioSystem.js";
@@ -11,19 +11,19 @@ export function skinTex(p, type) {
 
 export function createPeople(scene, rng) {
   // --- People (random wanderers) ---
-  const rwX = (WORLD_W * SCALE) / 2;
+  const rwX = (WORLD_W * TILE * SCALE) / 2;
   const rwTiles = 6;
   const rwTileH = 128 * SCALE;
   const rwTotalH = rwTiles * rwTileH;
-  const rwBottom = (WORLD_H * SCALE) / 2 + rwTotalH / 2;
+  const rwBottom = (WORLD_H * TILE * SCALE) / 2 + rwTotalH / 2;
   const droneStartX = rwX;
   const droneStartY = rwBottom - 80;
 
   for (let i = 0; i < 60; i++) {
     let px, py;
     do {
-      px = rng.between(300, WORLD_W * SCALE - 300);
-      py = rng.between(300, WORLD_H * SCALE - 300);
+      px = rng.between(300, WORLD_W * TILE * SCALE - 300);
+      py = rng.between(300, WORLD_H * TILE * SCALE - 300);
     } while (
       Phaser.Math.Distance.Between(px, py, droneStartX, droneStartY) < 2000
     );
@@ -296,8 +296,8 @@ export function updatePeople(scene, dt, delta) {
           p.sprite.setTexture(skinTex(p, "stand"));
         }
         // Clamp to world
-        p.sprite.x = Phaser.Math.Clamp(p.sprite.x, 50, WORLD_W * SCALE - 50);
-        p.sprite.y = Phaser.Math.Clamp(p.sprite.y, 50, WORLD_H * SCALE - 50);
+        p.sprite.x = Phaser.Math.Clamp(p.sprite.x, 50, WORLD_W * TILE * SCALE - 50);
+        p.sprite.y = Phaser.Math.Clamp(p.sprite.y, 50, WORLD_H * TILE * SCALE - 50);
       }
     }
 
@@ -368,8 +368,8 @@ export function updatePeople(scene, dt, delta) {
 
       // Bounce off world boundaries
       const margin = 100;
-      const worldW = WORLD_W * SCALE;
-      const worldH = WORLD_H * SCALE;
+      const worldW = WORLD_W * TILE * SCALE;
+      const worldH = WORLD_H * TILE * SCALE;
       if (p.sprite.x < margin) {
         p.sprite.x = margin;
         p.runAngle = Math.PI - p.runAngle;

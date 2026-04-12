@@ -1,10 +1,10 @@
 import Phaser from "phaser";
-import { WORLD_W, WORLD_H, TILE, SCALE } from "../constants.js";
+import { TILE, SCALE, SOCCER_X, SOCCER_Y } from "../constants.js";
 import { cheerPhrases } from "../dialog.js";
 
 export function createSoccer(scene, rng) {
-  const soccerX = WORLD_W * SCALE * 0.8;
-  const soccerY = WORLD_H * SCALE * 0.4;
+  const soccerX = SOCCER_X * TILE * SCALE;
+  const soccerY = SOCCER_Y * TILE * SCALE;
   const fieldW = 300;
   const fieldH = 200;
 

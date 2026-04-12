@@ -1,15 +1,10 @@
 import Phaser from "phaser";
-import { WORLD_W, WORLD_H, TILE, SCALE } from "../constants.js";
+import { TILE, SCALE, OIL_X, OIL_Y } from "../constants.js";
 import { workerGreetings } from "../dialog.js";
 
 export function createOilfield(scene, rng) {
-  const halfW = WORLD_W / 2;
-  const halfH = WORLD_H / 2;
-  const farmX = halfW * SCALE + 600;
-  const farmY = halfH * SCALE * 0.4;
-
-  const oilX = farmX + 200;
-  const oilY = farmY + 800;
+  const oilX = OIL_X * TILE * SCALE;
+  const oilY = OIL_Y * TILE * SCALE;
 
   const addBuilding = scene._addBuilding;
 
