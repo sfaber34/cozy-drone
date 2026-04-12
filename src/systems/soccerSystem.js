@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import {
   TILE, SCALE, SOCCER_X, SOCCER_Y,
-  SOCCER_FIELD_W, SOCCER_FIELD_H, SOCCER_PLAYERS_PER_TEAM,
+  SOCCER_FIELD_W, SOCCER_FIELD_H, SOCCER_PLAYERS_PER_TEAM, SOCCER_TACKLE_COOLDOWN,
 } from "../constants.js";
 import { cheerPhrases } from "../dialog.js";
 
@@ -263,17 +263,22 @@ export function updateSoccer(scene, dt, delta) {
     }
   }
 
-  // --- Ball holder & passing ---
+  // --- Ball holder & tackling ---
   scene.soccerPassTimer += dt;
+  scene.soccerTackleCooldown = (scene.soccerTackleCooldown || 0) - dt;
 
-  // Check if a chaser reached the ball
-  if (chaserA && bestDistA < 15 && scene.soccerBallHolder !== chaserA) {
-    scene.soccerBallHolder = chaserA;
-    scene.soccerPassTimer = 0;
-  }
-  if (chaserB && bestDistB < 15 && scene.soccerBallHolder !== chaserB) {
-    scene.soccerBallHolder = chaserB;
-    scene.soccerPassTimer = 0;
+  // Any player who reaches the ball can pick it up (with cooldown)
+  for (const p of players) {
+    if (!p.sprite.active || p.personEntry.state !== "idle") continue;
+    if (p === scene.soccerLastHolder && scene.soccerTackleCooldown > 0) continue;
+    const d = Phaser.Math.Distance.Between(p.sprite.x, p.sprite.y, ball.x, ball.y);
+    if (d < 15 && scene.soccerBallHolder !== p && scene.soccerTackleCooldown <= 0) {
+      scene.soccerLastHolder = scene.soccerBallHolder;
+      scene.soccerBallHolder = p;
+      scene.soccerPassTimer = 0;
+      scene.soccerTackleCooldown = SOCCER_TACKLE_COOLDOWN;
+      break;
+    }
   }
 
   // Ball follows holder
@@ -282,26 +287,39 @@ export function updateSoccer(scene, dt, delta) {
     ball.x = h.sprite.x + 8;
     ball.y = h.sprite.y + 5;
 
-    // After holding for a bit, kick toward a teammate or the goal
-    if (scene.soccerPassTimer > 1.0 + Math.random() * 0.5) {
+    // Dribble timer — pass or shoot after a delay
+    const holdTime = 0.8 + Math.random() * 0.8;
+    if (scene.soccerPassTimer > holdTime) {
       scene.soccerPassTimer = 0;
-      // Find a teammate to pass to, or shoot at goal
       const teammates = players.filter(
-        (p) => p.team === h.team && p !== h && p.sprite.active,
+        (p) => p.team === h.team && p !== h && p.sprite.active && p.personEntry.state === "idle",
       );
-      const shootChance = 0.3;
+
+      // Check if near opponent goal — higher shoot chance
+      const goalX = h.team === "team-a" ? fc.x + hw : fc.x - hw;
+      const distToGoal = Math.abs(h.sprite.x - goalX);
+      const shootChance = distToGoal < hw * 0.4 ? 0.6 : 0.2;
+
       if (Math.random() < shootChance || teammates.length === 0) {
-        // Shoot at goal
-        const goalX = h.team === "team-a" ? fc.x + hw + 10 : fc.x - hw - 10;
+        // Shoot at goal with some randomness
         scene.soccerBallVel = {
-          x: (goalX - ball.x) * 0.8,
-          y: (fc.y + Phaser.Math.Between(-30, 30) - ball.y) * 0.8,
+          x: (goalX + 10 * (h.team === "team-a" ? 1 : -1) - ball.x) * 0.9,
+          y: (fc.y + Phaser.Math.Between(-40, 40) - ball.y) * 0.9,
         };
       } else {
-        const target = Phaser.Utils.Array.GetRandom(teammates);
+        // Pass to a teammate — prefer forward passes
+        const forwardTeammates = teammates.filter((t) => {
+          const fwd = h.team === "team-a"
+            ? t.sprite.x > h.sprite.x
+            : t.sprite.x < h.sprite.x;
+          return fwd;
+        });
+        const target = forwardTeammates.length > 0
+          ? Phaser.Utils.Array.GetRandom(forwardTeammates)
+          : Phaser.Utils.Array.GetRandom(teammates);
         scene.soccerBallVel = {
-          x: (target.sprite.x - ball.x) * 0.6,
-          y: (target.sprite.y - ball.y) * 0.6,
+          x: (target.sprite.x - ball.x) * 0.7,
+          y: (target.sprite.y - ball.y) * 0.7,
         };
       }
       scene.soccerBallHolder = null;
@@ -311,8 +329,8 @@ export function updateSoccer(scene, dt, delta) {
     if (scene.soccerBallVel) {
       ball.x += scene.soccerBallVel.x * dt;
       ball.y += scene.soccerBallVel.y * dt;
-      scene.soccerBallVel.x *= 0.97;
-      scene.soccerBallVel.y *= 0.97;
+      scene.soccerBallVel.x *= 0.95;
+      scene.soccerBallVel.y *= 0.95;
       if (
         Math.abs(scene.soccerBallVel.x) < 1 &&
         Math.abs(scene.soccerBallVel.y) < 1
@@ -324,49 +342,67 @@ export function updateSoccer(scene, dt, delta) {
     ball.x = Phaser.Math.Clamp(ball.x, fc.x - hw, fc.x + hw);
     ball.y = Phaser.Math.Clamp(ball.y, fc.y - hh, fc.y + hh);
 
-    // If ball went past a goal line, reset to center
+    // Goal scored — reset to center
     if (ball.x <= fc.x - hw + 5 || ball.x >= fc.x + hw - 5) {
       ball.x = fc.x;
       ball.y = fc.y;
       scene.soccerBallVel = null;
       scene.soccerBallHolder = null;
+      // Reset all formations
+      for (const p of players) { p.formX = null; }
     }
   }
 
-  // --- Move players (only those still playing) ---
+  // --- Move players ---
   for (const p of players) {
     if (!p.sprite.active) continue;
-    // Skip players that are panicking, ghost, gone, etc.
     if (p.personEntry.state !== "idle") {
-      // Drop the ball if holder panicked/died
-      if (scene.soccerBallHolder === p) {
-        scene.soccerBallHolder = null;
-      }
+      if (scene.soccerBallHolder === p) scene.soccerBallHolder = null;
       continue;
     }
 
     const isChaser = p === chaserA || p === chaserB;
     const isHolder = p === scene.soccerBallHolder;
     const teamSide = p.team === "team-a" ? -1 : 1;
+    const opponentHasBall = scene.soccerBallHolder && scene.soccerBallHolder.team !== p.team;
     let tx, ty, spd;
 
     if (isHolder) {
-      tx = fc.x + teamSide * hw;
-      ty = fc.y + Phaser.Math.Between(-30, 30);
-      spd = 55;
+      // Dribble toward goal but with some lateral movement
+      const goalX = fc.x + teamSide * hw;
+      tx = goalX;
+      ty = fc.y + Math.sin(scene.time ? scene.time.now * 0.002 + p.sprite.y : 0) * 40;
+      spd = 50;
     } else if (isChaser && !scene.soccerBallHolder) {
+      // Chase loose ball
       tx = ball.x;
       ty = ball.y;
       spd = 70;
-    } else if (
-      isChaser &&
-      scene.soccerBallHolder &&
-      scene.soccerBallHolder.team !== p.team
-    ) {
+    } else if (isChaser && opponentHasBall) {
+      // Chase the ball holder to tackle
       tx = scene.soccerBallHolder.sprite.x;
       ty = scene.soccerBallHolder.sprite.y;
-      spd = 65;
+      spd = 68;
+    } else if (opponentHasBall) {
+      // Non-chaser defenders — move toward ball side of field
+      tx = ball.x + teamSide * Phaser.Math.Between(-30, 60);
+      ty = ball.y + Phaser.Math.Between(-40, 40);
+      tx = Phaser.Math.Clamp(tx, fc.x - hw + 10, fc.x + hw - 10);
+      ty = Phaser.Math.Clamp(ty, fc.y - hh + 10, fc.y + hh - 10);
+      spd = 45;
+    } else if (scene.soccerBallHolder && scene.soccerBallHolder.team === p.team) {
+      // Teammate has ball — spread out ahead for a pass
+      const holderX = scene.soccerBallHolder.sprite.x;
+      if (!p.formX || Math.random() < 0.02) {
+        p.formX = holderX + teamSide * Phaser.Math.Between(30, hw - 20);
+        p.formY = fc.y + Phaser.Math.Between(-hh + 20, hh - 20);
+        p.formX = Phaser.Math.Clamp(p.formX, fc.x - hw + 10, fc.x + hw - 10);
+      }
+      tx = p.formX;
+      ty = p.formY;
+      spd = 45;
     } else {
+      // Default formation
       if (!p.formX || Math.random() < 0.005) {
         const posIdx = players.filter((pp) => pp.team === p.team).indexOf(p);
         const spread = hh * 0.7;

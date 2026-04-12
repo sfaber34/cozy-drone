@@ -152,6 +152,7 @@ export const BIKER_TURN_RATE = 2.0;
 export const SOCCER_FIELD_W = 300;
 export const SOCCER_FIELD_H = 200;
 export const SOCCER_PLAYERS_PER_TEAM = 5;
+export const SOCCER_TACKLE_COOLDOWN = 2.0;         // seconds before ball can be stolen after a possession change
 
 // --- Buildings ---
 export const BUILDING_HP_SMALL = 2;
