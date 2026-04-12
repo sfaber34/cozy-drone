@@ -42,6 +42,19 @@ export const CHICKEN_FIGHT_SPECTATORS = 30;       // number of spectators around
 export const CHICKEN_FIGHT_SPEED = 60;            // how fast the fighting chickens move (px/s)
 export const CHICKEN_FIGHT_DIRECTION_CHANGE = 0.3; // seconds between direction changes
 
+// --- Dirt biker no-go zones (in tiles — center x, center y, half-width, half-height) ---
+// Bikers steer around these areas to stay in open desert
+export const BIKER_NO_GO_ZONES = [
+  { x: TOWN_X + 30, y: TOWN_Y + 30, hw: 35, hh: 35 },       // Town
+  { x: FARM_X, y: FARM_Y, hw: 15, hh: 10 },                   // Farm compound
+  { x: FLOCK_X, y: FLOCK_Y, hw: 15, hh: 15 },                 // Goat flock
+  { x: OIL_X, y: OIL_Y, hw: 20, hh: 15 },                     // Oilfield
+  { x: WEDDING_X, y: WEDDING_Y, hw: 8, hh: 8 },               // Wedding
+  { x: SOCCER_X, y: SOCCER_Y, hw: 10, hh: 8 },                // Soccer
+  { x: AIRFIELD_X, y: AIRFIELD_Y, hw: 12, hh: 20 },           // Airfield
+  { x: CHICKEN_FIGHT_X, y: CHICKEN_FIGHT_Y, hw: 5, hh: 5 },   // Chicken fight
+];
+
 // --- Music ---
 export const MUSIC_VOLUME = 0.4; // background music volume (0-1)
 

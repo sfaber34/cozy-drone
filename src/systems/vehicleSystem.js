@@ -4,6 +4,7 @@ import {
   CAR_COUNT, CAR_SPEED_MIN, CAR_SPEED_RANGE,
   CAR_PASSENGERS_MIN, CAR_PASSENGERS_MAX,
   BIKER_COUNT, BIKER_SPEED_MIN, BIKER_SPEED_RANGE, BIKER_TURN_RATE,
+  BIKER_NO_GO_ZONES,
 } from "../constants.js";
 import { steerAroundBuildings } from "./buildingSystem.js";
 
@@ -47,8 +48,11 @@ export function createVehicles(scene, rng) {
   // --- Dirt bikers ---
   scene.dirtBikers = [];
   for (let bi = 0; bi < BIKER_COUNT; bi++) {
-    const bx = Phaser.Math.Between(500, WORLD_W * TILE * SCALE - 500);
-    const by = Phaser.Math.Between(500, WORLD_H * TILE * SCALE - 500);
+    let bx, by;
+    do {
+      bx = Phaser.Math.Between(500, WORLD_W * TILE * SCALE - 500);
+      by = Phaser.Math.Between(500, WORLD_H * TILE * SCALE - 500);
+    } while (isInNoGoZone(bx, by));
     const bikeVariant = Phaser.Math.Between(0, 9);
     const sprite = scene.add
       .image(bx, by, `dirtbike-${bikeVariant}`)
@@ -222,6 +226,36 @@ export function updateTownCars(scene, dt) {
   }
 }
 
+function isInNoGoZone(px, py) {
+  const tilePx = TILE * SCALE;
+  for (const zone of BIKER_NO_GO_ZONES) {
+    const zx = zone.x * tilePx;
+    const zy = zone.y * tilePx;
+    const zhw = zone.hw * tilePx;
+    const zhh = zone.hh * tilePx;
+    if (Math.abs(px - zx) < zhw && Math.abs(py - zy) < zhh) return true;
+  }
+  return false;
+}
+
+function steerAwayFromZones(px, py, heading, dt) {
+  const tilePx = TILE * SCALE;
+  const checkDist = 100;
+  const nx = px + Math.cos(heading) * checkDist;
+  const ny = py + Math.sin(heading) * checkDist;
+  for (const zone of BIKER_NO_GO_ZONES) {
+    const zx = zone.x * tilePx;
+    const zy = zone.y * tilePx;
+    const zhw = zone.hw * tilePx;
+    const zhh = zone.hh * tilePx;
+    if (Math.abs(nx - zx) < zhw + 50 && Math.abs(ny - zy) < zhh + 50) {
+      // Steer away from zone center
+      return Phaser.Math.Angle.Between(zx, zy, px, py);
+    }
+  }
+  return heading;
+}
+
 export function updateDirtBikers(scene, dt, delta) {
   const worldW = WORLD_W * TILE * SCALE;
   const worldH = WORLD_H * TILE * SCALE;
@@ -251,12 +285,16 @@ export function updateDirtBikers(scene, dt, delta) {
     }
     if (!bk.alive) continue;
 
-    // Pick new random destination periodically
+    // Pick new random destination periodically (avoiding no-go zones)
     bk.retargetTimer += dt;
     if (bk.retargetTimer > 3 + Math.random() * 4) {
       bk.retargetTimer = 0;
-      bk.targetX = Phaser.Math.Between(margin, worldW - margin);
-      bk.targetY = Phaser.Math.Between(margin, worldH - margin);
+      let tries = 0;
+      do {
+        bk.targetX = Phaser.Math.Between(margin, worldW - margin);
+        bk.targetY = Phaser.Math.Between(margin, worldH - margin);
+        tries++;
+      } while (isInNoGoZone(bk.targetX, bk.targetY) && tries < 20);
     }
 
     // Steer toward target, avoiding buildings
@@ -280,6 +318,9 @@ export function updateDirtBikers(scene, dt, delta) {
       bk.heading,
       dt,
     );
+
+    // Steer away from no-go zones
+    bk.heading = steerAwayFromZones(bk.sprite.x, bk.sprite.y, bk.heading, dt);
 
     // Move
     bk.sprite.x += Math.cos(bk.heading) * bk.speed * dt;
