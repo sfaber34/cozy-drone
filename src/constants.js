@@ -212,6 +212,12 @@ export const CLUSTER_OPEN_SHAKE_INTENSITY = 0.003; // screen shake intensity on 
 export const CLUSTER_DROP_FACTOR = 0.25; // multiplier on physics drop distance (speed × fallTime); >1 = farther behind
 export const CLUSTER_BOMBLET_FALL_TIME = 0.3; // seconds for bomblets to travel from opening point to ground
 
+// --- Mobile Controls ---
+export const MOBILE_ZOOM_FACTOR = 0.6; // base zoom multiplier on mobile (25% zoom out)
+export const MOBILE_JOYSTICK_RADIUS = 65; // virtual joystick radius (px)
+export const MOBILE_BUTTON_RADIUS = 42; // fire/alt button radius (px)
+export const MOBILE_BUTTON_MARGIN = 18; // gap from screen edge and between buttons (px)
+
 // --- Bus Route ---
 export const BUS_ROUTE_BLOCK_COL = 4; // town grid column (0-7) for bus road centerline
 export const BUS_ROUTE_ROAD_TILES = 25; // tile length of route between the two terminals

@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { BootScene } from './scenes/BootScene.js';
 import { GameScene } from './scenes/GameScene.js';
+import { MobileControlsScene } from './scenes/MobileControlsScene.js';
 
 const config = {
   type: Phaser.WEBGL,
@@ -12,7 +13,7 @@ const config = {
     height: '100%',
     parent: document.body,
   },
-  scene: [BootScene, GameScene],
+  scene: [BootScene, GameScene, MobileControlsScene],
   physics: {
     default: 'arcade',
     arcade: {

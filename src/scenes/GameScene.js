@@ -4,7 +4,7 @@ import {
   DRONE_TURN_RATE, DRONE_ACCEL, DRONE_MIN_SPEED_AIRBORNE,
   DRONE_ALT_RATE, DRONE_TAKEOFF_SPEED, DRONE_ZOOM_ALT_THRESHOLD,
   DRONE_ZOOM_MIN, DRONE_ZOOM_MAX, DRONE_MAX_SPEED, DRONE_MAX_ALT,
-  CAMERA_FOLLOW_LERP,
+  CAMERA_FOLLOW_LERP, MOBILE_ZOOM_FACTOR,
 } from "../constants.js";
 import { createWater, WATER_BOUNDS } from "../systems/waterSystem.js";
 
@@ -236,6 +236,8 @@ export class GameScene extends Phaser.Scene {
     this.input.on("pointerdown", (pointer) => {
       if (this.introPlaying) return;
       if (this.flightState === "crashed") return;
+      // On mobile, ignore taps in the lower controls zone
+      if (this.isMobile && pointer.y > this.scale.height * 0.65) return;
       const worldX = pointer.worldX;
       const worldY = pointer.worldY;
       this.targetPos = { x: worldX, y: worldY };
@@ -282,6 +284,15 @@ export class GameScene extends Phaser.Scene {
     });
     this.controlsText.setY(this.scale.height - 30);
 
+    // --- Mobile controls ---
+    this.isMobile = this.sys.game.device.input.touch;
+    this.mobileInput = { left: false, right: false, up: false, down: false,
+                         altUp: false, altDown: false, fire: false, fireJustDown: false };
+    if (this.isMobile) {
+      this.controlsText.setVisible(false);
+      this.scene.launch("MobileControls", { gameScene: this });
+    }
+
     // Kill counter
     this.kills = 0;
     this.totalPeople = countTotalPeople(this);
@@ -314,29 +325,30 @@ export class GameScene extends Phaser.Scene {
     const isGrounded = this.flightState === "grounded";
     const isAirborne = this.flightState === "airborne";
     const speedKnots = ds.speed * 0.5;
+    const mi = this.mobileInput;
 
     // --- Input: turn ---
     ds.currentTurnRate = 0;
-    if (this.cursors.left.isDown) {
+    if (this.cursors.left.isDown  || (mi && mi.left)) {
       ds.angle -= DRONE_TURN_RATE * dt;
       ds.currentTurnRate = -DRONE_TURN_RATE;
     }
-    if (this.cursors.right.isDown) {
+    if (this.cursors.right.isDown || (mi && mi.right)) {
       ds.angle += DRONE_TURN_RATE * dt;
       ds.currentTurnRate = DRONE_TURN_RATE;
     }
 
     // --- Input: speed ---
-    if (this.cursors.up.isDown) {
+    if (this.cursors.up.isDown || (mi && mi.up)) {
       ds.speed = Math.min(ds.maxSpeed, ds.speed + DRONE_ACCEL * dt);
     }
-    if (this.cursors.down.isDown) {
+    if (this.cursors.down.isDown || (mi && mi.down)) {
       const minSpd = isAirborne ? DRONE_MIN_SPEED_AIRBORNE : 0;
       ds.speed = Math.max(minSpd, ds.speed - DRONE_ACCEL * dt);
     }
 
     // --- Input: altitude ---
-    if (this.cursors.altUp.isDown) {
+    if (this.cursors.altUp.isDown || (mi && mi.altUp)) {
       // Can only gain altitude if speed >= takeoff speed
       if (speedKnots >= DRONE_TAKEOFF_SPEED) {
         ds.altitude = Math.min(ds.maxAlt, ds.altitude + DRONE_ALT_RATE * dt);
@@ -345,7 +357,7 @@ export class GameScene extends Phaser.Scene {
         }
       }
     }
-    if (this.cursors.altDown.isDown && isAirborne) {
+    if ((this.cursors.altDown.isDown || (mi && mi.altDown)) && isAirborne) {
       ds.altitude = Math.max(0, ds.altitude - DRONE_ALT_RATE * dt);
     }
 
@@ -412,15 +424,17 @@ export class GameScene extends Phaser.Scene {
       this.droneShadow.setVisible(false);
     }
 
-    // --- Camera zoom (zoom out above threshold, drone compensates to stay same size) ---
+    // --- Camera zoom (zoom out above threshold; mobile adds a constant 25% zoom-out) ---
+    const mobileZoom = this.isMobile ? MOBILE_ZOOM_FACTOR : 1.0;
     if (ds.altitude <= DRONE_ZOOM_ALT_THRESHOLD) {
-      this.cameras.main.setZoom(DRONE_ZOOM_MAX);
+      this.cameras.main.setZoom(DRONE_ZOOM_MAX * mobileZoom);
       this.drone.setScale(SCALE);
     } else {
       const t = (ds.altitude - DRONE_ZOOM_ALT_THRESHOLD) / (ds.maxAlt - DRONE_ZOOM_ALT_THRESHOLD);
-      const zoom = Phaser.Math.Linear(DRONE_ZOOM_MAX, DRONE_ZOOM_MIN, t);
-      this.cameras.main.setZoom(zoom);
-      this.drone.setScale(SCALE / zoom);
+      const worldZoom = Phaser.Math.Linear(DRONE_ZOOM_MAX, DRONE_ZOOM_MIN, t);
+      this.cameras.main.setZoom(worldZoom * mobileZoom);
+      // Drone compensates for altitude zoom only (mobile zoom intentionally shrinks it)
+      this.drone.setScale(SCALE / worldZoom);
     }
 
     // --- Propeller animation (faster spin at higher speed) ---
@@ -469,16 +483,20 @@ export class GameScene extends Phaser.Scene {
     }
 
     // --- Fire weapons (only when airborne) ---
+    const fireJustDown = Phaser.Input.Keyboard.JustDown(this.cursors.fire) || (mi && mi.fireJustDown);
+    const fireHeld     = this.cursors.fire.isDown || (mi && mi.fire);
+    if (mi) mi.fireJustDown = false; // consumed — MobileControlsScene will re-set on next press
+
     if (this.selectedWeapon === 1) {
       // Missile: single fire with cooldown
       if (this.missileFireTimer > 0) this.missileFireTimer -= dt;
-      if (Phaser.Input.Keyboard.JustDown(this.cursors.fire) && this.targetPos && isAirborne && this.missileFireTimer <= 0) {
+      if (fireJustDown && this.targetPos && isAirborne && this.missileFireTimer <= 0) {
         fireMissile(this);
         this.missileFireTimer = MISSILE_FIRE_RATE;
       }
     } else if (this.selectedWeapon === 2) {
       // Cannon: hold to auto-fire
-      if (this.cursors.fire.isDown && isAirborne) {
+      if (fireHeld && isAirborne) {
         this.cannonFireTimer += dt;
         if (this.cannonFireTimer >= CANNON_FIRE_RATE) {
           this.cannonFireTimer = 0;
@@ -490,7 +508,7 @@ export class GameScene extends Phaser.Scene {
     } else if (this.selectedWeapon === 3) {
       // Cluster bomb: single drop with cooldown
       if (this.clusterFireTimer > 0) this.clusterFireTimer -= dt;
-      if (Phaser.Input.Keyboard.JustDown(this.cursors.fire) && isAirborne && this.clusterFireTimer <= 0) {
+      if (fireJustDown && isAirborne && this.clusterFireTimer <= 0) {
         fireClusterBomb(this);
         this.clusterFireTimer = CLUSTER_FIRE_RATE;
       }
