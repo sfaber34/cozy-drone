@@ -8,7 +8,7 @@ import {
 } from "../constants.js";
 import { createWater, WATER_BOUNDS } from "../systems/waterSystem.js";
 
-import { initAudio, updateEngineSound } from "../systems/audioSystem.js";
+import { initAudio, updateEngineSound, updateCannonFiringSound } from "../systems/audioSystem.js";
 import { playIntroCutscene } from "../systems/introSystem.js";
 import { createWedding } from "../systems/weddingSetup.js";
 import { createSoccer, updateSoccer } from "../systems/soccerSystem.js";
@@ -518,6 +518,8 @@ export class GameScene extends Phaser.Scene {
     const fireHeld     = this.cursors.fire.isDown || (mi && mi.fire);
     if (mi) mi.fireJustDown = false; // consumed — MobileControlsScene will re-set on next press
 
+    if (this.selectedWeapon !== 2) updateCannonFiringSound(this, false);
+
     if (this.selectedWeapon === 1) {
       // Missile: single fire with cooldown
       if (this.missileFireTimer > 0) this.missileFireTimer -= dt;
@@ -527,7 +529,8 @@ export class GameScene extends Phaser.Scene {
       }
     } else if (this.selectedWeapon === 2) {
       // Cannon: hold to auto-fire
-      if (fireHeld && isAirborne) {
+      const cannonFiring = fireHeld && isAirborne;
+      if (cannonFiring) {
         this.cannonFireTimer += dt;
         if (this.cannonFireTimer >= CANNON_FIRE_RATE) {
           this.cannonFireTimer = 0;
@@ -536,6 +539,7 @@ export class GameScene extends Phaser.Scene {
       } else {
         this.cannonFireTimer = 0;
       }
+      updateCannonFiringSound(this, cannonFiring);
     } else if (this.selectedWeapon === 3) {
       // Cluster bomb: single drop with cooldown
       if (this.clusterFireTimer > 0) this.clusterFireTimer -= dt;

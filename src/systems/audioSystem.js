@@ -11,6 +11,8 @@ import {
   ENGINE_RATE_MIN,
   ENGINE_RATE_RANGE,
   ENGINE_CROSSFADE_SEC,
+  CANNON_GUN_VOLUME,
+  CANNON_GUN_CROSSFADE_SEC,
   SFX_MAX_DISTANCE,
   SFX_MIN_VOLUME_FRAC,
   SFX_PAN_AMOUNT,
@@ -38,6 +40,10 @@ export function initAudio(scene) {
   scene.engineB = null;
   scene.engineActive = null;
   scene.engineCrossfade = ENGINE_CROSSFADE_SEC;
+  scene.cannonGunKey = null;
+  scene.cannonGunA = null;
+  scene.cannonGunB = null;
+  scene.cannonGunActive = null;
 
   if (scene.sound.context) scene.sound.context.resume();
 
@@ -59,11 +65,15 @@ export function initAudio(scene) {
   const engineFetch = fetch("/sfx/engine/sounds.json")
     .then((r) => r.json())
     .catch(() => []);
+  const cannonGunFetch = fetch("/sfx/cannonFiring/sounds.json")
+    .then((r) => r.json())
+    .catch(() => []);
 
-  Promise.all([musicFetch, ...sfxFetches, engineFetch]).then((results) => {
+  Promise.all([musicFetch, ...sfxFetches, engineFetch, cannonGunFetch]).then((results) => {
     const musicFiles = results[0] || [];
     const sfxResults = results.slice(1, 1 + sfxManifests.length);
-    const engineFiles = results[results.length - 1] || [];
+    const engineFiles = results[sfxManifests.length + 1] || [];
+    const cannonGunFiles = results[sfxManifests.length + 2] || [];
 
     for (const filename of musicFiles) {
       scene.load.audio(`music-${filename}`, `/music/${filename}`);
@@ -85,9 +95,16 @@ export function initAudio(scene) {
       scene.load.audio(engineKey, `/sfx/engine/${engineFiles[0]}`);
     }
 
+    let cannonGunKey = null;
+    if (cannonGunFiles.length > 0) {
+      cannonGunKey = `sfx-cannonFiring-${cannonGunFiles[0]}`;
+      scene.load.audio(cannonGunKey, `/sfx/cannonFiring/${cannonGunFiles[0]}`);
+    }
+
     if (
       musicFiles.length === 0 &&
       engineKey === null &&
+      cannonGunKey === null &&
       sfxResults.every((r) => r.files.length === 0)
     )
       return;
@@ -116,6 +133,13 @@ export function initAudio(scene) {
           rate: ENGINE_RATE_MIN,
         });
         scene.engineActive = null;
+      }
+
+      if (cannonGunKey) {
+        scene.cannonGunKey = cannonGunKey;
+        scene.cannonGunA = scene.sound.add(cannonGunKey, { volume: 0, loop: false });
+        scene.cannonGunB = scene.sound.add(cannonGunKey, { volume: 0, loop: false });
+        scene.cannonGunActive = null;
       }
 
       if (scene.musicTracks.length > 0) {
@@ -264,6 +288,54 @@ export function updateEngineSound(scene, ds, delta) {
       if (scene.engineA.isPlaying) scene.engineA.stop();
       if (scene.engineB.isPlaying) scene.engineB.stop();
       scene.engineActive = null;
+    }
+  }
+}
+
+export function updateCannonFiringSound(scene, isFiring) {
+  const a = scene.cannonGunA;
+  const b = scene.cannonGunB;
+  if (!a || !b) return;
+
+  if (!isFiring) {
+    if (a.isPlaying) a.stop();
+    if (b.isPlaying) b.stop();
+    scene.cannonGunActive = null;
+    return;
+  }
+
+  const fade = CANNON_GUN_CROSSFADE_SEC;
+
+  // Kick off playback if nothing is running
+  if (!a.isPlaying && !b.isPlaying) {
+    a.setVolume(CANNON_GUN_VOLUME);
+    a.play();
+    scene.cannonGunActive = a;
+  }
+
+  const active = scene.cannonGunActive;
+  if (!active || !active.isPlaying) return;
+  const other = active === a ? b : a;
+
+  // Chain next loop before the current one ends
+  if (active.duration > 0) {
+    const remaining = active.duration - active.seek;
+    if (remaining < fade && !other.isPlaying) {
+      other.setVolume(0);
+      other.play();
+      scene.cannonGunActive = other;
+    }
+    // Crossfade volumes
+    if (remaining < fade) {
+      const t = remaining / fade;
+      active.setVolume(CANNON_GUN_VOLUME * t);
+    } else {
+      active.setVolume(CANNON_GUN_VOLUME);
+    }
+    if (other.isPlaying && other.seek < fade) {
+      other.setVolume(CANNON_GUN_VOLUME * (other.seek / fade));
+    } else if (other.isPlaying && other === scene.cannonGunActive) {
+      other.setVolume(CANNON_GUN_VOLUME);
     }
   }
 }

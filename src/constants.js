@@ -117,6 +117,10 @@ export const MISSILE_SMOKE_INTERVAL = 40;
 export const MISSILE_SMOKE_OPACITY = 0.8; // starting alpha of each smoke puff
 export const MISSILE_FIRE_RATE = 0.3; // seconds between missile launches
 
+// --- Cannon firing SFX ---
+export const CANNON_GUN_VOLUME = 0.35; // volume of the looping gun sound
+export const CANNON_GUN_CROSSFADE_SEC = 0.3; // crossfade overlap between chained gun loops
+
 // --- Cannon ---
 export const CANNON_FIRE_RATE = 0.075; // seconds between shots (hold to auto-fire)
 export const CANNON_BULLET_SPEED = 1000; // bullet travel speed (px/s)
