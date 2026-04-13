@@ -44,9 +44,10 @@ export function fireCannon(scene) {
   const ds = scene.droneState;
   if (ds.altitude <= 0) return;
 
-  const spread = (Math.random() - 0.5) * CANNON_SPREAD * 2;
-  const rad = Phaser.Math.DegToRad(ds.angle - 90) + spread;
-  const range = ds.altitude * CANNON_RANGE_FACTOR;
+  const angleSpread = (Math.random() - 0.5) * CANNON_SPREAD * 2;
+  const rangeSpread = (Math.random() - 0.5) * CANNON_SPREAD * 2;
+  const rad   = Phaser.Math.DegToRad(ds.angle - 90) + angleSpread;
+  const range = ds.altitude * CANNON_RANGE_FACTOR * (1 + rangeSpread);
   const targetX = ds.x + Math.cos(rad) * range;
   const targetY = ds.y + Math.sin(rad) * range;
 

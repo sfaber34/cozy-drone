@@ -92,7 +92,7 @@ export class GameScene extends Phaser.Scene {
     createOilfield(this, rng);
     createChickenFight(this, rng);
     createCamelRace(this, rng);
-    createBusRoute(this, rng);
+
 
     // --- Runway (6 tiles long) ---
     const rwX = AIRFIELD_X * TILE * SCALE;
@@ -232,11 +232,19 @@ export class GameScene extends Phaser.Scene {
     initCannon(this);
     initClusterBomb(this);
 
-    // Click to set target (missile only)
+    // Pointer down: set missile target, or restart after crash
     this.input.on("pointerdown", (pointer) => {
       if (this.introPlaying) return;
-      if (this.flightState === "crashed") return;
-      // On mobile, ignore taps that land directly on a control widget
+      // Crashed: tap anywhere (off controls) to restart
+      if (this.flightState === "crashed") {
+        if (this.crashRestartReady) {
+          if (this.isMobile && this.isOnMobileControl(pointer.x, pointer.y)) return;
+          this.sound.stopAll();
+          this.scene.restart();
+        }
+        return;
+      }
+      // Normal: set missile target (skip if tap landed on a mobile control)
       if (this.isMobile && this.isOnMobileControl(pointer.x, pointer.y)) return;
       const worldX = pointer.worldX;
       const worldY = pointer.worldY;
@@ -287,7 +295,9 @@ export class GameScene extends Phaser.Scene {
     // --- Mobile controls ---
     this.isMobile = this.sys.game.device.input.touch;
     this.mobileInput = { left: false, right: false, up: false, down: false,
-                         altUp: false, altDown: false, fire: false, fireJustDown: false };
+                         altUp: false, altDown: false, fire: false, fireJustDown: false,
+                         turnAmount: 0, altAmount: 0 };  // analog (-1…+1) from joystick
+    this.crashRestartReady = false;
     this.mobileControlZones = null; // populated by MobileControlsScene.buildControls()
     if (this.isMobile) {
       this.controlsText.setVisible(false);
@@ -318,6 +328,11 @@ export class GameScene extends Phaser.Scene {
     const rk = z.rocker;
     if (px >= rk.x - rk.w / 2 && px <= rk.x + rk.w / 2 &&
         py >= rk.y - rk.h / 2 && py <= rk.y + rk.h / 2) return true;
+    if (z.weaponRocker) {
+      const wr = z.weaponRocker;
+      if (px >= wr.x - wr.w / 2 && px <= wr.x + wr.w / 2 &&
+          py >= wr.y - wr.h / 2 && py <= wr.y + wr.h / 2) return true;
+    }
     return false;
   }
 
@@ -343,15 +358,13 @@ export class GameScene extends Phaser.Scene {
     const speedKnots = ds.speed * 0.5;
     const mi = this.mobileInput;
 
-    // --- Input: turn ---
+    // --- Input: turn (requires forward speed — can't yaw while stationary) ---
+    const kbTurn = this.cursors.left.isDown ? -1 : this.cursors.right.isDown ? 1 : 0;
+    const turnAmt = kbTurn !== 0 ? kbTurn : (mi ? mi.turnAmount : 0);
     ds.currentTurnRate = 0;
-    if (this.cursors.left.isDown  || (mi && mi.left)) {
-      ds.angle -= DRONE_TURN_RATE * dt;
-      ds.currentTurnRate = -DRONE_TURN_RATE;
-    }
-    if (this.cursors.right.isDown || (mi && mi.right)) {
-      ds.angle += DRONE_TURN_RATE * dt;
-      ds.currentTurnRate = DRONE_TURN_RATE;
+    if (ds.speed > 0 && Math.abs(turnAmt) > 0.01) {
+      ds.angle += DRONE_TURN_RATE * dt * turnAmt;
+      ds.currentTurnRate = DRONE_TURN_RATE * turnAmt;
     }
 
     // --- Input: speed ---
@@ -363,18 +376,20 @@ export class GameScene extends Phaser.Scene {
       ds.speed = Math.max(minSpd, ds.speed - DRONE_ACCEL * dt);
     }
 
-    // --- Input: altitude ---
-    if (this.cursors.altUp.isDown || (mi && mi.altUp)) {
-      // Can only gain altitude if speed >= takeoff speed
+    // --- Input: altitude (keyboard = binary, joystick = analog via altAmount) ---
+    // altAmount: +1 = stick pushed down = nose up = gain altitude (real-plane feel)
+    const altUpFactor = this.cursors.altUp.isDown   ? 1
+                      : (mi && mi.altAmount > 0)    ? mi.altAmount : 0;
+    const altDnFactor = this.cursors.altDown.isDown  ? 1
+                      : (mi && mi.altAmount < 0)    ? -mi.altAmount : 0;
+    if (altUpFactor > 0) {
       if (speedKnots >= DRONE_TAKEOFF_SPEED) {
-        ds.altitude = Math.min(ds.maxAlt, ds.altitude + DRONE_ALT_RATE * dt);
-        if (isGrounded) {
-          this.flightState = "airborne";
-        }
+        ds.altitude = Math.min(ds.maxAlt, ds.altitude + DRONE_ALT_RATE * dt * altUpFactor);
+        if (isGrounded) this.flightState = "airborne";
       }
     }
-    if ((this.cursors.altDown.isDown || (mi && mi.altDown)) && isAirborne) {
-      ds.altitude = Math.max(0, ds.altitude - DRONE_ALT_RATE * dt);
+    if (altDnFactor > 0 && isAirborne) {
+      ds.altitude = Math.max(0, ds.altitude - DRONE_ALT_RATE * dt * altDnFactor);
     }
 
     // --- Check if drone touched down ---
@@ -470,7 +485,7 @@ export class GameScene extends Phaser.Scene {
     // --- Weapon switching ---
     if (Phaser.Input.Keyboard.JustDown(this.cursors.weapon1)) this.selectedWeapon = 1;
     if (Phaser.Input.Keyboard.JustDown(this.cursors.weapon2)) this.selectedWeapon = 2;
-    if (Phaser.Input.Keyboard.JustDown(this.cursors.weapon3)) this.selectedWeapon = 3;
+    // CBU (weapon 3) selection disabled — leave fire/update code intact
 
     // --- Weapon display (hide all reticles, then show the active one) ---
     this.laserLine.clear();
@@ -542,7 +557,7 @@ export class GameScene extends Phaser.Scene {
     updateTownCars(this, dt);
     updateChickenFight(this, dt);
     updateCamelRace(this, dt);
-    updateBusSystem(this, dt, delta);
+
 
     // --- HUD ---
     const spdDisplay = Math.round(speedKnots);

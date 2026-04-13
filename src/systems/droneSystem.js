@@ -24,11 +24,12 @@ export function crashDrone(scene) {
   scene.cameras.main.shake(CRASH_SHAKE_DURATION, CRASH_SHAKE_INTENSITY);
 
   // Show crash message
+  const hint = scene.isMobile ? "Tap to restart" : "Press R  or  tap to restart";
   scene.crashText = scene.add
     .text(
       scene.scale.width / 2,
       scene.scale.height / 2,
-      "DRONE DESTROYED\n\nPress R to restart",
+      `DRONE DESTROYED\n\n${hint}`,
       {
         fontFamily: "monospace",
         fontSize: "24px",
@@ -41,6 +42,11 @@ export function crashDrone(scene) {
     .setOrigin(0.5)
     .setDepth(200);
   scene.cameras.main.ignore(scene.crashText);
+
+  // Enable tap-to-restart after a short delay (avoids accidental restart on crash)
+  scene.time.delayedCall(700, () => {
+    scene.crashRestartReady = true;
+  });
 
   scene.restartKey = scene.input.keyboard.addKey(
     Phaser.Input.Keyboard.KeyCodes.R,
