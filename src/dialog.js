@@ -93,7 +93,7 @@ export const ghostLines = [
   "This rules!",
   "My back doesn't\nhurt anymore!",
   "Totally worth\nthe wait!",
-  "I was so bored!",
+  "I was so bored\nanyway!",
   "Incredible!",
   "Much appreciated!",
   "That tickled!",

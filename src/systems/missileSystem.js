@@ -3,7 +3,7 @@ import {
   SCALE, MISSILE_LAUNCH_VOLUME, EXPLOSION_VOLUME,
   MISSILE_SPEED, MISSILE_TURN_RATE, MISSILE_BOOST_TIME,
   MISSILE_MAX_SPEED, MISSILE_ACCEL, MISSILE_DESCENT_RATE,
-  MISSILE_HIT_RADIUS, MISSILE_SMOKE_INTERVAL,
+  MISSILE_HIT_RADIUS, MISSILE_SMOKE_INTERVAL, MISSILE_SMOKE_OPACITY,
   SCREEN_SHAKE_DURATION, SCREEN_SHAKE_INTENSITY,
 } from "../constants.js";
 import { ghostLines } from "../dialog.js";
@@ -121,7 +121,7 @@ export function updateMissiles(scene, dt) {
         .image(smokeX, smokeY, "smoke")
         .setScale(SCALE * (0.4 + Math.random() * 0.3))
         .setDepth(8)
-        .setAlpha(0.6);
+        .setAlpha(MISSILE_SMOKE_OPACITY);
       scene.hudCam.ignore(puff);
       scene.tweens.add({
         targets: puff,

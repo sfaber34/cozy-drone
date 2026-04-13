@@ -113,6 +113,7 @@ export const MISSILE_ACCEL = 240;
 export const MISSILE_DESCENT_RATE = 600;
 export const MISSILE_HIT_RADIUS = 15;
 export const MISSILE_SMOKE_INTERVAL = 40;
+export const MISSILE_SMOKE_OPACITY = 0.8; // starting alpha of each smoke puff
 export const MISSILE_FIRE_RATE = 0.4; // seconds between missile launches
 
 // --- Cannon ---

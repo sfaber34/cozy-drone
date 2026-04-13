@@ -112,12 +112,14 @@ function drawTerminal(scene, geo, terminalIdx) {
 // Rider factory
 // ---------------------------------------------------------------------------
 
-function spawnRider(scene, rng, terminalSide, termX, termY) {
+// spawnX/spawnY are the visual position; termX/termY are the road-centre anchor used
+// for boarding logic.  Keeping them separate lets us put riders off the road while
+// the bus still loads anyone whose homeTerminalSide matches.
+function spawnRider(scene, rng, terminalSide, termX, termY, spawnX, spawnY) {
   const skinId = rng.between(0, 199);
-  const ox = (Math.random() - 0.5) * 90;
-  const oy = (Math.random() - 0.5) * 28;
-  const px = termX + ox;
-  const py = termY + oy;
+  // Small jitter so the group looks natural, not perfectly grid-aligned
+  const px = spawnX + (Math.random() - 0.5) * 14;
+  const py = spawnY + (Math.random() - 0.5) * 14;
 
   const sprite = scene.add
     .image(px, py, `person-stand-${skinId}`)
@@ -174,11 +176,19 @@ export function createBusRoute(scene, rng) {
     { x: returnX,   y: connTopY,    terminalIdx: -1 }, // 5: TR corner
   ];
 
-  // Riders spawn near their home terminal lane
+  // Riders spawn in groups on either side of the road, clear of the bus lane.
+  // Road is rt wide centred on laneX; put riders at least rt/2 + a margin away.
+  const { rt } = geo;
+  const sideBase  = rt * 0.7;          // min distance from road centre
+  const sideRange = rt * 0.8;          // additional random spread
+  const yRange    = rt * 2.5;          // vertical spread along terminal
   scene.busRiders = [];
   for (let i = 0; i < BUS_RIDER_COUNT; i++) {
-    scene.busRiders.push(spawnRider(scene, rng, "A", outboundX, termAY));
-    scene.busRiders.push(spawnRider(scene, rng, "B", returnX,   termBY));
+    const sign = i % 2 === 0 ? -1 : 1; // alternate left / right
+    const sx   = sign * (sideBase + Math.random() * sideRange);
+    const sy   = (Math.random() - 0.5) * yRange;
+    scene.busRiders.push(spawnRider(scene, rng, "A", outboundX, termAY, outboundX + sx, termAY + sy));
+    scene.busRiders.push(spawnRider(scene, rng, "B", returnX,   termBY, returnX   + sx, termBY + sy));
   }
 
   // Two buses start at opposite terminals, staggered by half a load cycle
@@ -278,13 +288,19 @@ export function updateBusSystem(scene, dt, delta) {
 
     // ----------------------------------------------------------------
     else if (bus.state === "unloading") {
-      // Scatter all riders to the stop position, then start loading again
-      const stopX = bus.sprite.x;
-      const stopY = bus.sprite.y;
-      for (const r of bus.riders) {
+      // Step riders off the road to either side, then start loading again
+      const stopX  = bus.sprite.x;
+      const stopY  = bus.sprite.y;
+      const rt     = scene.busGeo.rt;
+      const sideBase  = rt * 0.7;
+      const sideRange = rt * 0.8;
+      const yRange    = rt * 2.5;
+      for (let ri = 0; ri < bus.riders.length; ri++) {
+        const r = bus.riders[ri];
         if (r.state === "ghost" || r.state === "gone") continue;
-        const ox = (Math.random() - 0.5) * 90;
-        const oy = (Math.random() - 0.5) * 28;
+        const sign = ri % 2 === 0 ? -1 : 1;
+        const ox = sign * (sideBase + Math.random() * sideRange) + (Math.random() - 0.5) * 14;
+        const oy = (Math.random() - 0.5) * yRange;
         r.sprite.setVisible(true);
         r.sprite.setPosition(stopX + ox, stopY + oy);
         r.sprite.setTexture(`person-stand-${r.skinId}`);

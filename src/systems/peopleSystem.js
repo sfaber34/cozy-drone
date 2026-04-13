@@ -301,9 +301,15 @@ export function updatePeople(scene, dt, delta) {
             p.wanderAngle,
             dt,
           );
+          // Commit to the steered direction so the person walks away from
+          // the building instead of re-entering it next frame
+          if (steered !== p.wanderAngle) p.wanderAngle = steered;
           p.sprite.x += Math.cos(steered) * wanderSpeed * dt;
           p.sprite.y += Math.sin(steered) * wanderSpeed * dt;
-          p.sprite.setFlipX(Math.cos(steered) < 0);
+          // Dead zone: only flip when movement has a clear horizontal component,
+          // preventing flicker when walking nearly north/south
+          const cx = Math.cos(steered);
+          if (Math.abs(cx) > 0.15) p.sprite.setFlipX(cx < 0);
           // Walk anim
           p.runTimer = (p.runTimer || 0) + delta;
           if (p.runTimer > 200) {
