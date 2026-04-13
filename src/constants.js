@@ -118,9 +118,9 @@ export const MISSILE_SMOKE_OPACITY = 0.8; // starting alpha of each smoke puff
 export const MISSILE_FIRE_RATE = 0.3; // seconds between missile launches
 
 // --- Cannon ---
-export const CANNON_FIRE_RATE = 0.05; // seconds between shots (hold to auto-fire)
+export const CANNON_FIRE_RATE = 0.075; // seconds between shots (hold to auto-fire)
 export const CANNON_BULLET_SPEED = 1000; // bullet travel speed (px/s)
-export const CANNON_RANGE_FACTOR = 0.1; // impact distance = altitude * this factor
+export const CANNON_RANGE_FACTOR = 0.05; // impact distance = altitude * this factor
 export const CANNON_SPREAD = 0.1; // random spread in radians
 export const CANNON_KILL_RADIUS = 30; // explosion radius per bullet
 export const CANNON_SHAKE_DURATION = 50; // screen shake per shot (ms)
@@ -202,13 +202,15 @@ export const FLOCK_SHEPHERD_COUNT = 9;
 export const CAMERA_FOLLOW_LERP = 0.08;
 
 // --- Cluster Bomb ---
-export const CLUSTER_DESCENT_RATE = 500; // altitude feet/sec
-export const CLUSTER_OPEN_FRAC = 0.7; // opens at 70% of descent (30% altitude remaining)
-export const CLUSTER_BOMBLET_COUNT = 30; // bomblets released on opening (fixed)
-export const CLUSTER_BOMBLET_SPREAD_FACTOR = 0.15; // scatter radius (px) per foot of altitude at opening
+export const CLUSTER_DESCENT_RATE = 2500; // altitude feet/sec
+export const CLUSTER_OPEN_FRAC = 0.5; // opens at 70% of descent (30% altitude remaining)
+export const CLUSTER_BOMBLET_COUNT = 50; // bomblets released on opening (fixed)
+export const CLUSTER_BOMBLET_SPREAD_FACTOR = 0.05; // scatter radius (px) per foot of altitude at opening
 export const CLUSTER_FIRE_RATE = 2.5; // seconds between drops
 export const CLUSTER_OPEN_SHAKE_DURATION = 120; // screen shake when casing opens (ms)
 export const CLUSTER_OPEN_SHAKE_INTENSITY = 0.003; // screen shake intensity on open
+export const CLUSTER_DROP_FACTOR = 0.25; // multiplier on physics drop distance (speed × fallTime); >1 = farther behind
+export const CLUSTER_BOMBLET_FALL_TIME = 0.3; // seconds for bomblets to travel from opening point to ground
 
 // --- Bus Route ---
 export const BUS_ROUTE_BLOCK_COL = 4; // town grid column (0-7) for bus road centerline

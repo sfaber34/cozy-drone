@@ -37,24 +37,18 @@ export function generateWeaponTextures(scene) {
   bl.fillRect(1, 1, 1, 1);  // highlight pixel
   blCanvas.refresh();
 
-  // --- Cluster reticle (32x32, orange circle with tick marks) ---
+  // --- Cluster reticle (32x32, tick marks + small center dot, no outer ring) ---
   const crCanvas = scene.textures.createCanvas('cluster-reticle', 32, 32);
   const cr = crCanvas.context;
-  cr.strokeStyle = '#ff8800';
-  cr.lineWidth = 1.5;
-  cr.beginPath();
-  cr.arc(16, 16, 13, 0, Math.PI * 2);
-  cr.stroke();
-  // Cardinal tick marks
+  // Cardinal tick marks indicating spread boundary
   cr.fillStyle = '#ff8800';
   cr.fillRect(15, 1, 2, 4);
   cr.fillRect(15, 27, 2, 4);
   cr.fillRect(1, 15, 4, 2);
   cr.fillRect(27, 15, 4, 2);
-  // Center crosshair
+  // Small center dot
   cr.fillStyle = '#ff4400';
-  cr.fillRect(15, 14, 2, 4);
-  cr.fillRect(14, 15, 4, 2);
+  cr.fillRect(15, 15, 2, 2);
   crCanvas.refresh();
 
   // --- Cannon bullet (3x3, bright tracer round) ---

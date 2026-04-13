@@ -173,6 +173,7 @@ export class GameScene extends Phaser.Scene {
       maxAlt: DRONE_MAX_ALT,
       minSpeed: 0,
       maxSpeed: DRONE_MAX_SPEED,
+      currentTurnRate: 0, // deg/s this frame — used by cluster bomb drop prediction
     };
 
     // --- Targeting ---
@@ -315,11 +316,14 @@ export class GameScene extends Phaser.Scene {
     const speedKnots = ds.speed * 0.5;
 
     // --- Input: turn ---
+    ds.currentTurnRate = 0;
     if (this.cursors.left.isDown) {
       ds.angle -= DRONE_TURN_RATE * dt;
+      ds.currentTurnRate = -DRONE_TURN_RATE;
     }
     if (this.cursors.right.isDown) {
       ds.angle += DRONE_TURN_RATE * dt;
+      ds.currentTurnRate = DRONE_TURN_RATE;
     }
 
     // --- Input: speed ---
