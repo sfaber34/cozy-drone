@@ -26,10 +26,14 @@ export function createBettingSpectators(scene, rng, cx, cy, opts) {
   for (const ring of rings) {
     const ringCount = Math.round(count * ring.fraction);
     for (let i = 0; i < ringCount; i++) {
-      const angle = (i / ringCount) * Math.PI * 2 + (ring.dist > 100 ? 0.1 : 0);
+      const ringOffset = ring.angleOffset || 0;
+      const angle = (i / ringCount) * Math.PI * 2 + ringOffset;
       const jitter = rng.between(-10, 10);
-      const sx = cx + Math.cos(angle) * (ring.dist + jitter);
-      const sy = cy + Math.sin(angle) * (ring.dist + jitter);
+      // Support elliptical placement with distX/distY, or circular with dist
+      const rdx = (ring.distX || ring.dist) + jitter;
+      const rdy = (ring.distY || ring.dist) + jitter;
+      const sx = cx + Math.cos(angle) * rdx;
+      const sy = cy + Math.sin(angle) * rdy;
       const skinId = rng.between(0, 199);
 
       const holdsMoney = Math.random() > 0.5;

@@ -175,8 +175,8 @@ export function createCamelRace(scene, rng) {
   createBettingSpectators(scene, rng, cx, cy, {
     count: CAMEL_RACE_SPECTATORS,
     rings: [
-      { dist: rx + 50, fraction: 0.5 },
-      { dist: rx + 90, fraction: 0.5 },
+      { distX: rx + 50, distY: ry + 50, fraction: 0.5 },
+      { distX: rx + 90, distY: ry + 90, fraction: 0.5, angleOffset: Math.PI / Math.round(CAMEL_RACE_SPECTATORS * 0.5) },
     ],
     greetings: [
       "Yalla! Yalla!", "FASTER!", "Go camel go!",
