@@ -16,6 +16,13 @@ import {
   SFX_PAN_AMOUNT,
 } from "../constants.js";
 
+// Entries in sounds.json can be a plain string or { file, volume }.
+// Returns { file, volume } in both cases.
+function parseSfxEntry(entry) {
+  if (typeof entry === "string") return { file: entry, volume: 1 };
+  return { file: entry.file, volume: entry.volume ?? 1 };
+}
+
 export function initAudio(scene) {
   scene.musicTracks = [];
   scene.audioLoaded = false;
@@ -23,6 +30,8 @@ export function initAudio(scene) {
   scene.currentTrack = null;
   scene.lastTrackKey = null;
   scene.sfx = { missileLaunch: [], explosion: [], death: [] };
+  scene.sfxVolumes = new Map(); // key → per-sound volume modifier
+  scene.lastDeathSfxName = null; // filename stem of the most recently played death SFX
   scene.deathSfxActive = 0;
   scene.engineKey = null;
   scene.engineA = null;
@@ -62,11 +71,11 @@ export function initAudio(scene) {
     scene.musicTracks = musicFiles;
 
     for (const r of sfxResults) {
-      for (const filename of r.files) {
-        scene.load.audio(
-          `sfx-${r.category}-${filename}`,
-          `${r.path}/${filename}`,
-        );
+      for (const entry of r.files) {
+        const { file, volume } = parseSfxEntry(entry);
+        const key = `sfx-${r.category}-${file}`;
+        scene.load.audio(key, `${r.path}/${file}`);
+        if (volume !== 1) scene.sfxVolumes.set(key, volume);
       }
     }
 
@@ -88,8 +97,9 @@ export function initAudio(scene) {
       if (scene.sound.context) scene.sound.context.resume();
 
       for (const r of sfxResults) {
-        for (const filename of r.files) {
-          scene.sfx[r.category].push(`sfx-${r.category}-${filename}`);
+        for (const entry of r.files) {
+          const { file } = parseSfxEntry(entry);
+          scene.sfx[r.category].push(`sfx-${r.category}-${file}`);
         }
       }
 
@@ -193,8 +203,11 @@ export function playDeathSfxAt(scene, x, y) {
     if (scene.deathSfxRecent.length > DEATH_SFX_COOLDOWN) scene.deathSfxRecent.shift();
 
     const { volume, pan } = computeSpatialAudio(scene, x, y, DEATH_SFX_VOLUME);
-    // Apply min volume floor for death sounds
-    const finalVolume = Math.max(volume, DEATH_SFX_VOLUME * DEATH_SFX_MIN_VOLUME_FRAC);
+    const volumeModifier = scene.sfxVolumes.get(key) ?? 1;
+    const finalVolume = Math.max(volume, DEATH_SFX_VOLUME * DEATH_SFX_MIN_VOLUME_FRAC) * volumeModifier;
+
+    // Track name for HUD display: "sfx-death-death1.mp3" → "death1"
+    scene.lastDeathSfxName = key.replace(/^sfx-death-/, "").replace(/\.[^.]+$/, "");
 
     const sfx = scene.sound.add(key, { volume: finalVolume });
     sfx.play({ pan });

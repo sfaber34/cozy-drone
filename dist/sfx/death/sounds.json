@@ -1,7 +1,19 @@
 [
-  "death1.mp3", "death2_a.mp3", "death3_a.mp3", "death4_a.mp3", "death5.mp3", 
-  "death6.mp3", "death10_a.mp3", 
-  "death11.mp3", "death15_a.mp3", 
-  "death16.mp3", "death17.mp3", "death18_a.mp3", "death19.mp3", "death20.mp3",
-  "death21.mp3", "death22.mp3", "death23.mp3"
+  { "file": "death1.mp3",   "volume": 1 },
+  { "file": "death2_a.mp3", "volume": 1 },
+  { "file": "death3_a.mp3", "volume": 1 },
+  { "file": "death4_a.mp3", "volume": 1 },
+  { "file": "death5.mp3",   "volume": 1 },
+  { "file": "death6.mp3",   "volume": 1 },
+  { "file": "death10_a.mp3","volume": 1 },
+  { "file": "death11.mp3",  "volume": 1 },
+  { "file": "death15_a.mp3","volume": 1 },
+  { "file": "death16.mp3",  "volume": 1 },
+  { "file": "death17.mp3",  "volume": 1 },
+  { "file": "death18_a.mp3","volume": 1 },
+  { "file": "death19.mp3",  "volume": 1 },
+  { "file": "death20.mp3",  "volume": 1 },
+  { "file": "death21.mp3",  "volume": 1 },
+  { "file": "death22.mp3",  "volume": 1 },
+  { "file": "death23.mp3",  "volume": 1 }
 ]
