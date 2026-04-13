@@ -10,6 +10,7 @@ import { playSfxAt, playDeathSfxAt } from "./audioSystem.js";
 import { killPeopleInBuilding, findNearestBuilding } from "./buildingSystem.js";
 import { ghostLines } from "../dialog.js";
 import { damageBusAt } from "./busSystem.js";
+import { isInWater, splashAt } from "./waterSystem.js";
 
 export function initCannon(scene) {
   scene.cannonBullets = [];
@@ -98,6 +99,12 @@ export function updateCannonBullets(scene, dt) {
 }
 
 export function cannonImpact(scene, x, y) {
+  // Water impact — splash only, no damage
+  if (isInWater(x, y)) {
+    splashAt(scene, x, y);
+    return;
+  }
+
   const r = CANNON_KILL_RADIUS;
   // Proportional explosion scale (relative to kill radius)
   const explosionScale = SCALE * (r / 25); // normalized so radius 25 = SCALE*1

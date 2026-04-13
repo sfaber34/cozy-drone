@@ -3,6 +3,7 @@ export const WORLD_W = 200; // world width in tiles
 export const WORLD_H = 200; // world height in tiles
 export const TILE = 16; // tile size in pixels
 export const SCALE = 3; // pixel art scale multiplier
+export const MOAT_TILES = 30; // water tiles surrounding the map on every side
 
 // --- Map element positions (in tiles — multiply by TILE * SCALE for px) ---
 // Change x/y to move an entire group (all props + people) together

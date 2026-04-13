@@ -12,6 +12,7 @@ import { affectNearbyPeople } from "./peopleSystem.js";
 import { affectNearbyAnimals } from "./animalSystem.js";
 import { killPeopleInBuilding } from "./buildingSystem.js";
 import { damageBusAt } from "./busSystem.js";
+import { isInWater, splashAt } from "./waterSystem.js";
 
 export function fireMissile(scene) {
   if (!scene.targetPos) return;
@@ -157,6 +158,12 @@ export function updateMissiles(scene, dt) {
 }
 
 export function missileImpact(scene, x, y) {
+  // Water impact — splash only, no damage
+  if (isInWater(x, y)) {
+    splashAt(scene, x, y);
+    return;
+  }
+
   // Explosion
   const exp = scene.add
     .sprite(x, y, "explosion-sheet", 0)

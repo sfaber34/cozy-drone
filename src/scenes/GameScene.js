@@ -6,6 +6,7 @@ import {
   DRONE_ZOOM_MIN, DRONE_ZOOM_MAX, DRONE_MAX_SPEED, DRONE_MAX_ALT,
   CAMERA_FOLLOW_LERP,
 } from "../constants.js";
+import { createWater, WATER_BOUNDS } from "../systems/waterSystem.js";
 
 import { initAudio, updateEngineSound } from "../systems/audioSystem.js";
 import { playIntroCutscene } from "../systems/introSystem.js";
@@ -51,6 +52,9 @@ export class GameScene extends Phaser.Scene {
     // Desert ground is the flat background color (#d2b48c) set in main.js
     // No ground tiles needed — props/buildings sit directly on it
     const rng = new Phaser.Math.RandomDataGenerator(["desert"]);
+
+    // --- Water moat (drawn at depth 0, below all map content) ---
+    createWater(this);
 
     // --- Desert props (scattered across the entire map) ---
     const worldPxW = WORLD_W * TILE * SCALE;
@@ -198,7 +202,12 @@ export class GameScene extends Phaser.Scene {
     });
 
     // --- Camera ---
-    this.cameras.main.setBounds(0, 0, WORLD_W * TILE * SCALE, WORLD_H * TILE * SCALE);
+    this.cameras.main.setBounds(
+      WATER_BOUNDS.left,
+      WATER_BOUNDS.top,
+      WATER_BOUNDS.right - WATER_BOUNDS.left,
+      WATER_BOUNDS.bottom - WATER_BOUNDS.top,
+    );
     this.cameras.main.startFollow(this.drone, true, CAMERA_FOLLOW_LERP, CAMERA_FOLLOW_LERP);
     this.cameras.main.setZoom(1);
 
@@ -354,9 +363,31 @@ export class GameScene extends Phaser.Scene {
     ds.x += Math.cos(rad) * ds.speed * dt;
     ds.y += Math.sin(rad) * ds.speed * dt;
 
-    // Clamp to world bounds
-    ds.x = Phaser.Math.Clamp(ds.x, 0, WORLD_W * TILE * SCALE);
-    ds.y = Phaser.Math.Clamp(ds.y, 0, WORLD_H * TILE * SCALE);
+    // Soft water boundary: steering kicks in 20 tiles past the map edge, scales up to outer wall
+    const moatPx    = -WATER_BOUNDS.left;              // MOAT_PX in world pixels
+    const triggerPx = 20 * TILE * SCALE;               // free-fly zone: 20 tiles of open water
+    const turnZone  = moatPx - triggerPx;              // remaining moat width where steering acts
+    const mapBndW   = WORLD_W * TILE * SCALE;
+    const mapBndH   = WORLD_H * TILE * SCALE;
+    const overL = ds.x < -triggerPx            ? Math.min(-ds.x - triggerPx,          turnZone) / turnZone : 0;
+    const overR = ds.x > mapBndW + triggerPx   ? Math.min(ds.x - mapBndW - triggerPx, turnZone) / turnZone : 0;
+    const overT = ds.y < -triggerPx            ? Math.min(-ds.y - triggerPx,          turnZone) / turnZone : 0;
+    const overB = ds.y > mapBndH + triggerPx   ? Math.min(ds.y - mapBndH - triggerPx, turnZone) / turnZone : 0;
+    if (overL > 0 || overR > 0 || overT > 0 || overB > 0) {
+      const pushX = overL - overR; // positive = steer east
+      const pushY = overT - overB; // positive = steer south
+      const mag = Math.sqrt(pushX * pushX + pushY * pushY) || 1;
+      const targetRad = Math.atan2(pushY / mag, pushX / mag);
+      const currentRad = Phaser.Math.DegToRad(ds.angle - 90);
+      const diff = Phaser.Math.Angle.Wrap(targetRad - currentRad);
+      const depth = Math.max(overL, overR, overT, overB);
+      const turnMult = 1.5 + depth * 3.5; // 1.5× at trigger line → 5× near outer wall
+      const maxTurn = Phaser.Math.DegToRad(DRONE_TURN_RATE) * turnMult * dt;
+      ds.angle += Phaser.Math.RadToDeg(Phaser.Math.Clamp(diff, -maxTurn, maxTurn));
+    }
+    // Hard clamp at outer wall (safety net — soft steering should prevent reaching it)
+    ds.x = Phaser.Math.Clamp(ds.x, WATER_BOUNDS.left, WATER_BOUNDS.right);
+    ds.y = Phaser.Math.Clamp(ds.y, WATER_BOUNDS.top, WATER_BOUNDS.bottom);
 
     this.drone.setPosition(ds.x, ds.y);
     this.drone.setAngle(ds.angle);
