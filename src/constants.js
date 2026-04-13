@@ -107,7 +107,7 @@ export const DRONE_MAX_ALT = 15000; // feet
 
 // --- Missile ---
 export const MISSILE_SPEED = 280;
-export const MISSILE_TURN_RATE = 3.0;
+export const MISSILE_TURN_RATE = 5.0;
 export const MISSILE_BOOST_TIME = 0.3;
 export const MISSILE_MAX_SPEED = 400;
 export const MISSILE_ACCEL = 240;
@@ -217,6 +217,7 @@ export const MOBILE_ZOOM_FACTOR = 0.6; // base zoom multiplier on mobile (25% zo
 export const MOBILE_JOYSTICK_RADIUS = 65; // virtual joystick radius (px)
 export const MOBILE_BUTTON_RADIUS = 42; // fire/alt button radius (px)
 export const MOBILE_BUTTON_MARGIN = 18; // gap from screen edge and between buttons (px)
+export const MOBILE_DIALOG_SCALE = 1.6; // speech bubble / dialog scale multiplier on mobile
 
 // --- Bus Route ---
 export const BUS_ROUTE_BLOCK_COL = 4; // town grid column (0-7) for bus road centerline

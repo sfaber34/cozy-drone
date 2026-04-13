@@ -1,4 +1,4 @@
-import { SCALE } from "../constants.js";
+import { SCALE, MOBILE_DIALOG_SCALE } from "../constants.js";
 import { introLines } from "../dialog.js";
 
 export function playIntroCutscene(scene) {
@@ -66,6 +66,7 @@ export function playIntroCutscene(scene) {
       // Speech bubble — cycles through lines
       const introLine =
         introLines[Math.floor(Math.random() * introLines.length)];
+      const introBubbleScale = SCALE * 0.6 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1);
       const bubble = scene.add
         .text(guyTargetX + 40, guyTargetY - 40, introLine, {
           fontFamily: "monospace",
@@ -75,7 +76,7 @@ export function playIntroCutscene(scene) {
           padding: { x: 8, y: 6 },
         })
         .setDepth(13)
-        .setScale(SCALE * 0.6);
+        .setScale(introBubbleScale);
       scene.hudCam.ignore(bubble);
 
       // After a pause, guy walks away

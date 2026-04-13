@@ -84,6 +84,14 @@ export class MobileControlsScene extends Phaser.Scene {
       { x: fireRX, y: fireRY, r: br, color: 0xff4400, pressed: false, pointerId: -1 },
     ];
 
+    // Publish hit zones so GameScene can skip target-setting when tapping a control
+    this.gameScene.mobileControlZones = {
+      joystick: { x: joyX,     y: joyY,     r: jr * 1.6 },
+      fireL:    { x: fireLX,   y: fireLY,   r: br * 1.2 },
+      fireR:    { x: fireRX,   y: fireRY,   r: br * 1.2 },
+      rocker:   { x: rockerCX, y: rockerCY, w: rw, h: rh },
+    };
+
     const labelSize = Math.round(br * 0.44) + "px";
     const addLabel = (x, y, str) => {
       const t = this.add.text(x, y, str, {
@@ -182,8 +190,8 @@ export class MobileControlsScene extends Phaser.Scene {
       const thresh = j.radius * 0.2;
       mi.left    = dx < -thresh;
       mi.right   = dx >  thresh;
-      mi.altUp   = dy < -thresh;
-      mi.altDown = dy >  thresh;
+      mi.altUp   = dy >  thresh;   // push stick DOWN → nose up → gain altitude (real-plane feel)
+      mi.altDown = dy < -thresh;   // push stick UP   → nose down → lose altitude
     } else {
       mi.left = mi.right = mi.altUp = mi.altDown = false;
     }

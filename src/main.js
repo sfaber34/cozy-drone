@@ -14,6 +14,9 @@ const config = {
     parent: document.body,
   },
   scene: [BootScene, GameScene, MobileControlsScene],
+  input: {
+    activePointers: 4, // support 4 simultaneous touch points for multi-touch
+  },
   physics: {
     default: 'arcade',
     arcade: {

@@ -7,6 +7,7 @@ import {
   PANIC_DIR_INTERVAL_MIN, PANIC_DIR_INTERVAL_MAX, PANIC_DIR_CHANGE_ARC,
   PEOPLE_GREETING_MIN_DIST,
   PEOPLE_SPAWN_COUNT, PEOPLE_TOWN_SPAWN_COUNT, PEOPLE_SPAWN_AVOID_DIST,
+  MOBILE_DIALOG_SCALE,
 } from "../constants.js";
 import { greetings, ghostLines } from "../dialog.js";
 import { findNearestBuilding, steerAroundBuildings } from "./buildingSystem.js";
@@ -137,6 +138,7 @@ export function affectNearbyPeople(scene, x, y) {
 
       // Ghost speech bubble
       const line = Phaser.Utils.Array.GetRandom(ghostLines);
+      const ghostBubbleScale = SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1);
       p.bubble = scene.add
         .text(p.sprite.x + 20, p.sprite.y - 20, line, {
           fontFamily: "monospace",
@@ -145,7 +147,7 @@ export function affectNearbyPeople(scene, x, y) {
           backgroundColor: "#000000aa",
           padding: { x: 4, y: 3 },
         })
-        .setScale(SCALE * 0.5)
+        .setScale(ghostBubbleScale)
         .setDepth(14);
       scene.hudCam.ignore(p.bubble);
     } else if (
@@ -268,6 +270,7 @@ export function updatePeople(scene, dt, delta) {
           }
         }
         if (!tooClose) {
+          const greetBubbleScale = SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1);
           p.bubble = scene.add
             .text(p.sprite.x + 20, p.sprite.y - 30, p.greeting, {
               fontFamily: "monospace",
@@ -276,7 +279,7 @@ export function updatePeople(scene, dt, delta) {
               backgroundColor: "#fff",
               padding: { x: 4, y: 3 },
             })
-            .setScale(SCALE * 0.5)
+            .setScale(greetBubbleScale)
             .setDepth(13);
           scene.hudCam.ignore(p.bubble);
         }

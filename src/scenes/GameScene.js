@@ -236,8 +236,8 @@ export class GameScene extends Phaser.Scene {
     this.input.on("pointerdown", (pointer) => {
       if (this.introPlaying) return;
       if (this.flightState === "crashed") return;
-      // On mobile, ignore taps in the lower controls zone
-      if (this.isMobile && pointer.y > this.scale.height * 0.65) return;
+      // On mobile, ignore taps that land directly on a control widget
+      if (this.isMobile && this.isOnMobileControl(pointer.x, pointer.y)) return;
       const worldX = pointer.worldX;
       const worldY = pointer.worldY;
       this.targetPos = { x: worldX, y: worldY };
@@ -288,8 +288,11 @@ export class GameScene extends Phaser.Scene {
     this.isMobile = this.sys.game.device.input.touch;
     this.mobileInput = { left: false, right: false, up: false, down: false,
                          altUp: false, altDown: false, fire: false, fireJustDown: false };
+    this.mobileControlZones = null; // populated by MobileControlsScene.buildControls()
     if (this.isMobile) {
       this.controlsText.setVisible(false);
+      // Apply mobile zoom immediately so the intro cutscene starts at the right zoom level
+      this.cameras.main.setZoom(MOBILE_ZOOM_FACTOR);
       this.scene.launch("MobileControls", { gameScene: this });
     }
 
@@ -303,6 +306,19 @@ export class GameScene extends Phaser.Scene {
     // --- Intro cutscene ---
     this.introPlaying = true;
     playIntroCutscene(this);
+  }
+
+  // Returns true if screen-space (px, py) falls on a mobile control widget
+  isOnMobileControl(px, py) {
+    const z = this.mobileControlZones;
+    if (!z) return false;
+    if (Phaser.Math.Distance.Between(px, py, z.joystick.x, z.joystick.y) < z.joystick.r) return true;
+    if (Phaser.Math.Distance.Between(px, py, z.fireL.x, z.fireL.y) < z.fireL.r) return true;
+    if (Phaser.Math.Distance.Between(px, py, z.fireR.x, z.fireR.y) < z.fireR.r) return true;
+    const rk = z.rocker;
+    if (px >= rk.x - rk.w / 2 && px <= rk.x + rk.w / 2 &&
+        py >= rk.y - rk.h / 2 && py <= rk.y + rk.h / 2) return true;
+    return false;
   }
 
   update(time, delta) {
