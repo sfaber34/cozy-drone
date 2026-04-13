@@ -125,6 +125,20 @@ export const CANNON_SPREAD = 0.1; // random spread in radians
 export const CANNON_KILL_RADIUS = 30; // explosion radius per bullet
 export const CANNON_SHAKE_DURATION = 50; // screen shake per shot (ms)
 export const CANNON_SHAKE_INTENSITY = 0.001; // screen shake intensity
+export const CANNON_IMPACT_VOLUME_FRAC = 0.15; // fraction of EXPLOSION_VOLUME for cannon impacts
+// Muzzle smoke
+export const CANNON_MUZZLE_NOSE_OFFSET = 40; // px ahead of drone center where puffs spawn
+export const CANNON_MUZZLE_PUFFS = 2; // puffs emitted per shot
+export const CANNON_MUZZLE_SPREAD = 8; // perpendicular spread of puffs (px)
+export const CANNON_MUZZLE_DURATION_MIN = 350; // puff lifetime min (ms)
+export const CANNON_MUZZLE_DURATION_RANGE = 150; // puff lifetime random range (ms)
+export const CANNON_MUZZLE_SCALE_MIN = 0.45; // initial scale factor (× SCALE)
+export const CANNON_MUZZLE_SCALE_RANGE = 0.2; // initial scale random range
+export const CANNON_MUZZLE_SCALE_END_MIN = 1.0; // end scale factor (× SCALE)
+export const CANNON_MUZZLE_SCALE_END_RANGE = 0.4; // end scale random range
+export const CANNON_MUZZLE_ALPHA = 0.45; // initial alpha
+export const CANNON_MUZZLE_ALPHA_RANGE = 0.2; // initial alpha random range
+export const CANNON_MUZZLE_DRIFT_SPREAD = 10; // extra end-position scatter (px)
 
 // --- People AI ---
 export const PEOPLE_DETECT_RADIUS = 600;

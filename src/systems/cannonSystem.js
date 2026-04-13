@@ -3,7 +3,12 @@ import {
   SCALE,
   CANNON_FIRE_RATE, CANNON_BULLET_SPEED, CANNON_RANGE_FACTOR,
   CANNON_SPREAD, CANNON_KILL_RADIUS,
-  CANNON_SHAKE_DURATION, CANNON_SHAKE_INTENSITY,
+  CANNON_SHAKE_DURATION, CANNON_SHAKE_INTENSITY, CANNON_IMPACT_VOLUME_FRAC,
+  CANNON_MUZZLE_NOSE_OFFSET, CANNON_MUZZLE_PUFFS, CANNON_MUZZLE_SPREAD,
+  CANNON_MUZZLE_DURATION_MIN, CANNON_MUZZLE_DURATION_RANGE,
+  CANNON_MUZZLE_SCALE_MIN, CANNON_MUZZLE_SCALE_RANGE,
+  CANNON_MUZZLE_SCALE_END_MIN, CANNON_MUZZLE_SCALE_END_RANGE,
+  CANNON_MUZZLE_ALPHA, CANNON_MUZZLE_ALPHA_RANGE, CANNON_MUZZLE_DRIFT_SPREAD,
   EXPLOSION_VOLUME,
 } from "../constants.js";
 import { playSfxAt, playDeathSfxAt } from "./audioSystem.js";
@@ -76,6 +81,38 @@ export function fireCannon(scene) {
   });
 
   scene.cameras.main.shake(CANNON_SHAKE_DURATION, CANNON_SHAKE_INTENSITY);
+
+  // Muzzle smoke — puffs at the nose that drift back as the drone flies forward
+  const noseRad = Phaser.Math.DegToRad(ds.angle - 90);
+  const noseX = ds.x + Math.cos(noseRad) * CANNON_MUZZLE_NOSE_OFFSET;
+  const noseY = ds.y + Math.sin(noseRad) * CANNON_MUZZLE_NOSE_OFFSET;
+
+  // Drift so the puff stays roughly stationary in world space while the drone moves away
+  const duration = CANNON_MUZZLE_DURATION_MIN + Math.random() * CANNON_MUZZLE_DURATION_RANGE;
+  const driftX = -Math.cos(noseRad) * ds.speed * (duration / 1000);
+  const driftY = -Math.sin(noseRad) * ds.speed * (duration / 1000);
+
+  const perpRad = noseRad + Math.PI / 2;
+  for (let i = 0; i < CANNON_MUZZLE_PUFFS; i++) {
+    const spread = (Math.random() - 0.5) * CANNON_MUZZLE_SPREAD;
+    const sx = noseX + Math.cos(perpRad) * spread;
+    const sy = noseY + Math.sin(perpRad) * spread;
+    const puff = scene.add.image(sx, sy, "smoke")
+      .setScale(SCALE * (CANNON_MUZZLE_SCALE_MIN + Math.random() * CANNON_MUZZLE_SCALE_RANGE))
+      .setDepth(21)
+      .setAlpha(CANNON_MUZZLE_ALPHA + Math.random() * CANNON_MUZZLE_ALPHA_RANGE)
+      .setTint(0xccccbb);
+    scene.hudCam.ignore(puff);
+    scene.tweens.add({
+      targets: puff,
+      alpha: 0,
+      scale: SCALE * (CANNON_MUZZLE_SCALE_END_MIN + Math.random() * CANNON_MUZZLE_SCALE_END_RANGE),
+      x: sx + driftX + (Math.random() - 0.5) * CANNON_MUZZLE_DRIFT_SPREAD,
+      y: sy + driftY + (Math.random() - 0.5) * CANNON_MUZZLE_DRIFT_SPREAD,
+      duration,
+      onComplete: () => puff.destroy(),
+    });
+  }
 }
 
 export function updateCannonBullets(scene, dt) {
@@ -136,7 +173,7 @@ export function cannonImpact(scene, x, y) {
   });
 
   // SFX — quieter than missile
-  playSfxAt(scene, "explosion", x, y, EXPLOSION_VOLUME * 0.3);
+  playSfxAt(scene, "explosion", x, y, EXPLOSION_VOLUME * CANNON_IMPACT_VOLUME_FRAC);
 
   // --- Damage people (apply 1 hit, 2 hits to kill) ---
   for (const p of scene.people) {
@@ -240,6 +277,96 @@ export function cannonImpact(scene, x, y) {
         }
       }
       break;
+    }
+  }
+
+  // --- Damage town cars (2 hits to destroy) ---
+  for (const car of scene.townCars) {
+    if (!car.alive) continue;
+    const dist = Phaser.Math.Distance.Between(x, y, car.sprite.x, car.sprite.y);
+    if (dist < r) {
+      car.cannonHits = (car.cannonHits || 0) + 1;
+      if (car.cannonHits >= 4) {
+        car.alive = false;
+        car.sprite.setTexture("car-dead");
+        scene.kills += car.passengers;
+        for (let di = 0; di < car.passengers; di++) {
+          playDeathSfxAt(scene, car.sprite.x, car.sprite.y);
+        }
+        const carExp = scene.add.sprite(car.sprite.x, car.sprite.y, "explosion-sheet", 0)
+          .setScale(SCALE * 1.5).setDepth(11);
+        scene.hudCam.ignore(carExp);
+        carExp.play("explode");
+        carExp.once("animationcomplete", () => carExp.destroy());
+        for (let gi = 0; gi < car.passengers; gi++) {
+          const spawnAngle = (gi / car.passengers) * Math.PI * 2 + Math.random() * 0.5;
+          scene.time.delayedCall(gi * 250, () => {
+            const ghost = scene.add.image(
+              car.sprite.x + Math.cos(spawnAngle) * 15,
+              car.sprite.y + Math.sin(spawnAngle) * 15,
+              "ghost",
+            ).setScale(SCALE).setDepth(13).setAlpha(0.8);
+            scene.hudCam.ignore(ghost);
+            const line = Phaser.Utils.Array.GetRandom(ghostLines);
+            const bubble = scene.add.text(ghost.x + 20, ghost.y - 20, line, {
+              fontFamily: "monospace", fontSize: "8px",
+              color: "#aaccff", backgroundColor: "#000000aa",
+              padding: { x: 4, y: 3 },
+            }).setScale(SCALE * 0.5).setDepth(14);
+            scene.hudCam.ignore(bubble);
+            const driftX = Math.cos(spawnAngle) * (15 + Math.random() * 25);
+            const driftY = -(20 + Math.random() * 20);
+            const wobble = Math.random() * Math.PI * 2;
+            scene.tweens.add({
+              targets: ghost, alpha: 0, y: ghost.y - 150, duration: 5000,
+              onUpdate: () => {
+                ghost.x += driftX * 0.016;
+                ghost.x += Math.sin(ghost.y * 0.04 + wobble) * 0.3;
+                bubble.setPosition(ghost.x + 20, ghost.y - 20);
+                bubble.setAlpha(ghost.alpha);
+              },
+              onComplete: () => { ghost.destroy(); bubble.destroy(); },
+            });
+          });
+        }
+      } else {
+        // First hit — flash the car darker
+        car.sprite.setTint(0xaa6633);
+      }
+    }
+  }
+
+  // --- Damage dirt bikers (2 hits to destroy, same as people) ---
+  for (const bk of scene.dirtBikers) {
+    if (!bk.alive) continue;
+    const dist = Phaser.Math.Distance.Between(x, y, bk.sprite.x, bk.sprite.y);
+    if (dist < r) {
+      bk.cannonHits = (bk.cannonHits || 0) + 1;
+      if (bk.cannonHits >= 2) {
+        bk.alive = false;
+        scene.kills++;
+        playDeathSfxAt(scene, bk.sprite.x, bk.sprite.y);
+        const bkExp = scene.add.sprite(bk.sprite.x, bk.sprite.y, "explosion-sheet", 0)
+          .setScale(SCALE * 1.5).setDepth(11);
+        scene.hudCam.ignore(bkExp);
+        bkExp.play("explode");
+        bkExp.once("animationcomplete", () => bkExp.destroy());
+        bk.sprite.setTexture("ghost");
+        bk.sprite.setAlpha(0.8);
+        bk.sprite.setDepth(13);
+        const awayAngle = Phaser.Math.Angle.Between(x, y, bk.sprite.x, bk.sprite.y);
+        bk.ghostDriftX = Math.cos(awayAngle) * (15 + Math.random() * 25);
+        bk.ghostDriftY = -(20 + Math.random() * 20);
+        bk.ghostWobble = Math.random() * Math.PI * 2;
+        bk.isGhost = true;
+        const line = Phaser.Utils.Array.GetRandom(ghostLines);
+        bk.bubble = scene.add.text(bk.sprite.x + 20, bk.sprite.y - 20, line, {
+          fontFamily: "monospace", fontSize: "8px",
+          color: "#aaccff", backgroundColor: "#000000aa",
+          padding: { x: 4, y: 3 },
+        }).setScale(SCALE * 0.5).setDepth(14);
+        scene.hudCam.ignore(bk.bubble);
+      }
     }
   }
 
