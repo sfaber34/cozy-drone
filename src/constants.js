@@ -115,14 +115,14 @@ export const MISSILE_DESCENT_RATE = 600;
 export const MISSILE_HIT_RADIUS = 15;
 export const MISSILE_SMOKE_INTERVAL = 40;
 export const MISSILE_SMOKE_OPACITY = 0.8; // starting alpha of each smoke puff
-export const MISSILE_FIRE_RATE = 0.4; // seconds between missile launches
+export const MISSILE_FIRE_RATE = 0.3; // seconds between missile launches
 
 // --- Cannon ---
 export const CANNON_FIRE_RATE = 0.05; // seconds between shots (hold to auto-fire)
 export const CANNON_BULLET_SPEED = 1000; // bullet travel speed (px/s)
-export const CANNON_RANGE_FACTOR = 0.4; // impact distance = altitude * this factor
-export const CANNON_SPREAD = 0.02; // random spread in radians
-export const CANNON_KILL_RADIUS = 20; // explosion radius per bullet
+export const CANNON_RANGE_FACTOR = 0.1; // impact distance = altitude * this factor
+export const CANNON_SPREAD = 0.1; // random spread in radians
+export const CANNON_KILL_RADIUS = 30; // explosion radius per bullet
 export const CANNON_SHAKE_DURATION = 50; // screen shake per shot (ms)
 export const CANNON_SHAKE_INTENSITY = 0.001; // screen shake intensity
 
