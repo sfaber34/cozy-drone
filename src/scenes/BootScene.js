@@ -13,6 +13,7 @@ import { generateSoccerTextures } from '../textures/soccerTextures.js';
 import { generateChickenFightTextures } from '../textures/chickenFightTextures.js';
 import { generateCamelRaceTextures } from '../textures/camelRaceTextures.js';
 import { generateWeaponTextures } from '../textures/weaponTextures.js';
+import { generateBusTextures } from '../textures/busTextures.js';
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -34,6 +35,7 @@ export class BootScene extends Phaser.Scene {
     generateChickenFightTextures(this);
     generateCamelRaceTextures(this);
     generateWeaponTextures(this);
+    generateBusTextures(this);
 
     this.scene.start('Game');
   }

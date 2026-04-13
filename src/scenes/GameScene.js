@@ -30,7 +30,8 @@ import {
 import { isOnRunway, crashDrone } from "../systems/droneSystem.js";
 import { createChickenFight, updateChickenFight } from "../systems/chickenFightSystem.js";
 import { createCamelRace, updateCamelRace } from "../systems/camelRaceSystem.js";
-import { CANNON_FIRE_RATE, CLUSTER_FIRE_RATE } from "../constants.js";
+import { createBusRoute, updateBusSystem } from "../systems/busSystem.js";
+import { CANNON_FIRE_RATE, CLUSTER_FIRE_RATE, MISSILE_FIRE_RATE } from "../constants.js";
 import { initCannon, updateCannonReticle, fireCannon, updateCannonBullets } from "../systems/cannonSystem.js";
 import {
   initClusterBomb, updateClusterReticle, fireClusterBomb, updateClusterBombs,
@@ -87,6 +88,7 @@ export class GameScene extends Phaser.Scene {
     createOilfield(this, rng);
     createChickenFight(this, rng);
     createCamelRace(this, rng);
+    createBusRoute(this, rng);
 
     // --- Runway (6 tiles long) ---
     const rwX = AIRFIELD_X * TILE * SCALE;
@@ -216,6 +218,7 @@ export class GameScene extends Phaser.Scene {
 
     // Weapon system: 1 = missile, 2 = cannon, 3 = cluster bomb
     this.selectedWeapon = 1;
+    this.missileFireTimer = 0;
     initCannon(this);
     initClusterBomb(this);
 
@@ -432,9 +435,11 @@ export class GameScene extends Phaser.Scene {
 
     // --- Fire weapons (only when airborne) ---
     if (this.selectedWeapon === 1) {
-      // Missile: single fire on press
-      if (Phaser.Input.Keyboard.JustDown(this.cursors.fire) && this.targetPos && isAirborne) {
+      // Missile: single fire with cooldown
+      if (this.missileFireTimer > 0) this.missileFireTimer -= dt;
+      if (Phaser.Input.Keyboard.JustDown(this.cursors.fire) && this.targetPos && isAirborne && this.missileFireTimer <= 0) {
         fireMissile(this);
+        this.missileFireTimer = MISSILE_FIRE_RATE;
       }
     } else if (this.selectedWeapon === 2) {
       // Cannon: hold to auto-fire
@@ -468,6 +473,7 @@ export class GameScene extends Phaser.Scene {
     updateTownCars(this, dt);
     updateChickenFight(this, dt);
     updateCamelRace(this, dt);
+    updateBusSystem(this, dt, delta);
 
     // --- HUD ---
     const spdDisplay = Math.round(speedKnots);

@@ -94,9 +94,9 @@ export const SFX_PAN_AMOUNT = 0.25; // max stereo pan amount (0 = center, 1 = ha
 
 // --- Drone physics ---
 export const DRONE_TURN_RATE = 90; // degrees/sec
-export const DRONE_ACCEL = 100; // px/s^2
+export const DRONE_ACCEL = 50; // px/s^2
 export const DRONE_MIN_SPEED_AIRBORNE = 80; // px/s (40 knots)
-export const DRONE_ALT_RATE = 300; // feet/sec
+export const DRONE_ALT_RATE = 800; // feet/sec
 export const DRONE_TAKEOFF_SPEED = 40; // knots
 export const DRONE_ZOOM_ALT_THRESHOLD = 2000; // feet, zoom starts above this
 export const DRONE_ZOOM_MIN = 0.65; // max zoom out
@@ -113,6 +113,7 @@ export const MISSILE_ACCEL = 240;
 export const MISSILE_DESCENT_RATE = 600;
 export const MISSILE_HIT_RADIUS = 15;
 export const MISSILE_SMOKE_INTERVAL = 40;
+export const MISSILE_FIRE_RATE = 0.4; // seconds between missile launches
 
 // --- Cannon ---
 export const CANNON_FIRE_RATE = 0.05; // seconds between shots (hold to auto-fire)
@@ -131,6 +132,9 @@ export const PEOPLE_KILL_RADIUS = 50;
 export const PEOPLE_PANIC_RADIUS = 400;
 export const PEOPLE_CALM_DISTANCE = 800;
 export const PEOPLE_CALM_TIME = 5;
+export const PANIC_DIR_INTERVAL_MIN = 3; // seconds between scatter-direction changes
+export const PANIC_DIR_INTERVAL_MAX = 7; // seconds between scatter-direction changes
+export const PANIC_DIR_CHANGE_ARC = Math.PI * 1.5; // max angle shift per change (±135°)
 export const PEOPLE_HIDE_TIMEOUT = 10;
 export const PEOPLE_RETURN_WAIT_MIN = 3; // min seconds event people stand idle before walking back
 export const PEOPLE_RETURN_WAIT_RANGE = 12; // random range added to min (total max = MIN + RANGE)
@@ -203,3 +207,18 @@ export const CLUSTER_BOMBLET_SPREAD_FACTOR = 0.15; // scatter radius (px) per fo
 export const CLUSTER_FIRE_RATE = 2.5; // seconds between drops
 export const CLUSTER_OPEN_SHAKE_DURATION = 120; // screen shake when casing opens (ms)
 export const CLUSTER_OPEN_SHAKE_INTENSITY = 0.003; // screen shake intensity on open
+
+// --- Bus Route ---
+export const BUS_ROUTE_BLOCK_COL = 4; // town grid column (0-7) for bus road centerline
+export const BUS_ROUTE_ROAD_TILES = 25; // tile length of route between the two terminals
+export const BUS_TERMINAL_OFFSET_TILES = 4; // gap tiles between town edge and terminal A
+export const BUS_LOOP_EXTENSION_TILES = 3; // tiles beyond each terminal for the corner/connecting road
+export const BUS_ROAD_GAP_TILES = 3; // tiles each road is offset from center
+export const BUS_COUNT = 2; // buses circulating (one per direction)
+export const BUS_SPEED = 80; // px/s
+export const BUS_CAPACITY = 8; // max riders per bus
+export const BUS_RIDER_COUNT = 10; // riders pooled at each terminal
+export const BUS_HP = 3; // missile hits to destroy
+export const BUS_HIT_RADIUS = 40; // weapon collision radius (px)
+export const BUS_LOAD_TIME = 4.0; // seconds to board/alight at terminal
+export const BUS_RECOVER_TIME = 15.0; // max seconds waiting for scattered riders to return

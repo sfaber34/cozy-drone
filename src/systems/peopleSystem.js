@@ -4,6 +4,7 @@ import {
   PEOPLE_DETECT_RADIUS, PEOPLE_WANDER_SPEED, PEOPLE_PANIC_SPEED,
   PEOPLE_KILL_RADIUS, PEOPLE_PANIC_RADIUS, PEOPLE_CALM_DISTANCE,
   PEOPLE_CALM_TIME, PEOPLE_HIDE_TIMEOUT, PEOPLE_RETURN_WAIT_MIN, PEOPLE_RETURN_WAIT_RANGE,
+  PANIC_DIR_INTERVAL_MIN, PANIC_DIR_INTERVAL_MAX, PANIC_DIR_CHANGE_ARC,
   PEOPLE_GREETING_MIN_DIST,
   PEOPLE_SPAWN_COUNT, PEOPLE_TOWN_SPAWN_COUNT, PEOPLE_SPAWN_AVOID_DIST,
 } from "../constants.js";
@@ -381,6 +382,21 @@ export function updatePeople(scene, dt, delta) {
         if (!p.hideTarget) {
           // No buildings left — just run away
           p.runAngle += (Math.random() - 0.5) * 0.5;
+        }
+      }
+
+      // Randomly change direction for scatter runners (no building target)
+      if (!p.hideTarget) {
+        if (p.panicDirTimer === undefined) {
+          // Stagger each person's first change independently
+          p.panicDirTimer    = Math.random() * PANIC_DIR_INTERVAL_MIN;
+          p.panicDirInterval = PANIC_DIR_INTERVAL_MIN + Math.random() * (PANIC_DIR_INTERVAL_MAX - PANIC_DIR_INTERVAL_MIN);
+        }
+        p.panicDirTimer += dt;
+        if (p.panicDirTimer >= p.panicDirInterval) {
+          p.panicDirInterval = PANIC_DIR_INTERVAL_MIN + Math.random() * (PANIC_DIR_INTERVAL_MAX - PANIC_DIR_INTERVAL_MIN);
+          p.panicDirTimer    = 0;
+          p.runAngle += (Math.random() - 0.5) * PANIC_DIR_CHANGE_ARC;
         }
       }
 
