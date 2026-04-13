@@ -96,7 +96,7 @@ export function updateCannonBullets(scene, dt) {
   }
 }
 
-function cannonImpact(scene, x, y) {
+export function cannonImpact(scene, x, y) {
   const r = CANNON_KILL_RADIUS;
   // Proportional explosion scale (relative to kill radius)
   const explosionScale = SCALE * (r / 25); // normalized so radius 25 = SCALE*1
@@ -161,12 +161,12 @@ function cannonImpact(scene, x, y) {
     }
   }
 
-  // --- Damage buildings (1 hp per hit, same as missile) ---
+  // --- Damage buildings (0.5 hp per hit — takes 2x as many hits as a missile) ---
   for (const b of scene.buildings) {
     if (b.destroyed) continue;
     const dist = Phaser.Math.Distance.Between(x, y, b.x, b.y);
     if (dist < b.radius) {
-      b.hp--;
+      b.hp -= 0.5;
       if (b.hp <= 0) {
         b.destroyed = true;
         if (b.isOilWell) {

@@ -194,3 +194,12 @@ export const FLOCK_SHEPHERD_COUNT = 9;
 
 // --- Camera ---
 export const CAMERA_FOLLOW_LERP = 0.08;
+
+// --- Cluster Bomb ---
+export const CLUSTER_DESCENT_RATE = 500; // altitude feet/sec
+export const CLUSTER_OPEN_FRAC = 0.7; // opens at 70% of descent (30% altitude remaining)
+export const CLUSTER_BOMBLET_COUNT = 30; // bomblets released on opening (fixed)
+export const CLUSTER_BOMBLET_SPREAD_FACTOR = 0.15; // scatter radius (px) per foot of altitude at opening
+export const CLUSTER_FIRE_RATE = 2.5; // seconds between drops
+export const CLUSTER_OPEN_SHAKE_DURATION = 120; // screen shake when casing opens (ms)
+export const CLUSTER_OPEN_SHAKE_INTENSITY = 0.003; // screen shake intensity on open

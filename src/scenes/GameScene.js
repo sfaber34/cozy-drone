@@ -30,8 +30,11 @@ import {
 import { isOnRunway, crashDrone } from "../systems/droneSystem.js";
 import { createChickenFight, updateChickenFight } from "../systems/chickenFightSystem.js";
 import { createCamelRace, updateCamelRace } from "../systems/camelRaceSystem.js";
-import { CANNON_FIRE_RATE } from "../constants.js";
+import { CANNON_FIRE_RATE, CLUSTER_FIRE_RATE } from "../constants.js";
 import { initCannon, updateCannonReticle, fireCannon, updateCannonBullets } from "../systems/cannonSystem.js";
+import {
+  initClusterBomb, updateClusterReticle, fireClusterBomb, updateClusterBombs,
+} from "../systems/clusterBombSystem.js";
 
 export class GameScene extends Phaser.Scene {
   constructor() {
@@ -208,11 +211,13 @@ export class GameScene extends Phaser.Scene {
       fire: Phaser.Input.Keyboard.KeyCodes.SPACE,
       weapon1: Phaser.Input.Keyboard.KeyCodes.ONE,
       weapon2: Phaser.Input.Keyboard.KeyCodes.TWO,
+      weapon3: Phaser.Input.Keyboard.KeyCodes.THREE,
     });
 
-    // Weapon system: 1 = missile, 2 = cannon
+    // Weapon system: 1 = missile, 2 = cannon, 3 = cluster bomb
     this.selectedWeapon = 1;
     initCannon(this);
+    initClusterBomb(this);
 
     // Click to set target (missile only)
     this.input.on("pointerdown", (pointer) => {
@@ -240,7 +245,7 @@ export class GameScene extends Phaser.Scene {
       .setDepth(100);
 
     this.controlsText = this.add
-      .text(10, 0, "WASD:turn/speed  E/Q:alt  1:MSL 2:GUN  Click:target  Space:fire", {
+      .text(10, 0, "WASD:turn/speed  E/Q:alt  1:MSL 2:GUN 3:CBU  Click:target  Space:fire", {
         fontFamily: "monospace",
         fontSize: "11px",
         color: "#0f0",
@@ -397,12 +402,16 @@ export class GameScene extends Phaser.Scene {
     // --- Weapon switching ---
     if (Phaser.Input.Keyboard.JustDown(this.cursors.weapon1)) this.selectedWeapon = 1;
     if (Phaser.Input.Keyboard.JustDown(this.cursors.weapon2)) this.selectedWeapon = 2;
+    if (Phaser.Input.Keyboard.JustDown(this.cursors.weapon3)) this.selectedWeapon = 3;
 
-    // --- Weapon display ---
+    // --- Weapon display (hide all reticles, then show the active one) ---
     this.laserLine.clear();
+    this.reticle.setVisible(false);
+    this.cannonReticle.setVisible(false);
+    this.clusterReticle.setVisible(false);
+
     if (this.selectedWeapon === 1) {
       // Missile mode: laser line + click-to-target reticle
-      this.cannonReticle.setVisible(false);
       if (this.targetPos && isAirborne) {
         this.laserLine.lineStyle(1, 0xff0000, 0.5);
         this.laserLine.beginPath();
@@ -411,16 +420,14 @@ export class GameScene extends Phaser.Scene {
         this.laserLine.strokePath();
         const pulse = 0.8 + Math.sin(time * 0.005) * 0.2;
         this.reticle.setAlpha(pulse);
+        this.reticle.setVisible(true);
       }
-      this.reticle.setVisible(!!this.targetPos && isAirborne);
-    } else {
-      // Cannon mode: fixed reticle ahead of drone, no laser
-      this.reticle.setVisible(false);
-      if (isAirborne) {
-        updateCannonReticle(this, ds);
-      } else {
-        this.cannonReticle.setVisible(false);
-      }
+    } else if (this.selectedWeapon === 2) {
+      // Cannon mode: fixed reticle ahead of drone
+      if (isAirborne) updateCannonReticle(this, ds);
+    } else if (this.selectedWeapon === 3) {
+      // Cluster bomb mode: circle reticle behind drone
+      if (isAirborne) updateClusterReticle(this, ds);
     }
 
     // --- Fire weapons (only when airborne) ---
@@ -429,7 +436,7 @@ export class GameScene extends Phaser.Scene {
       if (Phaser.Input.Keyboard.JustDown(this.cursors.fire) && this.targetPos && isAirborne) {
         fireMissile(this);
       }
-    } else {
+    } else if (this.selectedWeapon === 2) {
       // Cannon: hold to auto-fire
       if (this.cursors.fire.isDown && isAirborne) {
         this.cannonFireTimer += dt;
@@ -440,11 +447,19 @@ export class GameScene extends Phaser.Scene {
       } else {
         this.cannonFireTimer = 0;
       }
+    } else if (this.selectedWeapon === 3) {
+      // Cluster bomb: single drop with cooldown
+      if (this.clusterFireTimer > 0) this.clusterFireTimer -= dt;
+      if (Phaser.Input.Keyboard.JustDown(this.cursors.fire) && isAirborne && this.clusterFireTimer <= 0) {
+        fireClusterBomb(this);
+        this.clusterFireTimer = CLUSTER_FIRE_RATE;
+      }
     }
 
     // --- Update systems ---
     updateMissiles(this, dt);
     updateCannonBullets(this, dt);
+    updateClusterBombs(this, dt);
     updatePeople(this, dt, delta);
     updateSoccer(this, dt, delta);
     updateAnimals(this, dt);
@@ -463,7 +478,8 @@ export class GameScene extends Phaser.Scene {
     } else {
       stateLabel = "";
     }
-    const weaponName = this.selectedWeapon === 1 ? "MSL" : "GUN";
+    const weaponNames = { 1: "MSL", 2: "GUN", 3: "CBU" };
+    const weaponName = weaponNames[this.selectedWeapon];
     this.hudText.setText(
       `ALT: ${Math.round(ds.altitude)} ft  SPD: ${spdDisplay} kts  [${weaponName}]\n` +
         `FREEDOMS: ${this.kills}/${this.totalPeople}  ${stateLabel}`,
