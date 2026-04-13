@@ -30,6 +30,8 @@ import {
 import { isOnRunway, crashDrone } from "../systems/droneSystem.js";
 import { createChickenFight, updateChickenFight } from "../systems/chickenFightSystem.js";
 import { createCamelRace, updateCamelRace } from "../systems/camelRaceSystem.js";
+import { CANNON_FIRE_RATE } from "../constants.js";
+import { initCannon, updateCannonReticle, fireCannon, updateCannonBullets } from "../systems/cannonSystem.js";
 
 export class GameScene extends Phaser.Scene {
   constructor() {
@@ -204,11 +206,15 @@ export class GameScene extends Phaser.Scene {
       altUp: Phaser.Input.Keyboard.KeyCodes.E,
       altDown: Phaser.Input.Keyboard.KeyCodes.Q,
       fire: Phaser.Input.Keyboard.KeyCodes.SPACE,
+      weapon1: Phaser.Input.Keyboard.KeyCodes.ONE,
+      weapon2: Phaser.Input.Keyboard.KeyCodes.TWO,
     });
 
-    // Also allow arrow keys
+    // Weapon system: 1 = missile, 2 = cannon
+    this.selectedWeapon = 1;
+    initCannon(this);
 
-    // Click to set target
+    // Click to set target (missile only)
     this.input.on("pointerdown", (pointer) => {
       if (this.introPlaying) return;
       if (this.flightState === "crashed") return;
@@ -234,7 +240,7 @@ export class GameScene extends Phaser.Scene {
       .setDepth(100);
 
     this.controlsText = this.add
-      .text(10, 0, "WASD:turn/speed  E/Q:alt  Click:target  Space:fire", {
+      .text(10, 0, "WASD:turn/speed  E/Q:alt  1:MSL 2:GUN  Click:target  Space:fire", {
         fontFamily: "monospace",
         fontSize: "11px",
         color: "#0f0",
@@ -388,30 +394,57 @@ export class GameScene extends Phaser.Scene {
     // --- Engine sound ---
     updateEngineSound(this, ds, delta);
 
-    // --- Laser line from drone to target ---
-    this.laserLine.clear();
-    if (this.targetPos && isAirborne) {
-      this.laserLine.lineStyle(1, 0xff0000, 0.5);
-      this.laserLine.beginPath();
-      this.laserLine.moveTo(ds.x, ds.y);
-      this.laserLine.lineTo(this.targetPos.x, this.targetPos.y);
-      this.laserLine.strokePath();
+    // --- Weapon switching ---
+    if (Phaser.Input.Keyboard.JustDown(this.cursors.weapon1)) this.selectedWeapon = 1;
+    if (Phaser.Input.Keyboard.JustDown(this.cursors.weapon2)) this.selectedWeapon = 2;
 
-      const pulse = 0.8 + Math.sin(time * 0.005) * 0.2;
-      this.reticle.setAlpha(pulse);
+    // --- Weapon display ---
+    this.laserLine.clear();
+    if (this.selectedWeapon === 1) {
+      // Missile mode: laser line + click-to-target reticle
+      this.cannonReticle.setVisible(false);
+      if (this.targetPos && isAirborne) {
+        this.laserLine.lineStyle(1, 0xff0000, 0.5);
+        this.laserLine.beginPath();
+        this.laserLine.moveTo(ds.x, ds.y);
+        this.laserLine.lineTo(this.targetPos.x, this.targetPos.y);
+        this.laserLine.strokePath();
+        const pulse = 0.8 + Math.sin(time * 0.005) * 0.2;
+        this.reticle.setAlpha(pulse);
+      }
+      this.reticle.setVisible(!!this.targetPos && isAirborne);
+    } else {
+      // Cannon mode: fixed reticle ahead of drone, no laser
+      this.reticle.setVisible(false);
+      if (isAirborne) {
+        updateCannonReticle(this, ds);
+      } else {
+        this.cannonReticle.setVisible(false);
+      }
     }
 
-    // --- Fire missile (only when airborne) ---
-    if (
-      Phaser.Input.Keyboard.JustDown(this.cursors.fire) &&
-      this.targetPos &&
-      isAirborne
-    ) {
-      fireMissile(this);
+    // --- Fire weapons (only when airborne) ---
+    if (this.selectedWeapon === 1) {
+      // Missile: single fire on press
+      if (Phaser.Input.Keyboard.JustDown(this.cursors.fire) && this.targetPos && isAirborne) {
+        fireMissile(this);
+      }
+    } else {
+      // Cannon: hold to auto-fire
+      if (this.cursors.fire.isDown && isAirborne) {
+        this.cannonFireTimer += dt;
+        if (this.cannonFireTimer >= CANNON_FIRE_RATE) {
+          this.cannonFireTimer = 0;
+          fireCannon(this);
+        }
+      } else {
+        this.cannonFireTimer = 0;
+      }
     }
 
     // --- Update systems ---
     updateMissiles(this, dt);
+    updateCannonBullets(this, dt);
     updatePeople(this, dt, delta);
     updateSoccer(this, dt, delta);
     updateAnimals(this, dt);
@@ -430,8 +463,9 @@ export class GameScene extends Phaser.Scene {
     } else {
       stateLabel = "";
     }
+    const weaponName = this.selectedWeapon === 1 ? "MSL" : "GUN";
     this.hudText.setText(
-      `ALT: ${Math.round(ds.altitude)} ft  SPD: ${spdDisplay} kts\n` +
+      `ALT: ${Math.round(ds.altitude)} ft  SPD: ${spdDisplay} kts  [${weaponName}]\n` +
         `FREEDOMS: ${this.kills}/${this.totalPeople}  ${stateLabel}`,
     );
   }

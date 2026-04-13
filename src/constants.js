@@ -38,30 +38,30 @@ export const AIRFIELD_Y = 100;
 // Chicken fight — cockfighting ring with spectators
 export const CHICKEN_FIGHT_X = 115;
 export const CHICKEN_FIGHT_Y = 108;
-export const CHICKEN_FIGHT_SPECTATORS = 30;       // number of spectators around the ring
-export const CHICKEN_FIGHT_SPEED = 60;            // how fast the fighting chickens move (px/s)
+export const CHICKEN_FIGHT_SPECTATORS = 30; // number of spectators around the ring
+export const CHICKEN_FIGHT_SPEED = 60; // how fast the fighting chickens move (px/s)
 export const CHICKEN_FIGHT_DIRECTION_CHANGE = 0.3; // seconds between direction changes
 
 // Camel race — oval track with racing camels + spectators
 export const CAMEL_RACE_X = 115;
 export const CAMEL_RACE_Y = 98;
-export const CAMEL_RACE_CAMELS = 6;               // number of racing camels
-export const CAMEL_RACE_SPECTATORS = 30;           // spectators around the track
-export const CAMEL_RACE_SPEED_MIN = 50;            // slowest camel (px/s)
-export const CAMEL_RACE_SPEED_RANGE = 40;          // speed variance (total max = MIN + RANGE)
+export const CAMEL_RACE_CAMELS = 6; // number of racing camels
+export const CAMEL_RACE_SPECTATORS = 30; // spectators around the track
+export const CAMEL_RACE_SPEED_MIN = 50; // slowest camel (px/s)
+export const CAMEL_RACE_SPEED_RANGE = 40; // speed variance (total max = MIN + RANGE)
 
 // --- Dirt biker no-go zones (in tiles — center x, center y, half-width, half-height) ---
 // Bikers steer around these areas to stay in open desert
 export const BIKER_NO_GO_ZONES = [
-  { x: TOWN_X + 30, y: TOWN_Y + 30, hw: 35, hh: 35 },       // Town
-  { x: FARM_X, y: FARM_Y, hw: 15, hh: 10 },                   // Farm compound
-  { x: FLOCK_X, y: FLOCK_Y, hw: 15, hh: 15 },                 // Goat flock
-  { x: OIL_X, y: OIL_Y, hw: 20, hh: 15 },                     // Oilfield
-  { x: WEDDING_X, y: WEDDING_Y, hw: 8, hh: 8 },               // Wedding
-  { x: SOCCER_X, y: SOCCER_Y, hw: 10, hh: 8 },                // Soccer
-  { x: AIRFIELD_X, y: AIRFIELD_Y, hw: 12, hh: 20 },           // Airfield
-  { x: CHICKEN_FIGHT_X, y: CHICKEN_FIGHT_Y, hw: 5, hh: 5 },   // Chicken fight
-  { x: CAMEL_RACE_X, y: CAMEL_RACE_Y, hw: 8, hh: 6 },        // Camel race
+  { x: TOWN_X + 30, y: TOWN_Y + 30, hw: 35, hh: 35 }, // Town
+  { x: FARM_X, y: FARM_Y, hw: 15, hh: 10 }, // Farm compound
+  { x: FLOCK_X, y: FLOCK_Y, hw: 15, hh: 15 }, // Goat flock
+  { x: OIL_X, y: OIL_Y, hw: 20, hh: 15 }, // Oilfield
+  { x: WEDDING_X, y: WEDDING_Y, hw: 8, hh: 8 }, // Wedding
+  { x: SOCCER_X, y: SOCCER_Y, hw: 10, hh: 8 }, // Soccer
+  { x: AIRFIELD_X, y: AIRFIELD_Y, hw: 12, hh: 20 }, // Airfield
+  { x: CHICKEN_FIGHT_X, y: CHICKEN_FIGHT_Y, hw: 5, hh: 5 }, // Chicken fight
+  { x: CAMEL_RACE_X, y: CAMEL_RACE_Y, hw: 8, hh: 6 }, // Camel race
 ];
 
 // --- Music ---
@@ -93,7 +93,7 @@ export const SFX_MIN_VOLUME_FRAC = 0.05; // volume fraction at SFX_MAX_DISTANCE 
 export const SFX_PAN_AMOUNT = 0.25; // max stereo pan amount (0 = center, 1 = hard left/right)
 
 // --- Drone physics ---
-export const DRONE_TURN_RATE = 120; // degrees/sec
+export const DRONE_TURN_RATE = 90; // degrees/sec
 export const DRONE_ACCEL = 100; // px/s^2
 export const DRONE_MIN_SPEED_AIRBORNE = 80; // px/s (40 knots)
 export const DRONE_ALT_RATE = 300; // feet/sec
@@ -114,6 +114,15 @@ export const MISSILE_DESCENT_RATE = 600;
 export const MISSILE_HIT_RADIUS = 15;
 export const MISSILE_SMOKE_INTERVAL = 40;
 
+// --- Cannon ---
+export const CANNON_FIRE_RATE = 0.05; // seconds between shots (hold to auto-fire)
+export const CANNON_BULLET_SPEED = 1000; // bullet travel speed (px/s)
+export const CANNON_RANGE_FACTOR = 0.4; // impact distance = altitude * this factor
+export const CANNON_SPREAD = 0.02; // random spread in radians
+export const CANNON_KILL_RADIUS = 20; // explosion radius per bullet
+export const CANNON_SHAKE_DURATION = 50; // screen shake per shot (ms)
+export const CANNON_SHAKE_INTENSITY = 0.001; // screen shake intensity
+
 // --- People AI ---
 export const PEOPLE_DETECT_RADIUS = 600;
 export const PEOPLE_WANDER_SPEED = 30;
@@ -123,8 +132,8 @@ export const PEOPLE_PANIC_RADIUS = 400;
 export const PEOPLE_CALM_DISTANCE = 800;
 export const PEOPLE_CALM_TIME = 5;
 export const PEOPLE_HIDE_TIMEOUT = 10;
-export const PEOPLE_RETURN_WAIT_MIN = 3;           // min seconds event people stand idle before walking back
-export const PEOPLE_RETURN_WAIT_RANGE = 12;         // random range added to min (total max = MIN + RANGE)
+export const PEOPLE_RETURN_WAIT_MIN = 3; // min seconds event people stand idle before walking back
+export const PEOPLE_RETURN_WAIT_RANGE = 12; // random range added to min (total max = MIN + RANGE)
 export const PEOPLE_GREETING_MIN_DIST = 150;
 export const PEOPLE_SPAWN_COUNT = 60;
 export const PEOPLE_TOWN_SPAWN_COUNT = 80;
@@ -152,7 +161,7 @@ export const BIKER_TURN_RATE = 2.0;
 export const SOCCER_FIELD_W = 300;
 export const SOCCER_FIELD_H = 200;
 export const SOCCER_PLAYERS_PER_TEAM = 5;
-export const SOCCER_TACKLE_COOLDOWN = 2.0;         // seconds before ball can be stolen after a possession change
+export const SOCCER_TACKLE_COOLDOWN = 2.0; // seconds before ball can be stolen after a possession change
 
 // --- Buildings ---
 export const BUILDING_HP_SMALL = 2;
