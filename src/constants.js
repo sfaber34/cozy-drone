@@ -104,6 +104,8 @@ export const DRONE_ZOOM_MIN = 0.65; // max zoom out
 export const DRONE_ZOOM_MAX = 1.0; // no zoom
 export const DRONE_MAX_SPEED = 300; // px/s
 export const DRONE_MAX_ALT = 15000; // feet
+export const DRONE_MIN_ALT_OFF_RUNWAY = 500; // floor altitude when not over runway (prevents crash)
+export const DRONE_SHADOW_OPACITY = 0.75; // max shadow alpha at ground level (ramps down with altitude)
 
 // --- Missile ---
 export const MISSILE_SPEED = 280;

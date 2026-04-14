@@ -16,6 +16,8 @@ import {
   DRONE_ZOOM_MAX,
   DRONE_MAX_SPEED,
   DRONE_MAX_ALT,
+  DRONE_MIN_ALT_OFF_RUNWAY,
+  DRONE_SHADOW_OPACITY,
   CAMERA_FOLLOW_LERP,
   MOBILE_ZOOM_FACTOR,
 } from "../constants.js";
@@ -44,7 +46,7 @@ import {
   updateTownCars,
   updateDirtBikers,
 } from "../systems/vehicleSystem.js";
-import { isOnRunway, crashDrone } from "../systems/droneSystem.js";
+import { isOnRunway } from "../systems/droneSystem.js";
 import {
   createChickenFight,
   updateChickenFight,
@@ -180,7 +182,7 @@ export class GameScene extends Phaser.Scene {
       .image(0, 0, "drone-shadow")
       .setScale(SCALE)
       .setDepth(3)
-      .setAlpha(0.3);
+      .setAlpha(DRONE_SHADOW_OPACITY);
 
     // --- Drone (starts at bottom of runway) ---
     this.drone = this.add
@@ -469,16 +471,19 @@ export class GameScene extends Phaser.Scene {
       );
     }
 
-    // --- Check if drone touched down ---
-    if (isAirborne && ds.altitude <= 0) {
-      ds.altitude = 0;
+    // --- Altitude floor / touchdown ---
+    // Cozy rule: the drone can only reach ground altitude (0 ft) when it's
+    // over the runway. Off-runway, altitude is clamped to a safe floor so
+    // the drone can never crash. Grounded drones stay grounded regardless
+    // of position, so taxiing off the runway is fine.
+    if (isAirborne) {
       if (isOnRunway(this, ds.x, ds.y)) {
-        // Safe landing
-        this.flightState = "grounded";
-      } else {
-        // Crash!
-        crashDrone(this);
-        return;
+        if (ds.altitude <= 0) {
+          ds.altitude = 0;
+          this.flightState = "grounded";
+        }
+      } else if (ds.altitude < DRONE_MIN_ALT_OFF_RUNWAY) {
+        ds.altitude = DRONE_MIN_ALT_OFF_RUNWAY;
       }
     }
 
@@ -533,7 +538,11 @@ export class GameScene extends Phaser.Scene {
       this.droneShadow.setPosition(ds.x + shadowOffset, ds.y + shadowOffset);
       this.droneShadow.setAngle(ds.angle);
       this.droneShadow.setAlpha(
-        Phaser.Math.Clamp(0.4 - ds.altitude * 0.0001, 0.05, 0.4),
+        Phaser.Math.Clamp(
+          DRONE_SHADOW_OPACITY - ds.altitude * 0.0001,
+          DRONE_SHADOW_OPACITY * 0.125,
+          DRONE_SHADOW_OPACITY,
+        ),
       );
       const shadowScale =
         SCALE * Phaser.Math.Clamp(1.2 - ds.altitude * 0.0003, 0.6, 1.2);
