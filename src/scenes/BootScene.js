@@ -15,6 +15,7 @@ import { generateCamelRaceTextures } from '../textures/camelRaceTextures.js';
 import { generateRockFightTextures } from '../textures/rockFightTextures.js';
 import { generateFarmFieldTextures } from '../textures/farmFieldTextures.js';
 import { generateConcertTextures } from '../textures/concertTextures.js';
+import { generateTireFireTextures } from '../textures/tireFireTextures.js';
 import { generateWeaponTextures } from '../textures/weaponTextures.js';
 import { generateBusTextures } from '../textures/busTextures.js';
 import { generateWaterTextures } from '../textures/waterTextures.js';
@@ -41,6 +42,7 @@ export class BootScene extends Phaser.Scene {
     generateRockFightTextures(this);
     generateFarmFieldTextures(this);
     generateConcertTextures(this);
+    generateTireFireTextures(this);
     generateWeaponTextures(this);
     generateBusTextures(this);
     generateWaterTextures(this);

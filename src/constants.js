@@ -139,6 +139,24 @@ export const DRONE_MAX_ALT = 15000; // feet
 export const DRONE_MIN_ALT_OFF_RUNWAY = 500; // floor altitude when not over runway (prevents crash)
 export const DRONE_SHADOW_OPACITY = 0.75; // max shadow alpha at ground level (ramps down with altitude)
 
+// --- Tire fire set piece ---
+// A pile of burning tires with thick black smoke and a crowd gathered round
+// warming hands / roasting marshmallows / drinking.
+export const TIRE_FIRE_TIRE_COUNT = 14; // tire sprites stacked in the pile
+export const TIRE_FIRE_PILE_SPREAD = 26; // px random offset per tire in the pile
+export const TIRE_FIRE_CROWD_COUNT = 22; // people gathered round the fire
+export const TIRE_FIRE_CROWD_RADIUS_MIN = 80; // min distance from fire center
+export const TIRE_FIRE_CROWD_RADIUS_RANGE = 25; // random extra distance
+export const TIRE_FIRE_SMOKE_INTERVAL_MIN = 90; // ms between smoke puffs
+export const TIRE_FIRE_SMOKE_INTERVAL_RANGE = 90;
+export const TIRE_FIRE_SMOKE_RISE_HEIGHT = 140; // px each puff rises before fading
+export const TIRE_FIRE_SMOKE_DURATION_MIN = 1800; // ms
+export const TIRE_FIRE_SMOKE_DURATION_RANGE = 900;
+export const TIRE_FIRE_SMOKE_OPACITY = 0.85; // starting alpha of each smoke puff
+export const TIRE_FIRE_DRINK_INTERVAL_MIN = 2.5; // seconds between drink-sip animations
+export const TIRE_FIRE_DRINK_INTERVAL_RANGE = 3.0;
+export const TIRE_FIRE_SWAY_HZ = 0.8; // Hz — warming-hands sway oscillation
+
 // --- Victory cutscene ---
 // Kills needed before landing at the runway triggers the win cutscene.
 // Set to 1 during development; bump to `scene.totalPeople` for real play.

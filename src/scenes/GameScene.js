@@ -53,6 +53,7 @@ import { createCamelRace } from "../systems/camelRaceSystem.js";
 import { createRockFight } from "../systems/rockFightSystem.js";
 import { createFarmField } from "../systems/farmFieldSystem.js";
 import { createConcert } from "../systems/concertSystem.js";
+import { createTireFire } from "../systems/tireFireSystem.js";
 import { createAirfield } from "../systems/airfieldSystem.js";
 import { createTown } from "../systems/townSystem.js";
 import { createFarmCompound } from "../systems/farmCompoundSystem.js";
@@ -145,6 +146,7 @@ export class GameScene extends Phaser.Scene {
     this.setPieces.push(createRockFight(this, rng, { tileX: 115, tileY: 85 }));
     this.setPieces.push(createFarmField(this, rng, { tileX: 76, tileY: 100 }));
     this.setPieces.push(createConcert(this, rng, { tileX: 76, tileY: 62 }));
+    this.setPieces.push(createTireFire(this, rng, { tileX: 100, tileY: 82 }));
     // Airfield last: scene.runway is needed immediately below for the drone spawn
     const airfield = createAirfield(this, rng, { tileX: 100, tileY: 100 });
     this.setPieces.push(airfield);
