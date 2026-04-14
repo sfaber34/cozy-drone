@@ -1,41 +1,74 @@
 import Phaser from "phaser";
 import {
-  WORLD_W, WORLD_H, TILE, SCALE, AIRFIELD_X, AIRFIELD_Y,
-  DRONE_TURN_RATE, DRONE_ACCEL, DRONE_MIN_SPEED_AIRBORNE,
-  DRONE_ALT_RATE, DRONE_TAKEOFF_SPEED, DRONE_ZOOM_ALT_THRESHOLD,
-  DRONE_ZOOM_MIN, DRONE_ZOOM_MAX, DRONE_MAX_SPEED, DRONE_MAX_ALT,
-  CAMERA_FOLLOW_LERP, MOBILE_ZOOM_FACTOR,
+  WORLD_W,
+  WORLD_H,
+  TILE,
+  SCALE,
+  AIRFIELD_X,
+  AIRFIELD_Y,
+  DRONE_TURN_RATE,
+  DRONE_ACCEL,
+  DRONE_MIN_SPEED_AIRBORNE,
+  DRONE_ALT_RATE,
+  DRONE_TAKEOFF_SPEED,
+  DRONE_ZOOM_ALT_THRESHOLD,
+  DRONE_ZOOM_MIN,
+  DRONE_ZOOM_MAX,
+  DRONE_MAX_SPEED,
+  DRONE_MAX_ALT,
+  CAMERA_FOLLOW_LERP,
+  MOBILE_ZOOM_FACTOR,
 } from "../constants.js";
 import { createWater, WATER_BOUNDS } from "../systems/waterSystem.js";
 
-import { initAudio, updateEngineSound, updateCannonFiringSound } from "../systems/audioSystem.js";
+import {
+  initAudio,
+  updateEngineSound,
+  updateCannonFiringSound,
+} from "../systems/audioSystem.js";
 import { playIntroCutscene } from "../systems/introSystem.js";
 import { createWedding } from "../systems/weddingSetup.js";
 import { createSoccer, updateSoccer } from "../systems/soccerSystem.js";
 import { createBuildings } from "../systems/buildingSystem.js";
-import {
-  createAnimals,
-  updateAnimals,
-} from "../systems/animalSystem.js";
+import { createAnimals, updateAnimals } from "../systems/animalSystem.js";
 import { createOilfield, updateOilWells } from "../systems/oilfieldSystem.js";
+import { fireMissile, updateMissiles } from "../systems/missileSystem.js";
 import {
-  fireMissile,
-  updateMissiles,
-} from "../systems/missileSystem.js";
-import { createPeople, updatePeople, countTotalPeople } from "../systems/peopleSystem.js";
+  createPeople,
+  updatePeople,
+  countTotalPeople,
+} from "../systems/peopleSystem.js";
 import {
   createVehicles,
   updateTownCars,
   updateDirtBikers,
 } from "../systems/vehicleSystem.js";
 import { isOnRunway, crashDrone } from "../systems/droneSystem.js";
-import { createChickenFight, updateChickenFight } from "../systems/chickenFightSystem.js";
-import { createCamelRace, updateCamelRace } from "../systems/camelRaceSystem.js";
-import { createBusRoute, updateBusSystem } from "../systems/busSystem.js";
-import { CANNON_FIRE_RATE, CLUSTER_FIRE_RATE, MISSILE_FIRE_RATE } from "../constants.js";
-import { initCannon, updateCannonReticle, fireCannon, updateCannonBullets } from "../systems/cannonSystem.js";
 import {
-  initClusterBomb, updateClusterReticle, fireClusterBomb, updateClusterBombs,
+  createChickenFight,
+  updateChickenFight,
+} from "../systems/chickenFightSystem.js";
+import {
+  createCamelRace,
+  updateCamelRace,
+} from "../systems/camelRaceSystem.js";
+import { createBusRoute, updateBusSystem } from "../systems/busSystem.js";
+import {
+  CANNON_FIRE_RATE,
+  CLUSTER_FIRE_RATE,
+  MISSILE_FIRE_RATE,
+} from "../constants.js";
+import {
+  initCannon,
+  updateCannonReticle,
+  fireCannon,
+  updateCannonBullets,
+} from "../systems/cannonSystem.js";
+import {
+  initClusterBomb,
+  updateClusterReticle,
+  fireClusterBomb,
+  updateClusterBombs,
 } from "../systems/clusterBombSystem.js";
 
 export class GameScene extends Phaser.Scene {
@@ -92,7 +125,6 @@ export class GameScene extends Phaser.Scene {
     createOilfield(this, rng);
     createChickenFight(this, rng);
     createCamelRace(this, rng);
-
 
     // --- Runway (6 tiles long) ---
     const rwX = AIRFIELD_X * TILE * SCALE;
@@ -209,7 +241,12 @@ export class GameScene extends Phaser.Scene {
       WATER_BOUNDS.right - WATER_BOUNDS.left,
       WATER_BOUNDS.bottom - WATER_BOUNDS.top,
     );
-    this.cameras.main.startFollow(this.drone, true, CAMERA_FOLLOW_LERP, CAMERA_FOLLOW_LERP);
+    this.cameras.main.startFollow(
+      this.drone,
+      true,
+      CAMERA_FOLLOW_LERP,
+      CAMERA_FOLLOW_LERP,
+    );
     this.cameras.main.setZoom(1);
 
     // --- Input ---
@@ -238,7 +275,8 @@ export class GameScene extends Phaser.Scene {
       // Crashed: tap anywhere (off controls) to restart
       if (this.flightState === "crashed") {
         if (this.crashRestartReady) {
-          if (this.isMobile && this.isOnMobileControl(pointer.x, pointer.y)) return;
+          if (this.isMobile && this.isOnMobileControl(pointer.x, pointer.y))
+            return;
           this.sound.stopAll();
           this.scene.restart();
         }
@@ -268,13 +306,18 @@ export class GameScene extends Phaser.Scene {
       .setDepth(100);
 
     this.controlsText = this.add
-      .text(10, 0, "WASD:turn/speed  E/Q:alt  1:MSL 2:GUN 3:CBU  Click:target  Space:fire", {
-        fontFamily: "monospace",
-        fontSize: "11px",
-        color: "#0f0",
-        backgroundColor: "#000000aa",
-        padding: { x: 6, y: 4 },
-      })
+      .text(
+        10,
+        0,
+        "WASD:turn/speed  E/Q:alt  1:MSL 2:GUN  Click:target  Space:fire",
+        {
+          fontFamily: "monospace",
+          fontSize: "11px",
+          color: "#0f0",
+          backgroundColor: "#000000aa",
+          padding: { x: 6, y: 4 },
+        },
+      )
       .setDepth(100);
 
     // Main camera ignores HUD, HUD camera only sees HUD
@@ -294,9 +337,18 @@ export class GameScene extends Phaser.Scene {
 
     // --- Mobile controls ---
     this.isMobile = this.sys.game.device.input.touch;
-    this.mobileInput = { left: false, right: false, up: false, down: false,
-                         altUp: false, altDown: false, fire: false, fireJustDown: false,
-                         turnAmount: 0, altAmount: 0 };  // analog (-1…+1) from joystick
+    this.mobileInput = {
+      left: false,
+      right: false,
+      up: false,
+      down: false,
+      altUp: false,
+      altDown: false,
+      fire: false,
+      fireJustDown: false,
+      turnAmount: 0,
+      altAmount: 0,
+    }; // analog (-1…+1) from joystick
     this.crashRestartReady = false;
     this.mobileControlZones = null; // populated by MobileControlsScene.buildControls()
     if (this.isMobile) {
@@ -322,17 +374,20 @@ export class GameScene extends Phaser.Scene {
   isOnMobileControl(px, py) {
     const z = this.mobileControlZones;
     if (!z) return false;
-    if (Phaser.Math.Distance.Between(px, py, z.joystick.x, z.joystick.y) < z.joystick.r) return true;
-    if (Phaser.Math.Distance.Between(px, py, z.fireL.x, z.fireL.y) < z.fireL.r) return true;
-    if (Phaser.Math.Distance.Between(px, py, z.fireR.x, z.fireR.y) < z.fireR.r) return true;
-    const rk = z.rocker;
-    if (px >= rk.x - rk.w / 2 && px <= rk.x + rk.w / 2 &&
-        py >= rk.y - rk.h / 2 && py <= rk.y + rk.h / 2) return true;
-    if (z.weaponRocker) {
-      const wr = z.weaponRocker;
-      if (px >= wr.x - wr.w / 2 && px <= wr.x + wr.w / 2 &&
-          py >= wr.y - wr.h / 2 && py <= wr.y + wr.h / 2) return true;
-    }
+    const inRect = (r) =>
+      px >= r.x - r.w / 2 &&
+      px <= r.x + r.w / 2 &&
+      py >= r.y - r.h / 2 &&
+      py <= r.y + r.h / 2;
+    if (
+      z.fireR &&
+      Phaser.Math.Distance.Between(px, py, z.fireR.x, z.fireR.y) < z.fireR.r
+    )
+      return true;
+    if (z.turnSlider && inRect(z.turnSlider)) return true;
+    if (z.altRocker && inRect(z.altRocker)) return true;
+    if (z.rocker && inRect(z.rocker)) return true;
+    if (z.weaponRocker && inRect(z.weaponRocker)) return true;
     return false;
   }
 
@@ -359,8 +414,12 @@ export class GameScene extends Phaser.Scene {
     const mi = this.mobileInput;
 
     // --- Input: turn (requires forward speed — can't yaw while stationary) ---
-    const kbTurn = this.cursors.left.isDown ? -1 : this.cursors.right.isDown ? 1 : 0;
-    const turnAmt = kbTurn !== 0 ? kbTurn : (mi ? mi.turnAmount : 0);
+    const kbTurn = this.cursors.left.isDown
+      ? -1
+      : this.cursors.right.isDown
+        ? 1
+        : 0;
+    const turnAmt = kbTurn !== 0 ? kbTurn : mi ? mi.turnAmount : 0;
     ds.currentTurnRate = 0;
     if (ds.speed > 0 && Math.abs(turnAmt) > 0.01) {
       ds.angle += DRONE_TURN_RATE * dt * turnAmt;
@@ -378,18 +437,30 @@ export class GameScene extends Phaser.Scene {
 
     // --- Input: altitude (keyboard = binary, joystick = analog via altAmount) ---
     // altAmount: +1 = stick pushed down = nose up = gain altitude (real-plane feel)
-    const altUpFactor = this.cursors.altUp.isDown   ? 1
-                      : (mi && mi.altAmount > 0)    ? mi.altAmount : 0;
-    const altDnFactor = this.cursors.altDown.isDown  ? 1
-                      : (mi && mi.altAmount < 0)    ? -mi.altAmount : 0;
+    const altUpFactor = this.cursors.altUp.isDown
+      ? 1
+      : mi && mi.altAmount > 0
+        ? mi.altAmount
+        : 0;
+    const altDnFactor = this.cursors.altDown.isDown
+      ? 1
+      : mi && mi.altAmount < 0
+        ? -mi.altAmount
+        : 0;
     if (altUpFactor > 0) {
       if (speedKnots >= DRONE_TAKEOFF_SPEED) {
-        ds.altitude = Math.min(ds.maxAlt, ds.altitude + DRONE_ALT_RATE * dt * altUpFactor);
+        ds.altitude = Math.min(
+          ds.maxAlt,
+          ds.altitude + DRONE_ALT_RATE * dt * altUpFactor,
+        );
         if (isGrounded) this.flightState = "airborne";
       }
     }
     if (altDnFactor > 0 && isAirborne) {
-      ds.altitude = Math.max(0, ds.altitude - DRONE_ALT_RATE * dt * altDnFactor);
+      ds.altitude = Math.max(
+        0,
+        ds.altitude - DRONE_ALT_RATE * dt * altDnFactor,
+      );
     }
 
     // --- Check if drone touched down ---
@@ -411,15 +482,23 @@ export class GameScene extends Phaser.Scene {
     ds.y += Math.sin(rad) * ds.speed * dt;
 
     // Soft water boundary: steering kicks in 20 tiles past the map edge, scales up to outer wall
-    const moatPx    = -WATER_BOUNDS.left;              // MOAT_PX in world pixels
-    const triggerPx = 20 * TILE * SCALE;               // free-fly zone: 20 tiles of open water
-    const turnZone  = moatPx - triggerPx;              // remaining moat width where steering acts
-    const mapBndW   = WORLD_W * TILE * SCALE;
-    const mapBndH   = WORLD_H * TILE * SCALE;
-    const overL = ds.x < -triggerPx            ? Math.min(-ds.x - triggerPx,          turnZone) / turnZone : 0;
-    const overR = ds.x > mapBndW + triggerPx   ? Math.min(ds.x - mapBndW - triggerPx, turnZone) / turnZone : 0;
-    const overT = ds.y < -triggerPx            ? Math.min(-ds.y - triggerPx,          turnZone) / turnZone : 0;
-    const overB = ds.y > mapBndH + triggerPx   ? Math.min(ds.y - mapBndH - triggerPx, turnZone) / turnZone : 0;
+    const moatPx = -WATER_BOUNDS.left; // MOAT_PX in world pixels
+    const triggerPx = 20 * TILE * SCALE; // free-fly zone: 20 tiles of open water
+    const turnZone = moatPx - triggerPx; // remaining moat width where steering acts
+    const mapBndW = WORLD_W * TILE * SCALE;
+    const mapBndH = WORLD_H * TILE * SCALE;
+    const overL =
+      ds.x < -triggerPx ? Math.min(-ds.x - triggerPx, turnZone) / turnZone : 0;
+    const overR =
+      ds.x > mapBndW + triggerPx
+        ? Math.min(ds.x - mapBndW - triggerPx, turnZone) / turnZone
+        : 0;
+    const overT =
+      ds.y < -triggerPx ? Math.min(-ds.y - triggerPx, turnZone) / turnZone : 0;
+    const overB =
+      ds.y > mapBndH + triggerPx
+        ? Math.min(ds.y - mapBndH - triggerPx, turnZone) / turnZone
+        : 0;
     if (overL > 0 || overR > 0 || overT > 0 || overB > 0) {
       const pushX = overL - overR; // positive = steer east
       const pushY = overT - overB; // positive = steer south
@@ -430,7 +509,9 @@ export class GameScene extends Phaser.Scene {
       const depth = Math.max(overL, overR, overT, overB);
       const turnMult = 1.5 + depth * 3.5; // 1.5× at trigger line → 5× near outer wall
       const maxTurn = Phaser.Math.DegToRad(DRONE_TURN_RATE) * turnMult * dt;
-      ds.angle += Phaser.Math.RadToDeg(Phaser.Math.Clamp(diff, -maxTurn, maxTurn));
+      ds.angle += Phaser.Math.RadToDeg(
+        Phaser.Math.Clamp(diff, -maxTurn, maxTurn),
+      );
     }
     // Hard clamp at outer wall (safety net — soft steering should prevent reaching it)
     ds.x = Phaser.Math.Clamp(ds.x, WATER_BOUNDS.left, WATER_BOUNDS.right);
@@ -461,7 +542,9 @@ export class GameScene extends Phaser.Scene {
       this.cameras.main.setZoom(DRONE_ZOOM_MAX * mobileZoom);
       this.drone.setScale(SCALE);
     } else {
-      const t = (ds.altitude - DRONE_ZOOM_ALT_THRESHOLD) / (ds.maxAlt - DRONE_ZOOM_ALT_THRESHOLD);
+      const t =
+        (ds.altitude - DRONE_ZOOM_ALT_THRESHOLD) /
+        (ds.maxAlt - DRONE_ZOOM_ALT_THRESHOLD);
       const worldZoom = Phaser.Math.Linear(DRONE_ZOOM_MAX, DRONE_ZOOM_MIN, t);
       this.cameras.main.setZoom(worldZoom * mobileZoom);
       // Drone compensates for altitude zoom only (mobile zoom intentionally shrinks it)
@@ -483,8 +566,10 @@ export class GameScene extends Phaser.Scene {
     updateEngineSound(this, ds, delta);
 
     // --- Weapon switching ---
-    if (Phaser.Input.Keyboard.JustDown(this.cursors.weapon1)) this.selectedWeapon = 1;
-    if (Phaser.Input.Keyboard.JustDown(this.cursors.weapon2)) this.selectedWeapon = 2;
+    if (Phaser.Input.Keyboard.JustDown(this.cursors.weapon1))
+      this.selectedWeapon = 1;
+    if (Phaser.Input.Keyboard.JustDown(this.cursors.weapon2))
+      this.selectedWeapon = 2;
     // CBU (weapon 3) selection disabled — leave fire/update code intact
 
     // --- Weapon display (hide all reticles, then show the active one) ---
@@ -514,8 +599,10 @@ export class GameScene extends Phaser.Scene {
     }
 
     // --- Fire weapons (only when airborne) ---
-    const fireJustDown = Phaser.Input.Keyboard.JustDown(this.cursors.fire) || (mi && mi.fireJustDown);
-    const fireHeld     = this.cursors.fire.isDown || (mi && mi.fire);
+    const fireJustDown =
+      Phaser.Input.Keyboard.JustDown(this.cursors.fire) ||
+      (mi && mi.fireJustDown);
+    const fireHeld = this.cursors.fire.isDown || (mi && mi.fire);
     if (mi) mi.fireJustDown = false; // consumed — MobileControlsScene will re-set on next press
 
     if (this.selectedWeapon !== 2) updateCannonFiringSound(this, false);
@@ -523,7 +610,12 @@ export class GameScene extends Phaser.Scene {
     if (this.selectedWeapon === 1) {
       // Missile: single fire with cooldown
       if (this.missileFireTimer > 0) this.missileFireTimer -= dt;
-      if (fireJustDown && this.targetPos && isAirborne && this.missileFireTimer <= 0) {
+      if (
+        fireJustDown &&
+        this.targetPos &&
+        isAirborne &&
+        this.missileFireTimer <= 0
+      ) {
         fireMissile(this);
         this.missileFireTimer = MISSILE_FIRE_RATE;
       }
@@ -562,13 +654,13 @@ export class GameScene extends Phaser.Scene {
     updateChickenFight(this, dt);
     updateCamelRace(this, dt);
 
-
     // --- HUD ---
     const spdDisplay = Math.round(speedKnots);
     let stateLabel = "";
     if (isGrounded) {
       stateLabel = ds.speed === 0 ? "PARKED" : "TAXIING";
-      if (speedKnots >= DRONE_TAKEOFF_SPEED) stateLabel = "READY (E to take off)";
+      if (speedKnots >= DRONE_TAKEOFF_SPEED)
+        stateLabel = "READY (E to take off)";
     } else {
       stateLabel = "";
     }
@@ -577,8 +669,8 @@ export class GameScene extends Phaser.Scene {
     const lastSfx = this.lastDeathSfxName ?? "--";
     this.hudText.setText(
       `ALT: ${Math.round(ds.altitude)} ft  SPD: ${spdDisplay} kts  [${weaponName}]\n` +
-      `FREEDOMS: ${this.kills}/${this.totalPeople}  ${stateLabel}\n` +
-      lastSfx,
+        `FREEDOMS: ${this.kills}/${this.totalPeople}  ${stateLabel}\n` +
+        lastSfx,
     );
   }
 }
