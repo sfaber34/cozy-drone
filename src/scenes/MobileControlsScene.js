@@ -24,20 +24,20 @@ export class MobileControlsScene extends Phaser.Scene {
   }
 
   create() {
-    this.gfx          = this.add.graphics();
-    this.allTextObjs  = [];
-    this.turnSlider   = null;
-    this.altRocker    = null;
-    this.speedRocker  = null;
-    this.fireButtons  = [];
+    this.gfx = this.add.graphics();
+    this.allTextObjs = [];
+    this.turnSlider = null;
+    this.altRocker = null;
+    this.speedRocker = null;
+    this.fireButtons = [];
     this.weaponRocker = null;
 
     this.buildControls();
 
-    this.input.on("pointerdown",      this.onDown, this);
-    this.input.on("pointermove",      this.onMove, this);
-    this.input.on("pointerup",        this.onUp,   this);
-    this.input.on("pointerupoutside", this.onUp,   this);
+    this.input.on("pointerdown", this.onDown, this);
+    this.input.on("pointermove", this.onMove, this);
+    this.input.on("pointerup", this.onUp, this);
+    this.input.on("pointerupoutside", this.onUp, this);
 
     this.scale.on("resize", () => this.buildControls());
   }
@@ -51,9 +51,9 @@ export class MobileControlsScene extends Phaser.Scene {
     const isLandscape = w > h;
 
     const ref = Math.min(w, h);
-    const jr  = Math.min(MOBILE_JOYSTICK_RADIUS, ref * 0.17);
-    const br  = Math.min(MOBILE_BUTTON_RADIUS,   ref * 0.115);
-    const m   = Math.min(MOBILE_BUTTON_MARGIN,   ref * 0.05);
+    const jr = Math.min(MOBILE_JOYSTICK_RADIUS, ref * 0.17);
+    const br = Math.min(MOBILE_BUTTON_RADIUS, ref * 0.115);
+    const m = Math.min(MOBILE_BUTTON_MARGIN, ref * 0.05);
 
     // Speed rocker dims (bottom right)
     const srW = br * 2;
@@ -67,43 +67,65 @@ export class MobileControlsScene extends Phaser.Scene {
     const tsW = jr * 2.4;
     const tsH = jr * 0.9;
 
-    const extraBottomPad = isLandscape ? Math.max(Math.round(h * 0.10), 30) : 0;
-    const safeH = h - extraBottomPad;
+    const extraBottomPad = isLandscape ? Math.max(Math.round(h * 0.1), 30) : 0;
+    // Lift everything up 5 px for visual breathing room from the bottom edge
+    const safeH = h - extraBottomPad - 15;
 
     // Bottom-right: speed rocker + right fire button above
     const speedCX = w - m - srW / 2;
     const speedCY = safeH - m - srH / 2;
-    const fireX   = speedCX;
-    const fireY   = speedCY - srH / 2 - m - br;
+    const fireX = speedCX;
+    const fireY = speedCY - srH / 2 - m - br;
 
     // Bottom-left column: alt rocker at bottom, turn slider above it
-    const altCX  = m + arW / 2;
-    const altCY  = safeH - m - arH / 2;
+    const altCX = m + arW / 2;
+    const altCY = safeH - m - arH / 2;
     const turnCX = m + tsW / 2;
     const turnCY = altCY - arH / 2 - m - tsH / 2;
 
     this.turnSlider = {
-      cx: turnCX, cy: turnCY, w: tsW, h: tsH,
+      cx: turnCX,
+      cy: turnCY,
+      w: tsW,
+      h: tsH,
       thumbX: turnCX,
-      active: false, pointerId: -1,
+      active: false,
+      pointerId: -1,
     };
 
     this.altRocker = {
-      cx: altCX, cy: altCY, w: arW, h: arH,
-      active: false, pointerId: -1,
-      pressedUp: false, pressedDown: false,
+      cx: altCX,
+      cy: altCY,
+      w: arW,
+      h: arH,
+      active: false,
+      pointerId: -1,
+      pressedUp: false,
+      pressedDown: false,
       color: 0x88dd66,
     };
 
     this.speedRocker = {
-      cx: speedCX, cy: speedCY, w: srW, h: srH,
-      active: false, pointerId: -1,
-      pressedUp: false, pressedDown: false,
+      cx: speedCX,
+      cy: speedCY,
+      w: srW,
+      h: srH,
+      active: false,
+      pointerId: -1,
+      pressedUp: false,
+      pressedDown: false,
       color: 0x44aaff,
     };
 
     this.fireButtons = [
-      { x: fireX, y: fireY, r: br, color: 0xff4400, pressed: false, pointerId: -1 },
+      {
+        x: fireX,
+        y: fireY,
+        r: br,
+        color: 0xff4400,
+        pressed: false,
+        pointerId: -1,
+      },
     ];
 
     // Weapon selector rocker — horizontal pill at bottom center
@@ -115,18 +137,24 @@ export class MobileControlsScene extends Phaser.Scene {
 
     // Publish hit zones so GameScene can skip target-setting when tapping a control
     this.gameScene.mobileControlZones = {
-      turnSlider:   { x: turnCX,  y: turnCY,  w: tsW, h: tsH },
-      altRocker:    { x: altCX,   y: altCY,   w: arW, h: arH },
-      rocker:       { x: speedCX, y: speedCY, w: srW, h: srH },
-      fireR:        { x: fireX,   y: fireY,   r: br * 1.2 },
-      weaponRocker: { x: wrCX,    y: wrCY,    w: wrW, h: wrH },
+      turnSlider: { x: turnCX, y: turnCY, w: tsW, h: tsH },
+      altRocker: { x: altCX, y: altCY, w: arW, h: arH },
+      rocker: { x: speedCX, y: speedCY, w: srW, h: srH },
+      fireR: { x: fireX, y: fireY, r: br * 1.2 },
+      weaponRocker: { x: wrCX, y: wrCY, w: wrW, h: wrH },
     };
 
     const labelSize = Math.round(br * 0.44) + "px";
     const addLabel = (x, y, str) => {
-      const t = this.add.text(x, y, str, {
-        fontFamily: "monospace", fontSize: labelSize, color: "#ffffff",
-      }).setOrigin(0.5).setAlpha(0.75).setDepth(1);
+      const t = this.add
+        .text(x, y, str, {
+          fontFamily: "monospace",
+          fontSize: labelSize,
+          color: "#ffffff",
+        })
+        .setOrigin(0.5)
+        .setAlpha(0.75)
+        .setDepth(1);
       this.allTextObjs.push(t);
     };
 
@@ -146,27 +174,34 @@ export class MobileControlsScene extends Phaser.Scene {
     const sr = this.speedRocker;
 
     if (!ts.active && this.inRect(pointer.x, pointer.y, ts)) {
-      ts.active = true; ts.pointerId = pointer.id;
+      ts.active = true;
+      ts.pointerId = pointer.id;
       this.moveTurn(pointer.x);
       return;
     }
 
     if (!ar.active && this.inRect(pointer.x, pointer.y, ar)) {
-      ar.active = true; ar.pointerId = pointer.id;
+      ar.active = true;
+      ar.pointerId = pointer.id;
       this.updateRocker(ar, pointer.y);
       return;
     }
 
     if (!sr.active && this.inRect(pointer.x, pointer.y, sr)) {
-      sr.active = true; sr.pointerId = pointer.id;
+      sr.active = true;
+      sr.pointerId = pointer.id;
       this.updateRocker(sr, pointer.y);
       return;
     }
 
     for (const fb of this.fireButtons) {
-      if (!fb.pressed &&
-          Phaser.Math.Distance.Between(pointer.x, pointer.y, fb.x, fb.y) < fb.r * 1.2) {
-        fb.pressed = true; fb.pointerId = pointer.id;
+      if (
+        !fb.pressed &&
+        Phaser.Math.Distance.Between(pointer.x, pointer.y, fb.x, fb.y) <
+          fb.r * 1.2
+      ) {
+        fb.pressed = true;
+        fb.pointerId = pointer.id;
         this.gameScene.mobileInput.fireJustDown = true;
       }
     }
@@ -180,9 +215,12 @@ export class MobileControlsScene extends Phaser.Scene {
   }
 
   onMove(pointer) {
-    if (this.turnSlider.active  && pointer.id === this.turnSlider.pointerId)  this.moveTurn(pointer.x);
-    if (this.altRocker.active   && pointer.id === this.altRocker.pointerId)   this.updateRocker(this.altRocker,   pointer.y);
-    if (this.speedRocker.active && pointer.id === this.speedRocker.pointerId) this.updateRocker(this.speedRocker, pointer.y);
+    if (this.turnSlider.active && pointer.id === this.turnSlider.pointerId)
+      this.moveTurn(pointer.x);
+    if (this.altRocker.active && pointer.id === this.altRocker.pointerId)
+      this.updateRocker(this.altRocker, pointer.y);
+    if (this.speedRocker.active && pointer.id === this.speedRocker.pointerId)
+      this.updateRocker(this.speedRocker, pointer.y);
   }
 
   onUp(pointer) {
@@ -191,20 +229,26 @@ export class MobileControlsScene extends Phaser.Scene {
     const sr = this.speedRocker;
 
     if (ts.active && pointer.id === ts.pointerId) {
-      ts.active = false; ts.pointerId = -1;
+      ts.active = false;
+      ts.pointerId = -1;
       ts.thumbX = ts.cx;
     }
     if (ar.active && pointer.id === ar.pointerId) {
-      ar.active = false; ar.pointerId = -1;
-      ar.pressedUp = false; ar.pressedDown = false;
+      ar.active = false;
+      ar.pointerId = -1;
+      ar.pressedUp = false;
+      ar.pressedDown = false;
     }
     if (sr.active && pointer.id === sr.pointerId) {
-      sr.active = false; sr.pointerId = -1;
-      sr.pressedUp = false; sr.pressedDown = false;
+      sr.active = false;
+      sr.pointerId = -1;
+      sr.pressedUp = false;
+      sr.pressedDown = false;
     }
     for (const fb of this.fireButtons) {
       if (fb.pressed && fb.pointerId === pointer.id) {
-        fb.pressed = false; fb.pointerId = -1;
+        fb.pressed = false;
+        fb.pointerId = -1;
       }
     }
   }
@@ -216,12 +260,16 @@ export class MobileControlsScene extends Phaser.Scene {
   }
 
   inRect(px, py, r) {
-    return px >= r.cx - r.w / 2 && px <= r.cx + r.w / 2 &&
-           py >= r.cy - r.h / 2 && py <= r.cy + r.h / 2;
+    return (
+      px >= r.cx - r.w / 2 &&
+      px <= r.cx + r.w / 2 &&
+      py >= r.cy - r.h / 2 &&
+      py <= r.cy + r.h / 2
+    );
   }
 
   updateRocker(rk, py) {
-    rk.pressedUp   = py <  rk.cy;
+    rk.pressedUp = py < rk.cy;
     rk.pressedDown = py >= rk.cy;
   }
 
@@ -236,23 +284,23 @@ export class MobileControlsScene extends Phaser.Scene {
       const normX = Phaser.Math.Clamp((ts.thumbX - ts.cx) / (ts.w / 2), -1, 1);
       const dead = 0.12;
       mi.turnAmount = Math.abs(normX) > dead ? normX : 0;
-      mi.left  = normX < -dead;
-      mi.right = normX >  dead;
+      mi.left = normX < -dead;
+      mi.right = normX > dead;
     } else {
       mi.left = mi.right = false;
     }
 
     // Alt rocker → up/down (binary, analog form ±1 for consistency)
     const ar = this.altRocker;
-    mi.altUp   = ar.active && ar.pressedUp;
+    mi.altUp = ar.active && ar.pressedUp;
     mi.altDown = ar.active && ar.pressedDown;
     mi.altAmount = mi.altUp ? 1 : mi.altDown ? -1 : 0;
 
     const sr = this.speedRocker;
-    mi.up   = sr.active && sr.pressedUp;
+    mi.up = sr.active && sr.pressedUp;
     mi.down = sr.active && sr.pressedDown;
 
-    mi.fire = this.fireButtons.some(fb => fb.pressed);
+    mi.fire = this.fireButtons.some((fb) => fb.pressed);
 
     this.renderControls();
   }
@@ -294,10 +342,20 @@ export class MobileControlsScene extends Phaser.Scene {
       const cr = rk.w * 0.35;
 
       g.fillStyle(rk.color, rk.pressedUp ? 0.6 : 0.18);
-      g.fillRoundedRect(rx, ry, rk.w, rk.h / 2 + 2, { tl: cr, tr: cr, bl: 0, br: 0 });
+      g.fillRoundedRect(rx, ry, rk.w, rk.h / 2 + 2, {
+        tl: cr,
+        tr: cr,
+        bl: 0,
+        br: 0,
+      });
 
       g.fillStyle(rk.color, rk.pressedDown ? 0.6 : 0.18);
-      g.fillRoundedRect(rx, rk.cy - 2, rk.w, rk.h / 2 + 2, { tl: 0, tr: 0, bl: cr, br: cr });
+      g.fillRoundedRect(rx, rk.cy - 2, rk.w, rk.h / 2 + 2, {
+        tl: 0,
+        tr: 0,
+        bl: cr,
+        br: cr,
+      });
 
       g.lineStyle(2, rk.color, rk.active ? 0.9 : 0.6);
       g.strokeRoundedRect(rx, ry, rk.w, rk.h, cr);
@@ -324,15 +382,25 @@ export class MobileControlsScene extends Phaser.Scene {
     const wr = this.weaponRocker;
     if (wr) {
       const sel = this.gameScene.selectedWeapon;
-      const cr  = wr.h * 0.45;
-      const lx  = wr.cx - wr.w / 2;
-      const ty  = wr.cy - wr.h / 2;
+      const cr = wr.h * 0.45;
+      const lx = wr.cx - wr.w / 2;
+      const ty = wr.cy - wr.h / 2;
 
       g.fillStyle(0xff6600, sel === 1 ? 0.65 : 0.18);
-      g.fillRoundedRect(lx, ty, wr.w / 2 + 2, wr.h, { tl: cr, tr: 0, bl: cr, br: 0 });
+      g.fillRoundedRect(lx, ty, wr.w / 2 + 2, wr.h, {
+        tl: cr,
+        tr: 0,
+        bl: cr,
+        br: 0,
+      });
 
       g.fillStyle(0x44aaff, sel === 2 ? 0.65 : 0.18);
-      g.fillRoundedRect(wr.cx - 2, ty, wr.w / 2 + 2, wr.h, { tl: 0, tr: cr, bl: 0, br: cr });
+      g.fillRoundedRect(wr.cx - 2, ty, wr.w / 2 + 2, wr.h, {
+        tl: 0,
+        tr: cr,
+        bl: 0,
+        br: cr,
+      });
 
       g.lineStyle(2, 0xffffff, 0.5);
       g.strokeRoundedRect(lx, ty, wr.w, wr.h, cr);

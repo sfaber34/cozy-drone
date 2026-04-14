@@ -1,4 +1,4 @@
-import { SCALE, MOBILE_DIALOG_SCALE } from "../constants.js";
+import { SCALE } from "../constants.js";
 import { introLines } from "../dialog.js";
 
 export function playIntroCutscene(scene) {
@@ -63,20 +63,22 @@ export function playIntroCutscene(scene) {
         });
       }
 
-      // Speech bubble — cycles through lines
+      // Speech bubble — cycles through lines. Positioned above the guy's
+      // head with origin (0.5, 1) so its bottom edge anchors above him.
       const introLine =
         introLines[Math.floor(Math.random() * introLines.length)];
-      const introBubbleScale = SCALE * 0.6 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1);
       const bubble = scene.add
-        .text(guyTargetX + 40, guyTargetY - 40, introLine, {
+        .text(guyTargetX, guyTargetY - 20, introLine, {
           fontFamily: "monospace",
           fontSize: "10px",
           color: "#000",
           backgroundColor: "#fff",
           padding: { x: 8, y: 6 },
+          align: "center",
         })
+        .setOrigin(0.5, 1.4)
         .setDepth(13)
-        .setScale(introBubbleScale);
+        .setScale(SCALE * 0.6);
       scene.hudCam.ignore(bubble);
 
       // After a pause, guy walks away
