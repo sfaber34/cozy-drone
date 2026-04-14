@@ -5,6 +5,7 @@ import {
   ANIMAL_FREE_ROAM_RADIUS,
 } from "../constants.js";
 import { steerAroundBuildings } from "./buildingSystem.js";
+import { playAnimalDeathSfxAt } from "./audioSystem.js";
 
 export function createAnimals(scene, rng) {
   // Just initialize the shared array. Individual animal groups (farm corrals,
@@ -175,6 +176,7 @@ export function affectNearbyAnimals(scene, x, y) {
     if (dist < killRadius) {
       // Explode into meat!
       a.state = "dead";
+      playAnimalDeathSfxAt(scene, a.type, a.sprite.x, a.sprite.y);
       a.sprite.setVisible(false);
       const meatCount = Phaser.Math.Between(3, 6);
       for (let m = 0; m < meatCount; m++) {

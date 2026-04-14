@@ -31,7 +31,15 @@ export function initAudio(scene) {
   scene.musicStarted = false;
   scene.currentTrack = null;
   scene.lastTrackKey = null;
-  scene.sfx = { missileLaunch: [], explosion: [], death: [] };
+  scene.sfx = {
+    missileLaunch: [],
+    explosion: [],
+    death: [],
+    pigDeath: [],
+    chickenDeath: [],
+    camelDeath: [],
+    goatDeath: [],
+  };
   scene.sfxVolumes = new Map(); // key → per-sound volume modifier
   scene.lastDeathSfxName = null; // filename stem of the most recently played death SFX
   scene.deathSfxActive = 0;
@@ -51,6 +59,10 @@ export function initAudio(scene) {
     { category: "missileLaunch", path: "/sfx/missileLaunch" },
     { category: "explosion", path: "/sfx/explosion" },
     { category: "death", path: "/sfx/death" },
+    { category: "pigDeath", path: "/sfx/pigDeath" },
+    { category: "chickenDeath", path: "/sfx/chickenDeath" },
+    { category: "camelDeath", path: "/sfx/camelDeath" },
+    { category: "goatDeath", path: "/sfx/goatDeath" },
   ];
 
   const musicFetch = fetch("/music/tracks.json")
@@ -232,6 +244,51 @@ export function playDeathSfxAt(scene, x, y) {
 
     // Track name for HUD display: "sfx-death-death1.mp3" → "death1"
     scene.lastDeathSfxName = key.replace(/^sfx-death-/, "").replace(/\.[^.]+$/, "");
+
+    const sfx = scene.sound.add(key, { volume: finalVolume });
+    sfx.play({ pan });
+    sfx.once("complete", () => {
+      sfx.destroy();
+      scene.deathSfxActive--;
+    });
+  });
+}
+
+// Animal death sfx — mirrors playDeathSfxAt but keyed by animal type.
+// Shares the same DEATH_SFX_MAX_CONCURRENT / STAGGER budget as people deaths
+// so a mass kill (people + animals together) doesn't stack 30 simultaneous
+// sounds. Each type maintains its own recent-cooldown list so variants rotate.
+export function playAnimalDeathSfxAt(scene, type, x, y) {
+  if (scene.deathSfxActive >= DEATH_SFX_MAX_CONCURRENT) return;
+  const categoryKey = `${type}Death`;
+  const keys = scene.sfx[categoryKey];
+  if (!keys || keys.length === 0) return;
+
+  if (!scene.animalDeathSfxRecent) scene.animalDeathSfxRecent = {};
+  if (!scene.animalDeathSfxRecent[categoryKey])
+    scene.animalDeathSfxRecent[categoryKey] = [];
+  const recent = scene.animalDeathSfxRecent[categoryKey];
+
+  scene.deathSfxActive++;
+  const delay = (scene.deathSfxActive - 1) * DEATH_SFX_STAGGER_MS;
+
+  scene.time.delayedCall(delay, () => {
+    let candidates = keys.filter((k) => !recent.includes(k));
+    if (candidates.length === 0) candidates = keys;
+    const key = candidates[Math.floor(Math.random() * candidates.length)];
+    recent.push(key);
+    if (recent.length > DEATH_SFX_COOLDOWN) recent.shift();
+
+    const { volume, pan } = computeSpatialAudio(scene, x, y, DEATH_SFX_VOLUME);
+    const volumeModifier = scene.sfxVolumes.get(key) ?? 1;
+    const finalVolume =
+      Math.max(volume, DEATH_SFX_VOLUME * DEATH_SFX_MIN_VOLUME_FRAC) *
+      volumeModifier;
+
+    // Track for HUD display: "sfx-pigDeath-oink1.mp3" → "oink1"
+    scene.lastAnimalDeathSfxName = key
+      .replace(/^sfx-\w+Death-/, "")
+      .replace(/\.[^.]+$/, "");
 
     const sfx = scene.sound.add(key, { volume: finalVolume });
     sfx.play({ pan });

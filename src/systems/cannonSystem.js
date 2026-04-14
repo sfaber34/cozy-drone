@@ -12,7 +12,7 @@ import {
   CANNON_MUZZLE_ALPHA, CANNON_MUZZLE_ALPHA_RANGE, CANNON_MUZZLE_DRIFT_SPREAD,
   EXPLOSION_VOLUME,
 } from "../constants.js";
-import { playSfxAt, playDeathSfxAt } from "./audioSystem.js";
+import { playSfxAt, playDeathSfxAt, playAnimalDeathSfxAt } from "./audioSystem.js";
 import { killPeopleInBuilding, findNearestBuilding } from "./buildingSystem.js";
 import { ghostLines } from "../dialog.js";
 import { damageBusAt } from "./busSystem.js";
@@ -379,6 +379,7 @@ export function cannonImpact(scene, x, y) {
       a.cannonHits = (a.cannonHits || 0) + 1;
       if (a.cannonHits >= 2) {
         a.state = "dead";
+        playAnimalDeathSfxAt(scene, a.type, a.sprite.x, a.sprite.y);
         a.sprite.setVisible(false);
         const meatCount = Phaser.Math.Between(3, 6);
         for (let m = 0; m < meatCount; m++) {

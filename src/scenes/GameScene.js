@@ -707,10 +707,12 @@ export class GameScene extends Phaser.Scene {
     const weaponNames = { 1: "MSL", 2: "GUN", 3: "CBU" };
     const weaponName = weaponNames[this.selectedWeapon];
     const lastSfx = this.lastDeathSfxName ?? "--";
+    const lastAnimalSfx = this.lastAnimalDeathSfxName ?? "--";
     this.hudText.setText(
       `ALT: ${Math.round(ds.altitude)} ft  SPD: ${spdDisplay} kts  [${weaponName}]\n` +
         `FREEDOMS: ${this.kills}/${this.totalPeople}\n` +
-        lastSfx,
+        `p: ${lastSfx}\n` +
+        `a: ${lastAnimalSfx}`,
     );
 
     // Mission-complete HUD alert (shown once threshold met, hidden during cutscene)
