@@ -139,6 +139,25 @@ export const DRONE_MAX_ALT = 15000; // feet
 export const DRONE_MIN_ALT_OFF_RUNWAY = 500; // floor altitude when not over runway (prevents crash)
 export const DRONE_SHADOW_OPACITY = 0.75; // max shadow alpha at ground level (ramps down with altitude)
 
+// --- Victory cutscene ---
+// Kills needed before landing at the runway triggers the win cutscene.
+// Set to 1 during development; bump to `scene.totalPeople` for real play.
+export const VICTORY_KILL_THRESHOLD = 1;
+export const VICTORY_CROWD_COUNT = 10;
+export const VICTORY_SURROUND_RADIUS = 70; // px — where guys stop around the drone
+export const VICTORY_WALK_SPEED = 80; // px/s running out of the hangar
+export const VICTORY_JUMP_HZ = 2.2; // cheer jump frequency per guy
+export const VICTORY_JUMP_AMP = 10; // px vertical jump amplitude
+export const VICTORY_FRAME_INTERVAL = 140; // ms between guy1/guy2 (or cheer1/cheer2) pose toggles
+export const VICTORY_CELEBRATION_DURATION = 6000; // ms of cheering before modal
+export const VICTORY_EMOJI_INTERVAL_MIN = 120; // ms between emoji spawns
+export const VICTORY_EMOJI_INTERVAL_RANGE = 180;
+export const VICTORY_EMOJI_RISE_DURATION = 1600; // ms
+export const VICTORY_EMOJI_RISE_HEIGHT = 80; // px
+export const VICTORY_EXIT_STAGGER_MS = 180; // ms delay between each guy leaving the hangar
+export const VICTORY_EXIT_JITTER_MS = 120; // extra random ms per guy
+export const VICTORY_DRONE_AVOID_RADIUS = 90; // guys steer around this radius instead of cutting through the drone
+
 // --- Missile ---
 export const MISSILE_SPEED = 280;
 export const MISSILE_TURN_RATE = 5.0;

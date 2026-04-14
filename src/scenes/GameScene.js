@@ -16,6 +16,7 @@ import {
   DRONE_MAX_ALT,
   DRONE_MIN_ALT_OFF_RUNWAY,
   DRONE_SHADOW_OPACITY,
+  VICTORY_KILL_THRESHOLD,
   CAMERA_FOLLOW_LERP,
   MOBILE_ZOOM_FACTOR,
 } from "../constants.js";
@@ -42,6 +43,7 @@ import {
   updateDirtBikers,
 } from "../systems/vehicleSystem.js";
 import { isOnRunway } from "../systems/droneSystem.js";
+import { startVictory } from "../systems/victoryCutscene.js";
 // Set-piece factories — each returns { type, bounds, update, destroy }
 import { createWedding } from "../systems/weddingSetup.js";
 import { createSoccer } from "../systems/soccerSystem.js";
@@ -282,7 +284,28 @@ export class GameScene extends Phaser.Scene {
         backgroundColor: "#000000aa",
         padding: { x: 8, y: 6 },
       })
-      .setDepth(100);
+      .setDepth(100)
+      .setVisible(false); // revealed once intro cutscene finishes
+
+    // Mission-complete alert — shows + slow-flashes once the player has
+    // met VICTORY_KILL_THRESHOLD and is still in the air
+    this.missionCompleteText = this.add
+      .text(10, 0, "MISSION COMPLETE! Return to base!", {
+        fontFamily: "monospace",
+        fontSize: "14px",
+        color: "#ffee66",
+        backgroundColor: "#000000cc",
+        padding: { x: 8, y: 6 },
+      })
+      .setDepth(100)
+      .setVisible(false);
+    this.missionCompleteTween = this.tweens.add({
+      targets: this.missionCompleteText,
+      alpha: { from: 1.0, to: 0.35 },
+      duration: 900,
+      yoyo: true,
+      repeat: -1,
+    });
 
     this.controlsText = this.add
       .text(
@@ -300,10 +323,17 @@ export class GameScene extends Phaser.Scene {
       .setDepth(100);
 
     // Main camera ignores HUD, HUD camera only sees HUD
-    this.cameras.main.ignore([this.hudText, this.controlsText]);
+    this.cameras.main.ignore([
+      this.hudText,
+      this.controlsText,
+      this.missionCompleteText,
+    ]);
     this.hudCam.ignore(
       this.children.list.filter(
-        (child) => child !== this.hudText && child !== this.controlsText,
+        (child) =>
+          child !== this.hudText &&
+          child !== this.controlsText &&
+          child !== this.missionCompleteText,
       ),
     );
 
@@ -397,6 +427,20 @@ export class GameScene extends Phaser.Scene {
     const speedKnots = ds.speed * 0.5;
     const mi = this.mobileInput;
 
+    // --- Victory cutscene active: lock input, pin drone in place ---
+    if (this.victoryActive) {
+      ds.speed = 0;
+      ds.altitude = 0;
+      this.drone.setPosition(ds.x, ds.y);
+      this.droneShadow.setVisible(false);
+      // Keep world + set pieces animating so the celebration runs
+      updateMissiles(this, dt);
+      updatePeople(this, dt, delta);
+      updateAnimals(this, dt);
+      for (const sp of this.setPieces) sp.update(dt, delta);
+      return;
+    }
+
     // --- Input: turn (requires forward speed — can't yaw while stationary) ---
     const kbTurn = this.cursors.left.isDown
       ? -1
@@ -461,6 +505,17 @@ export class GameScene extends Phaser.Scene {
       } else if (ds.altitude < DRONE_MIN_ALT_OFF_RUNWAY) {
         ds.altitude = DRONE_MIN_ALT_OFF_RUNWAY;
       }
+    }
+
+    // --- Victory trigger: enough kills + landed + stopped on runway ---
+    if (
+      !this.victoryActive &&
+      this.kills >= VICTORY_KILL_THRESHOLD &&
+      this.flightState === "grounded" &&
+      ds.speed === 0 &&
+      isOnRunway(this, ds.x, ds.y)
+    ) {
+      startVictory(this);
     }
 
     // --- Move drone ---
@@ -645,22 +700,25 @@ export class GameScene extends Phaser.Scene {
     for (const sp of this.setPieces) sp.update(dt, delta);
 
     // --- HUD ---
+    if (!this.hudText.visible) this.hudText.setVisible(true);
     const spdDisplay = Math.round(speedKnots);
-    let stateLabel = "";
-    if (isGrounded) {
-      stateLabel = ds.speed === 0 ? "PARKED" : "TAXIING";
-      if (speedKnots >= DRONE_TAKEOFF_SPEED)
-        stateLabel = "READY (E to take off)";
-    } else {
-      stateLabel = "";
-    }
     const weaponNames = { 1: "MSL", 2: "GUN", 3: "CBU" };
     const weaponName = weaponNames[this.selectedWeapon];
     const lastSfx = this.lastDeathSfxName ?? "--";
     this.hudText.setText(
       `ALT: ${Math.round(ds.altitude)} ft  SPD: ${spdDisplay} kts  [${weaponName}]\n` +
-        `FREEDOMS: ${this.kills}/${this.totalPeople}  ${stateLabel}\n` +
+        `FREEDOMS: ${this.kills}/${this.totalPeople}\n` +
         lastSfx,
     );
+
+    // Mission-complete HUD alert (shown once threshold met, hidden during cutscene)
+    const missionReady =
+      this.kills >= VICTORY_KILL_THRESHOLD && !this.victoryActive;
+    if (this.missionCompleteText) {
+      this.missionCompleteText.setVisible(missionReady);
+      // Anchor directly under the main HUD block
+      const hudBottom = this.hudText.y + this.hudText.height;
+      this.missionCompleteText.setPosition(10, hudBottom + 4);
+    }
   }
 }

@@ -588,4 +588,70 @@ export function generatePersonTextures(scene) {
   g2.fillRect(3, 11, 2, 2);
   g2.fillRect(6, 12, 2, 2);
   guy2Canvas.refresh();
+
+  // --- Little guy cheer pose 1 (both arms raised high) ---
+  const guyCheer1Canvas = scene.textures.createCanvas('guy-cheer1', 10, 14);
+  const gc1 = guyCheer1Canvas.context;
+  gc1.fillStyle = '#ffcc88';
+  gc1.fillRect(3, 0, 4, 4);
+  gc1.fillStyle = '#553300';
+  gc1.fillRect(3, 0, 4, 1);
+  gc1.fillStyle = '#222';
+  gc1.fillRect(4, 1, 1, 1);
+  gc1.fillRect(6, 1, 1, 1);
+  gc1.fillStyle = '#c44';
+  gc1.fillRect(4, 3, 2, 1); // open-mouth cheer
+  gc1.fillStyle = '#3366cc';
+  gc1.fillRect(3, 4, 4, 5);
+  gc1.fillStyle = '#cc8833';
+  gc1.fillRect(3, 6, 4, 1);
+  // Both arms up high (skin pixels rising from shoulder to fist)
+  gc1.fillStyle = '#ffcc88';
+  gc1.fillRect(2, 4, 1, 1); // left shoulder
+  gc1.fillRect(1, 2, 1, 2); // left upper arm
+  gc1.fillRect(1, 0, 1, 2); // left fist high
+  gc1.fillRect(7, 4, 1, 1); // right shoulder
+  gc1.fillRect(8, 2, 1, 2); // right upper arm
+  gc1.fillRect(8, 0, 1, 2); // right fist high
+  // Legs
+  gc1.fillStyle = '#3366cc';
+  gc1.fillRect(3, 9, 2, 3);
+  gc1.fillRect(5, 9, 2, 3);
+  gc1.fillStyle = '#442200';
+  gc1.fillRect(3, 12, 2, 2);
+  gc1.fillRect(5, 12, 2, 2);
+  guyCheer1Canvas.refresh();
+
+  // --- Little guy cheer pose 2 (arms slightly lower, jumping apart) ---
+  const guyCheer2Canvas = scene.textures.createCanvas('guy-cheer2', 10, 14);
+  const gc2 = guyCheer2Canvas.context;
+  gc2.fillStyle = '#ffcc88';
+  gc2.fillRect(3, 0, 4, 4);
+  gc2.fillStyle = '#553300';
+  gc2.fillRect(3, 0, 4, 1);
+  gc2.fillStyle = '#222';
+  gc2.fillRect(4, 1, 1, 1);
+  gc2.fillRect(6, 1, 1, 1);
+  gc2.fillStyle = '#c44';
+  gc2.fillRect(4, 3, 2, 1);
+  gc2.fillStyle = '#3366cc';
+  gc2.fillRect(3, 4, 4, 5);
+  gc2.fillStyle = '#cc8833';
+  gc2.fillRect(3, 6, 4, 1);
+  // Arms out to the sides (wider V shape)
+  gc2.fillStyle = '#ffcc88';
+  gc2.fillRect(2, 4, 1, 1); // shoulder L
+  gc2.fillRect(1, 3, 1, 2); // upper arm L
+  gc2.fillRect(0, 1, 1, 2); // fist L out
+  gc2.fillRect(7, 4, 1, 1); // shoulder R
+  gc2.fillRect(8, 3, 1, 2); // upper arm R
+  gc2.fillRect(9, 1, 1, 2); // fist R out
+  // Legs — feet apart (jumping)
+  gc2.fillStyle = '#3366cc';
+  gc2.fillRect(2, 9, 2, 3);
+  gc2.fillRect(6, 9, 2, 3);
+  gc2.fillStyle = '#442200';
+  gc2.fillRect(2, 12, 2, 2);
+  gc2.fillRect(6, 12, 2, 2);
+  guyCheer2Canvas.refresh();
 }
