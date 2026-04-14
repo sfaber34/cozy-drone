@@ -1,40 +1,51 @@
-import { TILE, SCALE, WEDDING_X, WEDDING_Y, WEDDING_HEART_INTERVAL } from "../constants.js";
+import { TILE, SCALE, WEDDING_HEART_INTERVAL } from "../constants.js";
 
-export function createWedding(scene, rng) {
-  const weddingX = WEDDING_X * TILE * SCALE;
-  const weddingY = WEDDING_Y * TILE * SCALE;
-  scene.weddingPos = { x: weddingX, y: weddingY };
+/**
+ * Spawn a wedding at the given tile coordinates.
+ * @param {Phaser.Scene} scene
+ * @param {Phaser.Math.RandomDataGenerator} rng
+ * @param {{tileX: number, tileY: number}} opts
+ * @returns {{type: string, bounds: {cx, cy, hw, hh}, update: () => void, destroy: () => void}}
+ */
+export function createWedding(scene, rng, opts) {
+  const { tileX, tileY } = opts;
+  const cx = tileX * TILE * SCALE;
+  const cy = tileY * TILE * SCALE;
+
+  // --- Per-instance state (closure) ---
+  let brideEntry = null;
+  let groomEntry = null;
 
   // Flat desert-colored ground to cover desert props under the wedding
   const groundW = 500;
   const groundH = 350;
   const ground = scene.add.graphics();
   ground.fillStyle(0xd2b48c, 1);
-  ground.fillRect(weddingX - groundW / 2, weddingY - groundH / 2, groundW, groundH);
+  ground.fillRect(cx - groundW / 2, cy - groundH / 2, groundW, groundH);
   ground.setDepth(1.1);
 
   // Wedding rug (aisle)
   for (let r = -2; r <= 2; r++) {
     scene.add
-      .image(weddingX, weddingY + r * 12 * SCALE, "wedding-rug")
+      .image(cx, cy + r * 12 * SCALE, "wedding-rug")
       .setScale(SCALE)
       .setDepth(1.5);
   }
 
   // Wedding arch at the front
   scene.add
-    .image(weddingX, weddingY - 3 * 12 * SCALE, "wedding-arch")
+    .image(cx, cy - 3 * 12 * SCALE, "wedding-arch")
     .setScale(SCALE)
     .setDepth(2);
 
   // Lanterns flanking the aisle
   for (let li = -2; li <= 2; li++) {
     scene.add
-      .image(weddingX - 50, weddingY + li * 40, "lantern")
+      .image(cx - 50, cy + li * 40, "lantern")
       .setScale(SCALE)
       .setDepth(2);
     scene.add
-      .image(weddingX + 50, weddingY + li * 40, "lantern")
+      .image(cx + 50, cy + li * 40, "lantern")
       .setScale(SCALE)
       .setDepth(2);
   }
@@ -43,11 +54,11 @@ export function createWedding(scene, rng) {
   for (let row = 0; row < 4; row++) {
     for (let seat = 0; seat < 5; seat++) {
       scene.add
-        .image(weddingX - 80 - seat * 22, weddingY - 30 + row * 30, "cushion")
+        .image(cx - 80 - seat * 22, cy - 30 + row * 30, "cushion")
         .setScale(SCALE)
         .setDepth(1.5);
       scene.add
-        .image(weddingX + 80 + seat * 22, weddingY - 30 + row * 30, "cushion")
+        .image(cx + 80 + seat * 22, cy - 30 + row * 30, "cushion")
         .setScale(SCALE)
         .setDepth(1.5);
     }
@@ -59,16 +70,16 @@ export function createWedding(scene, rng) {
   const groomSkinId = rng.between(0, 199);
 
   const priestSprite = scene.add
-    .image(weddingX, weddingY - 3 * 12 * SCALE + 20, `person-stand-${priestSkinId}`)
+    .image(cx, cy - 3 * 12 * SCALE + 20, `person-stand-${priestSkinId}`)
     .setScale(SCALE)
     .setDepth(3);
 
   const brideSprite = scene.add
-    .image(weddingX - 25, weddingY - 2 * 12 * SCALE, `person-stand-${brideSkinId}`)
+    .image(cx - 25, cy - 2 * 12 * SCALE, `person-stand-${brideSkinId}`)
     .setScale(SCALE)
     .setDepth(3);
   const groomSprite = scene.add
-    .image(weddingX + 25, weddingY - 2 * 12 * SCALE, `person-stand-${groomSkinId}`)
+    .image(cx + 25, cy - 2 * 12 * SCALE, `person-stand-${groomSkinId}`)
     .setScale(SCALE)
     .setDepth(3);
 
@@ -79,8 +90,9 @@ export function createWedding(scene, rng) {
     callback: () => {
       if (!brideSprite.active || !groomSprite.active) return;
       if (
-        scene.brideEntry.state !== "idle" ||
-        scene.groomEntry.state !== "idle"
+        !brideEntry || !groomEntry ||
+        brideEntry.state !== "idle" ||
+        groomEntry.state !== "idle"
       )
         return;
       const hx = (brideSprite.x + groomSprite.x) / 2;
@@ -109,8 +121,8 @@ export function createWedding(scene, rng) {
   for (let side = -1; side <= 1; side += 2) {
     for (let row = 0; row < 4; row++) {
       for (let seat = 0; seat < 4; seat++) {
-        const gx = weddingX + side * (80 + seat * 22);
-        const gy = weddingY - 30 + row * 30;
+        const gx = cx + side * (80 + seat * 22);
+        const gy = cy - 30 + row * 30;
         const skinId = rng.between(0, 199);
         const sprite = scene.add
           .image(gx, gy, `person-stand-${skinId}`)
@@ -173,6 +185,18 @@ export function createWedding(scene, rng) {
     scene.people.push(entry);
     weddingEntries.push(entry);
   }
-  scene.brideEntry = weddingEntries[0];
-  scene.groomEntry = weddingEntries[1];
+  brideEntry = weddingEntries[0];
+  groomEntry = weddingEntries[1];
+
+  return {
+    type: "wedding",
+    bounds: {
+      cx,
+      cy,
+      hw: groundW / 2,
+      hh: groundH / 2,
+    },
+    update: () => {},
+    destroy() {},
+  };
 }

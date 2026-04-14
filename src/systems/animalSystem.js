@@ -1,127 +1,16 @@
 import Phaser from "phaser";
 import {
-  WORLD_W, WORLD_H, TILE, SCALE, FARM_X, FARM_Y, FLOCK_X, FLOCK_Y,
+  WORLD_W, WORLD_H, TILE, SCALE,
   ANIMAL_KILL_RADIUS, ANIMAL_PANIC_RADIUS, ANIMAL_PANIC_TIMEOUT,
-  ANIMAL_FLOCK_RADIUS, ANIMAL_FREE_ROAM_RADIUS,
-  FLOCK_GOAT_COUNT, FLOCK_SHEPHERD_COUNT,
+  ANIMAL_FREE_ROAM_RADIUS,
 } from "../constants.js";
-import { shepherdGreetings } from "../dialog.js";
 import { steerAroundBuildings } from "./buildingSystem.js";
 
 export function createAnimals(scene, rng) {
+  // Just initialize the shared array. Individual animal groups (farm corrals,
+  // farm-field critters, sheep flock) are spawned by their own set-piece
+  // factories which push into scene.animals.
   scene.animals = [];
-
-  const farmX = FARM_X * TILE * SCALE;
-  const farmY = FARM_Y * TILE * SCALE;
-
-  const corralDefs = [
-    { cx: farmX - 400, cy: farmY - 100, animal: "pig", count: 6 },
-    { cx: farmX - 400, cy: farmY + 120, animal: "chicken", count: 10 },
-    { cx: farmX + 550, cy: farmY - 100, animal: "camel", count: 4 },
-    { cx: farmX + 550, cy: farmY + 120, animal: "goat", count: 6 },
-  ];
-
-  const corralW = 32 * SCALE;
-  const corralH = 24 * SCALE;
-
-  for (const cd of corralDefs) {
-    // Draw the corral fence
-    scene.add.image(cd.cx, cd.cy, "corral").setScale(SCALE).setDepth(1.5);
-
-    // Spawn animals inside
-    for (let a = 0; a < cd.count; a++) {
-      const ax =
-        cd.cx + Phaser.Math.Between(-corralW / 2 + 15, corralW / 2 - 15);
-      const ay =
-        cd.cy + Phaser.Math.Between(-corralH / 2 + 10, corralH / 2 - 10);
-      const sprite = scene.add
-        .image(ax, ay, cd.animal)
-        .setScale(SCALE)
-        .setDepth(2);
-      scene.animals.push({
-        sprite,
-        type: cd.animal,
-        state: "idle", // idle | panicking | dead
-        corral: { x: cd.cx, y: cd.cy, hw: corralW / 2, hh: corralH / 2 },
-        wanderAngle: Math.random() * Math.PI * 2,
-        wanderTimer: 0,
-        wanderDuration: 1 + Math.random() * 3,
-        moving: Math.random() > 0.5,
-        runAngle: 0,
-        panicTimer: 0,
-      });
-    }
-  }
-
-  // ==========================================
-  // GOAT FLOCK WITH SHEPHERDS (right of farm)
-  // ==========================================
-  const flockX = FLOCK_X * TILE * SCALE;
-  const flockY = FLOCK_Y * TILE * SCALE;
-  const flockRadius = ANIMAL_FLOCK_RADIUS;
-
-  // Large goat flock
-  for (let g = 0; g < FLOCK_GOAT_COUNT; g++) {
-    const angle = Math.random() * Math.PI * 2;
-    const dist = Math.random() * flockRadius * 0.8;
-    const gx = flockX + Math.cos(angle) * dist;
-    const gy = flockY + Math.sin(angle) * dist;
-    const sprite = scene.add.image(gx, gy, "goat").setScale(SCALE).setDepth(2);
-    scene.animals.push({
-      sprite,
-      type: "goat",
-      state: "idle",
-      corral: { x: flockX, y: flockY, hw: flockRadius, hh: flockRadius },
-      wanderAngle: Math.random() * Math.PI * 2,
-      wanderTimer: 0,
-      wanderDuration: 1 + Math.random() * 3,
-      moving: Math.random() > 0.5,
-      runAngle: 0,
-      runTimer: 0,
-      runFrame: 0,
-      panicTimer: 0,
-    });
-  }
-
-  // Shepherds (spread around the flock edges)
-  const shepherdPositions = [
-    { x: flockX - 160, y: flockY - 80 },
-    { x: flockX + 170, y: flockY + 60 },
-    { x: flockX - 40, y: flockY + 170 },
-    { x: flockX + 100, y: flockY - 150 },
-    { x: flockX - 180, y: flockY + 80 },
-    { x: flockX + 200, y: flockY - 30 },
-    { x: flockX - 100, y: flockY - 160 },
-    { x: flockX + 50, y: flockY + 190 },
-    { x: flockX - 200, y: flockY - 20 },
-  ].slice(0, FLOCK_SHEPHERD_COUNT);
-  for (const sp of shepherdPositions) {
-    const skinId = rng.between(0, 199); // any skin for shepherds
-    const sprite = scene.add
-      .image(sp.x, sp.y, `person-stand-${skinId}`)
-      .setScale(SCALE)
-      .setDepth(2);
-    scene.people.push({
-      sprite,
-      skinId,
-      state: "idle",
-      greeting: rng.pick(shepherdGreetings),
-      noGreet: false,
-      scatterPanic: true,
-      bubble: null,
-      waveTimer: 0,
-      waveFrame: 0,
-      runAngle: 0,
-      runTimer: 0,
-      runFrame: 0,
-      wanderTimer: 0,
-      wanderDuration: 3 + Math.random() * 4,
-      wanderAngle: Math.random() < 0.5 ? null : Math.random() * Math.PI * 2,
-      hideTarget: null,
-      homeX: sp.x,
-      homeY: sp.y,
-    });
-  }
 }
 
 export function updateAnimals(scene, dt) {

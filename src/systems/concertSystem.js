@@ -1,7 +1,19 @@
+// Concert set piece.
+//
+// Factory pattern — multiple concerts can coexist. Call:
+//   const concert = createConcert(scene, rng, { tileX, tileY });
+//   scene.setPieces.push(concert);
+//   // ... per frame:
+//   concert.update(dt);
+//
+// The returned instance exposes:
+//   { type, bounds, update(dt), destroy() }
+// where `bounds` is a rectangle in world-space px used for dynamic no-go
+// zones / spawn-avoidance. State is kept in closure variables so multiple
+// instances don't collide on scene-level properties.
 import Phaser from "phaser";
 import {
   TILE, SCALE,
-  CONCERT_X, CONCERT_Y,
   CONCERT_STAGE_WIDTH_PX, CONCERT_STAGE_HEIGHT_PX,
   CONCERT_MUSICIAN_COUNT,
   CONCERT_CROWD_COUNT, CONCERT_CROWD_WIDTH_PX, CONCERT_CROWD_HEIGHT_PX,
@@ -31,13 +43,21 @@ const CROWD_GREETINGS = [
   "One more\nsong!", "Louder!", "MOSH!", "YEAH!", "Party!",
   "I know\nthis one!", "My favorite!", "Front row!",
 ];
-
 const CROWD_STATES = ["dancing", "cheering", "wandering"];
 
-export function createConcert(scene, rng) {
-  const cx = CONCERT_X * TILE * SCALE;
-  const cy = CONCERT_Y * TILE * SCALE;
+/**
+ * Spawn a concert at the given tile coordinates.
+ * @param {Phaser.Scene} scene
+ * @param {Phaser.Math.RandomDataGenerator} rng
+ * @param {{tileX: number, tileY: number}} opts
+ * @returns {{type: string, bounds: {cx, cy, hw, hh}, update: (dt: number) => void, destroy: () => void}}
+ */
+export function createConcert(scene, rng, opts) {
+  const { tileX, tileY } = opts;
+  const cx = tileX * TILE * SCALE;
+  const cy = tileY * TILE * SCALE;
 
+  // --- Per-instance state (closure) ---
   const stageHalfW = CONCERT_STAGE_WIDTH_PX  / 2;
   const stageHalfH = CONCERT_STAGE_HEIGHT_PX / 2;
   const stage = {
@@ -47,61 +67,32 @@ export function createConcert(scene, rng) {
     top:    cy - stageHalfH,
     bottom: cy + stageHalfH,
   };
-
-  drawStage(scene, stage);
-
   const crowdHalfW = CONCERT_CROWD_WIDTH_PX  / 2;
   const crowdTop = stage.bottom + CONCERT_CROWD_TOP_GAP_PX;
-  const crowd = {
+  const crowdArea = {
     cx,
     top:    crowdTop,
     bottom: crowdTop + CONCERT_CROWD_HEIGHT_PX,
     left:   cx - crowdHalfW,
     right:  cx + crowdHalfW,
   };
-  scene.concertStage = stage;
-  scene.concertCrowdArea = crowd;
 
-  scene.concertMusicians = [];
-  scene.concertCrowd = [];
+  const musicians = [];
+  const crowd = [];
+  const sprites = []; // static scenery (stage planks, speakers) for destroy()
 
-  spawnMusicians(scene, rng, stage);
-  spawnCrowd(scene, rng, crowd);
-}
+  // --- Build scenery ---
+  drawStage(scene, stage, sprites);
 
-function drawStage(scene, s) {
-  const tile = 16 * SCALE;
-  // Plank surface — tile across stage footprint
-  for (let ty = s.top; ty < s.bottom; ty += tile) {
-    for (let tx = s.left; tx < s.right; tx += tile) {
-      scene.add.image(tx + tile / 2, ty + tile / 2, "stage-plank")
-        .setScale(SCALE).setDepth(1.3);
-    }
-  }
-  // Front lip along the bottom edge of the stage
-  const lipTile = 16 * SCALE;
-  const lipH = 4 * SCALE;
-  for (let tx = s.left; tx < s.right; tx += lipTile) {
-    scene.add.image(tx + lipTile / 2, s.bottom + lipH / 2, "stage-edge")
-      .setScale(SCALE).setDepth(1.35);
-  }
-  // Speakers at corners
-  for (const corner of [[s.left + 12, s.top + 18], [s.right - 12, s.top + 18]]) {
-    scene.add.image(corner[0], corner[1], "stage-speaker")
-      .setScale(SCALE).setDepth(1.8);
-  }
-}
-
-function spawnMusicians(scene, rng, s) {
-  const usableW = CONCERT_STAGE_WIDTH_PX - 60; // leave room for speakers
+  // --- Musicians ---
+  const usableW = CONCERT_STAGE_WIDTH_PX - 60;
   const step = usableW / (CONCERT_MUSICIAN_COUNT - 1);
   for (let i = 0; i < CONCERT_MUSICIAN_COUNT; i++) {
     const role = MUSICIAN_ROLES[i % MUSICIAN_ROLES.length];
-    const px = s.left + 30 + step * i;
-    const py = s.cy - 4; // stand slightly upstage
+    const px = stage.left + 30 + step * i;
+    const py = stage.cy - 4;
     const skinId = rng.between(0, 199);
     const greeting = rng.pick(MUSICIAN_GREETINGS[role]);
-
     const { sprite, personEntry } = createManagedPerson(scene, {
       x: px, y: py, skinId,
       texture: `person-wave1-${skinId}`,
@@ -110,41 +101,23 @@ function spawnMusicians(scene, rng, s) {
       event: "concert",
       flagKey: "isConcertMusician",
     });
-
     const instrument = makeInstrument(scene, role, px, py);
-
-    scene.concertMusicians.push({
-      personEntry,
-      sprite,
-      skinId,
-      role,
-      instrument,
-      noteTimer:
-        Math.random() * (CONCERT_NOTE_INTERVAL_MIN + CONCERT_NOTE_INTERVAL_RANGE),
-      poseTimer: 0,
-      poseFrame: 0,
+    sprites.push(instrument);
+    musicians.push({
+      personEntry, sprite, skinId, role, instrument,
+      noteTimer: Math.random() * (CONCERT_NOTE_INTERVAL_MIN + CONCERT_NOTE_INTERVAL_RANGE),
+      poseTimer: 0, poseFrame: 0,
     });
   }
-}
 
-function makeInstrument(scene, role, px, py) {
-  let tex, offsetX = 0, offsetY = 6, depth = 2.5;
-  if (role === "singer")    { tex = "instr-mic";       offsetX = 0;  offsetY = 2; }
-  if (role === "guitar")    { tex = "instr-guitar";    offsetX = 4;  offsetY = 5; }
-  if (role === "keyboard")  { tex = "instr-keyboard";  offsetX = 0;  offsetY = 10; }
-  if (role === "drums")     { tex = "instr-drums";     offsetX = 0;  offsetY = 12; }
-  return scene.add.image(px + offsetX, py + offsetY, tex)
-    .setScale(SCALE).setDepth(depth);
-}
-
-function spawnCrowd(scene, rng, crowd) {
+  // --- Crowd ---
   const placed = [];
   const minSq = CONCERT_CROWD_MIN_SPACING * CONCERT_CROWD_MIN_SPACING;
   for (let i = 0; i < CONCERT_CROWD_COUNT; i++) {
     let sx = 0, sy = 0;
     for (let tries = 0; tries < CONCERT_CROWD_SPAWN_MAX_TRIES; tries++) {
-      sx = rng.between(crowd.left + 10, crowd.right - 10);
-      sy = rng.between(crowd.top + 10, crowd.bottom - 10);
+      sx = rng.between(crowdArea.left + 10, crowdArea.right - 10);
+      sy = rng.between(crowdArea.top + 10, crowdArea.bottom - 10);
       let ok = true;
       for (const p of placed) {
         const dx = sx - p.x, dy = sy - p.y;
@@ -163,35 +136,89 @@ function spawnCrowd(scene, rng, crowd) {
       flagKey: "isConcertAudience",
     });
 
-    scene.concertCrowd.push({
-      personEntry,
-      sprite,
-      skinId,
-      homeX: sx,
-      homeY: sy,
+    crowd.push({
+      personEntry, sprite, skinId,
+      homeX: sx, homeY: sy,
       state: rng.pick(CROWD_STATES),
-      stateTimer:
-        CONCERT_STATE_SWITCH_MIN + Math.random() * CONCERT_STATE_SWITCH_RANGE,
+      stateTimer: CONCERT_STATE_SWITCH_MIN + Math.random() * CONCERT_STATE_SWITCH_RANGE,
       frameTimer: Math.random() * 500,
       frameIndex: 0,
       bobPhase: Math.random() * Math.PI * 2,
-      walkTargetX: sx,
-      walkTargetY: sy,
-      walkFrameTimer: 0,
-      walkFrame: 0,
+      walkTargetX: sx, walkTargetY: sy,
+      walkFrameTimer: 0, walkFrame: 0,
+      goingHome: false,
     });
+  }
+
+  // --- Instance API ---
+  const instance = {
+    type: "concert",
+    bounds: {
+      // Cover stage + crowd area for no-go / spawn-avoidance purposes
+      cx,
+      cy: (stage.top + crowdArea.bottom) / 2,
+      hw: Math.max(stageHalfW, crowdHalfW),
+      hh: (crowdArea.bottom - stage.top) / 2,
+    },
+    update(dt) {
+      updateMusicians(scene, musicians, dt);
+      updateCrowd(scene, crowdArea, crowd, dt);
+    },
+    destroy() {
+      // Remove scenery sprites; managed people remain in scene.people (they
+      // can still be killed/panicked). Full teardown of people is out of scope
+      // here — add it when a set piece actually needs to disappear mid-game.
+      for (const s of sprites) s.destroy();
+    },
+  };
+  return instance;
+}
+
+// --- Scenery -----------------------------------------------------------------
+
+function drawStage(scene, s, sprites) {
+  const tile = 16 * SCALE;
+  for (let ty = s.top; ty < s.bottom; ty += tile) {
+    for (let tx = s.left; tx < s.right; tx += tile) {
+      sprites.push(
+        scene.add.image(tx + tile / 2, ty + tile / 2, "stage-plank")
+          .setScale(SCALE).setDepth(1.3),
+      );
+    }
+  }
+  const lipTile = 16 * SCALE;
+  const lipH = 4 * SCALE;
+  for (let tx = s.left; tx < s.right; tx += lipTile) {
+    sprites.push(
+      scene.add.image(tx + lipTile / 2, s.bottom + lipH / 2, "stage-edge")
+        .setScale(SCALE).setDepth(1.35),
+    );
+  }
+  for (const corner of [[s.left + 12, s.top + 18], [s.right - 12, s.top + 18]]) {
+    sprites.push(
+      scene.add.image(corner[0], corner[1], "stage-speaker")
+        .setScale(SCALE).setDepth(1.8),
+    );
   }
 }
 
-export function updateConcert(scene, dt) {
-  if (!scene.concertMusicians) return;
+function makeInstrument(scene, role, px, py) {
+  let tex, offsetX = 0, offsetY = 6, depth = 2.5;
+  if (role === "singer")    { tex = "instr-mic";       offsetX = 0;  offsetY = 2; }
+  if (role === "guitar")    { tex = "instr-guitar";    offsetX = 4;  offsetY = 5; }
+  if (role === "keyboard")  { tex = "instr-keyboard";  offsetX = 0;  offsetY = 10; }
+  if (role === "drums")     { tex = "instr-drums";     offsetX = 0;  offsetY = 12; }
+  return scene.add.image(px + offsetX, py + offsetY, tex)
+    .setScale(SCALE).setDepth(depth);
+}
 
-  // --- Musicians: gentle arm pump + music notes ---
-  for (const m of scene.concertMusicians) {
+// --- Update loops ------------------------------------------------------------
+
+function updateMusicians(scene, musicians, dt) {
+  for (const m of musicians) {
     const pe = m.personEntry;
     if (pe.state !== "idle") continue;
 
-    // Toggle between wave1 and wave2 for a "playing" bob
     m.poseTimer -= dt * 1000;
     if (m.poseTimer <= 0) {
       m.poseTimer = 240 + Math.random() * 160;
@@ -208,28 +235,26 @@ export function updateConcert(scene, dt) {
       spawnNote(scene, m.sprite.x, m.sprite.y - 10);
     }
   }
+}
 
-  // --- Crowd: dance / cheer / wander ---
-  const worldDt = dt;
-  for (const c of scene.concertCrowd) {
+function updateCrowd(scene, crowdArea, crowd, dt) {
+  for (const c of crowd) {
     const pe = c.personEntry;
     if (pe.state !== "idle") continue;
 
-    c.stateTimer -= worldDt;
+    c.stateTimer -= dt;
     if (c.stateTimer <= 0) {
       if (c.state === "wandering" && !c.goingHome) {
-        // Don't teleport — walk back to home first, then switch state on arrival
         c.goingHome = true;
         c.walkTargetX = c.homeX;
         c.walkTargetY = c.homeY;
       } else if (c.state !== "wandering") {
-        switchCrowdState(scene, c);
+        switchCrowdState(crowdArea, c);
       }
-      // While wandering & already heading home, just let the walk finish
     }
 
     if (c.state === "dancing") {
-      c.frameTimer -= worldDt * 1000;
+      c.frameTimer -= dt * 1000;
       if (c.frameTimer <= 0) {
         c.frameTimer = CONCERT_DANCE_FRAME_INTERVAL;
         c.frameIndex = 1 - c.frameIndex;
@@ -238,15 +263,14 @@ export function updateConcert(scene, dt) {
         );
         c.sprite.setFlipX(!c.sprite.flipX);
       }
-      c.bobPhase += worldDt * CONCERT_DANCE_BOB_HZ * Math.PI * 2;
+      c.bobPhase += dt * CONCERT_DANCE_BOB_HZ * Math.PI * 2;
       c.sprite.y = c.homeY + Math.sin(c.bobPhase) * CONCERT_DANCE_BOB_AMP;
       c.sprite.x = c.homeX;
     } else if (c.state === "cheering") {
-      c.frameTimer -= worldDt * 1000;
+      c.frameTimer -= dt * 1000;
       if (c.frameTimer <= 0) {
         c.frameTimer = CONCERT_CHEER_FRAME_INTERVAL;
         c.frameIndex = 1 - c.frameIndex;
-        // Cheer = arms up (wave2) then briefly stand (arms reset) — looks like a pump
         c.sprite.setTexture(
           c.frameIndex === 0 ? `person-wave2-${c.skinId}` : `person-stand-${c.skinId}`,
         );
@@ -260,20 +284,19 @@ export function updateConcert(scene, dt) {
       const dist = Math.hypot(dx, dy);
       if (dist < 3) {
         if (c.goingHome) {
-          // Reached home — now safe to switch to dance/cheer (no teleport)
           c.goingHome = false;
           c.sprite.x = c.homeX;
           c.sprite.y = c.homeY;
-          switchCrowdState(scene, c);
+          switchCrowdState(crowdArea, c);
         } else {
-          pickNewWanderTarget(scene, c);
+          pickNewWanderTarget(crowdArea, c);
         }
       } else {
-        const step = CONCERT_WANDER_SPEED * worldDt;
+        const step = CONCERT_WANDER_SPEED * dt;
         c.sprite.x += (dx / dist) * step;
         c.sprite.y += (dy / dist) * step;
         c.sprite.setFlipX(dx < 0);
-        c.walkFrameTimer += worldDt * 1000;
+        c.walkFrameTimer += dt * 1000;
         if (c.walkFrameTimer >= 180) {
           c.walkFrameTimer = 0;
           c.walkFrame = 1 - c.walkFrame;
@@ -286,23 +309,23 @@ export function updateConcert(scene, dt) {
   }
 }
 
-function pickNewWanderTarget(scene, c) {
+function pickNewWanderTarget(crowdArea, c) {
   const hop =
     CONCERT_WANDER_HOP_DIST_MIN + Math.random() * CONCERT_WANDER_HOP_DIST_RANGE;
   const ang = Math.random() * Math.PI * 2;
   c.walkTargetX = Phaser.Math.Clamp(
     c.sprite.x + Math.cos(ang) * hop,
-    scene.concertCrowdArea.left + 10,
-    scene.concertCrowdArea.right - 10,
+    crowdArea.left + 10,
+    crowdArea.right - 10,
   );
   c.walkTargetY = Phaser.Math.Clamp(
     c.sprite.y + Math.sin(ang) * hop,
-    scene.concertCrowdArea.top + 10,
-    scene.concertCrowdArea.bottom - 10,
+    crowdArea.top + 10,
+    crowdArea.bottom - 10,
   );
 }
 
-function switchCrowdState(scene, c) {
+function switchCrowdState(crowdArea, c) {
   const choices = CROWD_STATES.filter((s) => s !== c.state);
   c.state = choices[Math.floor(Math.random() * choices.length)];
   c.stateTimer =
@@ -311,7 +334,7 @@ function switchCrowdState(scene, c) {
   c.frameIndex = 0;
   c.sprite.setFlipX(false);
   c.goingHome = false;
-  if (c.state === "wandering") pickNewWanderTarget(scene, c);
+  if (c.state === "wandering") pickNewWanderTarget(crowdArea, c);
 }
 
 function spawnNote(scene, x, y) {
@@ -325,8 +348,6 @@ function spawnNote(scene, x, y) {
     strokeThickness: 2,
   }).setOrigin(0.5).setDepth(5);
   scene.hudCam.ignore(note);
-
-  // Drift sideways slightly for variety
   const driftX = (Math.random() - 0.5) * 16;
   scene.tweens.add({
     targets: note,

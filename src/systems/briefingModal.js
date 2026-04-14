@@ -31,7 +31,7 @@ export function showBriefingModal(scene, onStart) {
     .text(
       w / 2,
       h * 0.42,
-      "ISR has identified a strong enemy presence within this AO. Enemy combatants will use civilian population as concealment. Prosecute targets of opportunity with extreme prejudice. Weapons hot!\n\n\nAvailable armament:\n- Infinity laser-guided Hellfire missiles\n- Infinity 30 mm anti material cannon\n\n\nRemember: We fight them there so we don't have to fight them at home!",
+      "ISR has identified a strong enemy presence within this AO. Enemy combatants will use civilian population as concealment. Prosecute targets of opportunity with extreme prejudice. Weapons hot!\n\n\nAvailable armament:\n- Infinity laser-guided Hellfire missiles\n- Infinity 30 mm anti material cannon\n\n\nRemember: We fight them here so we don't have to fight them at home!",
       {
         fontFamily: "monospace",
         fontSize: "16px",

@@ -52,7 +52,7 @@ export function createVehicles(scene, rng) {
     do {
       bx = Phaser.Math.Between(500, WORLD_W * TILE * SCALE - 500);
       by = Phaser.Math.Between(500, WORLD_H * TILE * SCALE - 500);
-    } while (isInNoGoZone(bx, by));
+    } while (isInNoGoZone(bx, by, scene));
     const bikeVariant = Phaser.Math.Between(0, 9);
     const sprite = scene.add
       .image(bx, by, `dirtbike-${bikeVariant}`)
@@ -226,34 +226,45 @@ export function updateTownCars(scene, dt) {
   }
 }
 
-function isInNoGoZone(px, py) {
+// Dirt-biker no-go zones come from two sources:
+//   1. Static constants (BIKER_NO_GO_ZONES, tile-space)
+//   2. Runtime set-piece bounds (scene.setPieces[i].bounds, px-space)
+// Helpers below iterate both in px-space.
+function forEachNoGoZonePx(scene, fn) {
   const tilePx = TILE * SCALE;
   for (const zone of BIKER_NO_GO_ZONES) {
-    const zx = zone.x * tilePx;
-    const zy = zone.y * tilePx;
-    const zhw = zone.hw * tilePx;
-    const zhh = zone.hh * tilePx;
-    if (Math.abs(px - zx) < zhw && Math.abs(py - zy) < zhh) return true;
+    fn(zone.x * tilePx, zone.y * tilePx, zone.hw * tilePx, zone.hh * tilePx);
   }
-  return false;
+  if (scene && scene.setPieces) {
+    for (const sp of scene.setPieces) {
+      if (!sp.bounds) continue;
+      fn(sp.bounds.cx, sp.bounds.cy, sp.bounds.hw, sp.bounds.hh);
+    }
+  }
 }
 
-function steerAwayFromZones(px, py, heading, dt) {
-  const tilePx = TILE * SCALE;
+function isInNoGoZone(px, py, scene) {
+  let inside = false;
+  forEachNoGoZonePx(scene, (zx, zy, zhw, zhh) => {
+    if (!inside && Math.abs(px - zx) < zhw && Math.abs(py - zy) < zhh) inside = true;
+  });
+  return inside;
+}
+
+function steerAwayFromZones(px, py, heading, dt, scene) {
   const checkDist = 100;
   const nx = px + Math.cos(heading) * checkDist;
   const ny = py + Math.sin(heading) * checkDist;
-  for (const zone of BIKER_NO_GO_ZONES) {
-    const zx = zone.x * tilePx;
-    const zy = zone.y * tilePx;
-    const zhw = zone.hw * tilePx;
-    const zhh = zone.hh * tilePx;
+  let newHeading = heading;
+  let steered = false;
+  forEachNoGoZonePx(scene, (zx, zy, zhw, zhh) => {
+    if (steered) return;
     if (Math.abs(nx - zx) < zhw + 50 && Math.abs(ny - zy) < zhh + 50) {
-      // Steer away from zone center
-      return Phaser.Math.Angle.Between(zx, zy, px, py);
+      newHeading = Phaser.Math.Angle.Between(zx, zy, px, py);
+      steered = true;
     }
-  }
-  return heading;
+  });
+  return newHeading;
 }
 
 export function updateDirtBikers(scene, dt, delta) {
@@ -294,7 +305,7 @@ export function updateDirtBikers(scene, dt, delta) {
         bk.targetX = Phaser.Math.Between(margin, worldW - margin);
         bk.targetY = Phaser.Math.Between(margin, worldH - margin);
         tries++;
-      } while (isInNoGoZone(bk.targetX, bk.targetY) && tries < 20);
+      } while (isInNoGoZone(bk.targetX, bk.targetY, scene) && tries < 20);
     }
 
     // Steer toward target, avoiding buildings
@@ -320,7 +331,7 @@ export function updateDirtBikers(scene, dt, delta) {
     );
 
     // Steer away from no-go zones
-    bk.heading = steerAwayFromZones(bk.sprite.x, bk.sprite.y, bk.heading, dt);
+    bk.heading = steerAwayFromZones(bk.sprite.x, bk.sprite.y, bk.heading, dt, scene);
 
     // Move
     bk.sprite.x += Math.cos(bk.heading) * bk.speed * dt;

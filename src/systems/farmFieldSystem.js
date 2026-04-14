@@ -1,7 +1,6 @@
 import Phaser from "phaser";
 import {
   TILE, SCALE,
-  FARM_FIELD_X, FARM_FIELD_Y,
   FARM_FIELD_WIDTH_PX, FARM_FIELD_HEIGHT_PX,
   FARM_FIELD_TRACTOR_COUNT,
   FARM_FIELD_TRACTOR_SPEED,
@@ -35,28 +34,45 @@ const PICKER_GREETINGS = [
   "Basket's\nfull!", "Yalla!",
 ];
 
-export function createFarmField(scene, rng) {
-  const cx = FARM_FIELD_X * TILE * SCALE;
-  const cy = FARM_FIELD_Y * TILE * SCALE;
+/**
+ * Spawn a farm field at the given tile coordinates.
+ * @param {Phaser.Scene} scene
+ * @param {Phaser.Math.RandomDataGenerator} rng
+ * @param {{tileX: number, tileY: number}} opts
+ * @returns {{type: string, bounds: {cx, cy, hw, hh}, update: (dt: number) => void, destroy: () => void}}
+ */
+export function createFarmField(scene, rng, opts) {
+  const { tileX, tileY } = opts;
+  const cx = tileX * TILE * SCALE;
+  const cy = tileY * TILE * SCALE;
   const halfW = FARM_FIELD_WIDTH_PX / 2;
   const halfH = FARM_FIELD_HEIGHT_PX / 2;
 
-  scene.farmField = {
+  // --- Per-instance state (closure) ---
+  const field = {
     cx, cy, halfW, halfH,
     left:   cx - halfW,
     right:  cx + halfW,
     top:    cy - halfH,
     bottom: cy + halfH,
   };
+  const tractors = [];
+  const pickers  = [];
 
-  drawFieldTiles(scene, rng, scene.farmField);
+  drawFieldTiles(scene, rng, field);
+  spawnTractors(scene, rng, field, tractors);
+  spawnPickers(scene, rng, field, pickers);
+  spawnFarmAnimals(scene, rng, field);
 
-  scene.farmTractors = [];
-  scene.farmPickers  = [];
-
-  spawnTractors(scene, rng, scene.farmField);
-  spawnPickers(scene, rng, scene.farmField);
-  spawnFarmAnimals(scene, rng, scene.farmField);
+  return {
+    type: "farmField",
+    bounds: { cx, cy, hw: halfW, hh: halfH },
+    update(dt) {
+      for (const t of tractors) updateTractor(scene, t, dt);
+      for (const p of pickers)  updatePicker (scene, p, dt, field);
+    },
+    destroy() {},
+  };
 }
 
 function drawFieldTiles(scene, rng, f) {
@@ -71,11 +87,9 @@ function drawFieldTiles(scene, rng, f) {
   }
 }
 
-function spawnTractors(scene, rng, f) {
+function spawnTractors(scene, rng, f, tractors) {
   const stripW = (f.right - f.left) / FARM_FIELD_TRACTOR_COUNT;
   const rowsPerStrip = FARM_FIELD_TRACTOR_ROWS_PER_STRIP;
-  // Rows are evenly spaced inside the strip, with padding so a wheel doesn't
-  // clip into the neighbor's strip.
   const rowMargin = stripW * 0.1;
   const rowSpan = stripW - 2 * rowMargin;
   const rowStep = rowsPerStrip > 1 ? rowSpan / (rowsPerStrip - 1) : 0;
@@ -85,7 +99,7 @@ function spawnTractors(scene, rng, f) {
     const startRow = rng.between(0, rowsPerStrip - 1);
     const rowX = stripLeft + rowMargin + startRow * rowStep;
     const startY = rng.pick([f.top + 30, f.bottom - 30]);
-    const direction = startY > f.cy ? -1 : 1; // head toward the far end
+    const direction = startY > f.cy ? -1 : 1;
 
     const sprite = scene.add.image(rowX, startY, "tractor")
       .setScale(SCALE).setDepth(2);
@@ -115,7 +129,7 @@ function spawnTractors(scene, rng, f) {
     };
     scene.people.push(driverEntry);
 
-    scene.farmTractors.push({
+    tractors.push({
       sprite,
       driver: driverEntry,
       driving: true,
@@ -125,11 +139,11 @@ function spawnTractors(scene, rng, f) {
       rowStep,
       rowCount: rowsPerStrip,
       rowIndex: startRow,
-      rowDir: Math.random() < 0.5 ? -1 : 1, // next-row step direction
+      rowDir: Math.random() < 0.5 ? -1 : 1,
       fieldTop: f.top + 30,
       fieldBottom: f.bottom - 30,
-      direction, // +1 moving south, -1 moving north
-      phase: "straight", // "straight" | "turning"
+      direction,
+      phase: "straight",
       turnT: 0,
       turnFromX: 0, turnToX: 0,
       turnEdgeY: 0,
@@ -139,7 +153,7 @@ function spawnTractors(scene, rng, f) {
   }
 }
 
-function spawnPickers(scene, rng, f) {
+function spawnPickers(scene, rng, f, pickers) {
   for (let i = 0; i < FARM_FIELD_PICKER_COUNT; i++) {
     const sx = rng.between(f.left + 24, f.right - 24);
     const sy = rng.between(f.top + 24, f.bottom - 24);
@@ -178,7 +192,7 @@ function spawnPickers(scene, rng, f) {
       skinId,
       basket,
       stalk,
-      task: "picking", // start picking on the spot they spawned on
+      task: "picking",
       pickTimer: Math.random() * (FARM_FIELD_PICKER_PICK_DURATION_MIN + FARM_FIELD_PICKER_PICK_DURATION_RANGE),
       pickTotal: FARM_FIELD_PICKER_PICK_DURATION_MIN + Math.random() * FARM_FIELD_PICKER_PICK_DURATION_RANGE,
       walkFrame: 0,
@@ -186,7 +200,7 @@ function spawnPickers(scene, rng, f) {
       targetX: sx,
       targetY: sy,
     };
-    scene.farmPickers.push(picker);
+    pickers.push(picker);
   }
 }
 
@@ -210,14 +224,7 @@ function spawnFarmAnimals(scene, rng, f) {
   spawn("pig",     FARM_FIELD_ANIMAL_PIGS);
   spawn("chicken", FARM_FIELD_ANIMAL_CHICKENS);
   spawn("camel",   FARM_FIELD_ANIMAL_CAMELS);
-  spawn("goat",    FARM_FIELD_ANIMAL_SHEEP); // goat stands in for sheep
-}
-
-export function updateFarmField(scene, dt) {
-  if (!scene.farmTractors) return;
-
-  for (const t of scene.farmTractors) updateTractor(scene, t, dt);
-  for (const p of scene.farmPickers)  updatePicker (scene, p, dt);
+  spawn("goat",    FARM_FIELD_ANIMAL_SHEEP);
 }
 
 // --- Tractor -----------------------------------------------------------------
@@ -226,7 +233,6 @@ function updateTractor(scene, t, dt) {
   const d = t.driver;
 
   if (!t.driving) {
-    // Parked; driver may be panicking or walking back
     if (d.state === "idle") {
       const dx = d.sprite.x - t.sprite.x;
       const dy = d.sprite.y - t.sprite.y;
@@ -240,11 +246,9 @@ function updateTractor(scene, t, dt) {
   }
 
   if (t.phase === "straight") {
-    // Drive straight along the current row
     t.sprite.y += t.direction * FARM_FIELD_TRACTOR_SPEED * dt;
     t.sprite.setAngle(t.direction === 1 ? 180 : 0);
 
-    // Reached the end of the strip — begin U-turn to next row
     if (t.direction === 1 && t.sprite.y >= t.fieldBottom) {
       beginTurn(t, t.fieldBottom);
     } else if (t.direction === -1 && t.sprite.y <= t.fieldTop) {
@@ -252,25 +256,18 @@ function updateTractor(scene, t, dt) {
     }
     spawnDust(scene, t, dt);
   } else {
-    // "turning" — lerp X across to the next row, arc out from the edge
     t.turnT += dt / FARM_FIELD_TRACTOR_TURN_DURATION;
     const tt = Math.min(1, t.turnT);
-    // Smooth the X lerp with an ease-in-out
     const ex = tt < 0.5 ? 2 * tt * tt : 1 - Math.pow(-2 * tt + 2, 2) / 2;
     t.sprite.x = t.turnFromX + (t.turnToX - t.turnFromX) * ex;
-    // Arc bulge outward (past the edge, then back in)
     const arc = Math.sin(Math.PI * tt) * FARM_FIELD_TRACTOR_TURN_ARC;
     const outward = t.turnEdgeY === t.fieldBottom ? 1 : -1;
     t.sprite.y = t.turnEdgeY + outward * arc;
-    // Rotate smoothly from entry angle to exit angle
-    const fromAngle = t.turnExitDir === 1 ? 0   : 180; // angle we had coming in = opposite of exit
-    const toAngle   = t.turnExitDir === 1 ? 180 : 0;
-    // Sweep the short way (+180)
+    const fromAngle = t.turnExitDir === 1 ? 0   : 180;
     const sweep = t.turnExitDir === 1 ? 180 : -180;
     t.sprite.setAngle(fromAngle + sweep * tt);
 
     if (tt >= 1) {
-      // Finish turn; drop to straight phase in the new direction
       t.phase = "straight";
       t.sprite.x = t.turnToX;
       t.sprite.y = t.turnEdgeY;
@@ -279,7 +276,6 @@ function updateTractor(scene, t, dt) {
     }
   }
 
-  // Driver rides along
   d.sprite.x = t.sprite.x;
   d.sprite.y = t.sprite.y - 2;
   d.sprite.setDepth(2.5);
@@ -294,7 +290,6 @@ function updateTractor(scene, t, dt) {
 }
 
 function beginTurn(t, edgeY) {
-  // Advance to the next row; bounce rowDir at strip edges
   let nextIndex = t.rowIndex + t.rowDir;
   if (nextIndex < 0 || nextIndex >= t.rowCount) {
     t.rowDir = -t.rowDir;
@@ -315,9 +310,7 @@ function spawnDust(scene, t, dt) {
   if (t.dustTimer > 0) return;
   t.dustTimer = FARM_FIELD_TRACTOR_DUST_INTERVAL * (0.75 + Math.random() * 0.5);
 
-  // Rear of tractor = opposite of travel direction. At angle 0 (facing up),
-  // rear is below (+y). At angle 180, rear is above (-y).
-  const rearOffset = t.direction === 1 ? -10 : 10; // tractor's tail in world y
+  const rearOffset = t.direction === 1 ? -10 : 10;
   const px = t.sprite.x + Phaser.Math.Between(-5, 5);
   const py = t.sprite.y + rearOffset + Phaser.Math.Between(-3, 3);
 
@@ -341,13 +334,11 @@ function spawnDust(scene, t, dt) {
 
 // --- Pickers -----------------------------------------------------------------
 
-function updatePicker(scene, p, dt) {
+function updatePicker(scene, p, dt, field) {
   const pe = p.personEntry;
 
-  // Hide stalk / pause tasks during panic & returning
   if (pe.state !== "idle") {
     if (p.stalk.visible) p.stalk.setVisible(false);
-    // Still park the basket at the picker
     if (p.basket) p.basket.setPosition(pe.sprite.x - 6, pe.sprite.y + 2);
     return;
   }
@@ -355,10 +346,9 @@ function updatePicker(scene, p, dt) {
   if (p.task === "walking") {
     walkPicker(p, dt);
   } else {
-    pickPicker(p, dt);
+    pickPicker(p, dt, field);
   }
 
-  // Basket always follows on the picker's left hip
   if (p.basket) p.basket.setPosition(pe.sprite.x - 6, pe.sprite.y + 2);
 }
 
@@ -369,7 +359,6 @@ function walkPicker(p, dt) {
   const dist = Math.hypot(dx, dy);
 
   if (dist < 3) {
-    // Arrived — begin picking
     p.task = "picking";
     p.pickTotal =
       FARM_FIELD_PICKER_PICK_DURATION_MIN +
@@ -384,10 +373,8 @@ function walkPicker(p, dt) {
   pe.sprite.x += (dx / dist) * step;
   pe.sprite.y += (dy / dist) * step;
 
-  // Face the direction of travel
   pe.sprite.setFlipX(dx < 0);
 
-  // Run-frame anim
   p.walkTimer += dt * 1000;
   if (p.walkTimer >= 180) {
     p.walkTimer = 0;
@@ -397,18 +384,13 @@ function walkPicker(p, dt) {
     );
   }
 
-  // Stalk is not held while walking — it's been deposited in the basket
   p.stalk.setVisible(false);
 }
 
-function pickPicker(p, dt) {
+function pickPicker(p, dt, field) {
   const pe = p.personEntry;
   p.pickTimer -= dt;
 
-  // Pick-animation cycle: 3 phases across p.pickTotal
-  // 0 → 1/3: reach down (wave1 with stalk low)
-  // 1/3 → 2/3: lift up (wave2 with stalk high)
-  // 2/3 → end: deposit (stand, stalk gone)
   const elapsed = p.pickTotal - p.pickTimer;
   const phase = elapsed / p.pickTotal;
 
@@ -419,12 +401,10 @@ function pickPicker(p, dt) {
   } else if (phase < 2 / 3) {
     pe.sprite.setTexture(`person-wave2-${p.skinId}`);
     p.stalk.setVisible(true);
-    // Lerp stalk upward toward the hand
     const subT = (phase - 1 / 3) / (1 / 3);
     p.stalk.setPosition(pe.sprite.x + 8, pe.sprite.y + 3 - subT * 10);
   } else {
     pe.sprite.setTexture(`person-stand-${p.skinId}`);
-    // Drop the stalk "into" the basket (left hip)
     p.stalk.setVisible(true);
     const subT = (phase - 2 / 3) / (1 / 3);
     const dropX = pe.sprite.x + (8 - subT * 14);
@@ -434,15 +414,11 @@ function pickPicker(p, dt) {
   }
 
   if (p.pickTimer <= 0) {
-    // Move on to a new spot within the field
-    const f = p.personEntry && p.personEntry.sprite ? null : null; // keep lint calm
-    const field = p.basket.scene.farmField;
     const hop =
       FARM_FIELD_PICKER_HOP_DIST_MIN + Math.random() * FARM_FIELD_PICKER_HOP_DIST_RANGE;
     const angle = Math.random() * Math.PI * 2;
     let nx = pe.sprite.x + Math.cos(angle) * hop;
     let ny = pe.sprite.y + Math.sin(angle) * hop;
-    // Clamp to field bounds
     nx = Phaser.Math.Clamp(nx, field.left + 24, field.right - 24);
     ny = Phaser.Math.Clamp(ny, field.top + 24, field.bottom - 24);
     p.targetX = nx;

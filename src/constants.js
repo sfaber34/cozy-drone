@@ -5,40 +5,11 @@ export const TILE = 16; // tile size in pixels
 export const SCALE = 3; // pixel art scale multiplier
 export const MOAT_TILES = 30; // water tiles surrounding the map on every side
 
-// --- Map element positions (in tiles — multiply by TILE * SCALE for px) ---
-// Change x/y to move an entire group (all props + people) together
+// Set-piece positions are passed at call-time now:
+//   scene.setPieces.push(createX(scene, rng, { tileX, tileY }))
+// Per-setpiece BALANCE knobs live below; the positions live in GameScene.
 
-// Town — NW quadrant, grid of roads + buildings + bazaar
-export const TOWN_X = 2;
-export const TOWN_Y = 2;
-
-// Farm compound — NE area, single farm with buildings + corrals
-export const FARM_X = 112;
-export const FARM_Y = 40;
-
-// Goat flock + shepherds — open desert east of farm
-export const FLOCK_X = 152;
-export const FLOCK_Y = 40;
-
-// Oilfield — large grid of wells + tanks + pipes, below farm
-export const OIL_X = 117;
-export const OIL_Y = 57;
-
-// Wedding — ceremony in the desert with bride/groom/guests
-export const WEDDING_X = 150;
-export const WEDDING_Y = 120;
-
-// Soccer game — field with teams + spectators
-export const SOCCER_X = 160;
-export const SOCCER_Y = 80;
-
-// Airfield — runway + hangar + taxiway, center of map
-export const AIRFIELD_X = 100;
-export const AIRFIELD_Y = 100;
-
-// Farm field — left of runway, worked by tractors + pickers with roaming animals
-export const FARM_FIELD_X = 76; // tile (center)
-export const FARM_FIELD_Y = 100; // tile (center)
+// Farm field — size/counts only (position via tileX/tileY)
 export const FARM_FIELD_WIDTH_PX = 900; // field width (px)
 export const FARM_FIELD_HEIGHT_PX = 1200; // field height (px)
 export const FARM_FIELD_TRACTOR_COUNT = 3;
@@ -63,58 +34,51 @@ export const FARM_FIELD_ANIMAL_CAMELS = 3;
 export const FARM_FIELD_ANIMAL_SHEEP = 6; // uses goat texture as a sheep stand-in
 
 // Concert — stage with a 4-piece band and a dancing/cheering/wandering crowd
-export const CONCERT_X = 76;  // tile (center) — above farm field
-export const CONCERT_Y = 62;  // tile (center)
-export const CONCERT_STAGE_WIDTH_PX  = 320;
+// NOTE: no X/Y constants — concert is placed via createConcert(scene, rng, { tileX, tileY })
+export const CONCERT_STAGE_WIDTH_PX = 320;
 export const CONCERT_STAGE_HEIGHT_PX = 80;
 export const CONCERT_MUSICIAN_COUNT = 4; // singer, guitarist, keyboardist, drummer
-export const CONCERT_CROWD_COUNT = 55;
-export const CONCERT_CROWD_WIDTH_PX  = 420;
+export const CONCERT_CROWD_COUNT = 30;
+export const CONCERT_CROWD_WIDTH_PX = 420;
 export const CONCERT_CROWD_HEIGHT_PX = 260;
 export const CONCERT_CROWD_TOP_GAP_PX = 24; // gap between stage and crowd
 export const CONCERT_CROWD_MIN_SPACING = 14; // anti-stack min px between crowd members
 export const CONCERT_CROWD_SPAWN_MAX_TRIES = 30;
 // Music note emojis rising from each musician
-export const CONCERT_NOTE_INTERVAL_MIN   = 700; // ms between spawns per musician
+export const CONCERT_NOTE_INTERVAL_MIN = 700; // ms between spawns per musician
 export const CONCERT_NOTE_INTERVAL_RANGE = 600;
-export const CONCERT_NOTE_RISE_HEIGHT = 48;     // px the note floats upward
+export const CONCERT_NOTE_RISE_HEIGHT = 48; // px the note floats upward
 export const CONCERT_NOTE_RISE_DURATION = 1800; // ms
 // Dance / cheer / wander state
-export const CONCERT_STATE_SWITCH_MIN   = 5;  // seconds between crowd-member state flips
+export const CONCERT_STATE_SWITCH_MIN = 5; // seconds between crowd-member state flips
 export const CONCERT_STATE_SWITCH_RANGE = 8;
 export const CONCERT_DANCE_FRAME_INTERVAL = 260; // ms between dance frames
-export const CONCERT_DANCE_BOB_HZ  = 2.0;        // bob-up-down frequency (Hz)
-export const CONCERT_DANCE_BOB_AMP = 2;          // px bob amplitude
+export const CONCERT_DANCE_BOB_HZ = 2.0; // bob-up-down frequency (Hz)
+export const CONCERT_DANCE_BOB_AMP = 2; // px bob amplitude
 export const CONCERT_CHEER_FRAME_INTERVAL = 360; // ms
-export const CONCERT_WANDER_SPEED = 16;          // px/s while wandering
-export const CONCERT_WANDER_HOP_DIST_MIN   = 25;
+export const CONCERT_WANDER_SPEED = 16; // px/s while wandering
+export const CONCERT_WANDER_HOP_DIST_MIN = 25;
 export const CONCERT_WANDER_HOP_DIST_RANGE = 60;
 
-// Chicken fight — cockfighting ring with spectators
-export const CHICKEN_FIGHT_X = 115;
-export const CHICKEN_FIGHT_Y = 108;
+// Chicken fight — cockfighting ring with spectators (position via tileX/tileY)
 export const CHICKEN_FIGHT_SPECTATORS = 30; // number of spectators around the ring
 export const CHICKEN_FIGHT_SPEED = 60; // how fast the fighting chickens move (px/s)
 export const CHICKEN_FIGHT_DIRECTION_CHANGE = 0.3; // seconds between direction changes
 
-// Camel race — oval track with racing camels + spectators
-export const CAMEL_RACE_X = 115;
-export const CAMEL_RACE_Y = 98;
+// Camel race — oval track with racing camels + spectators (position via tileX/tileY)
 export const CAMEL_RACE_CAMELS = 6; // number of racing camels
 export const CAMEL_RACE_SPECTATORS = 30; // spectators around the track
 export const CAMEL_RACE_SPEED_MIN = 50; // slowest camel (px/s)
 export const CAMEL_RACE_SPEED_RANGE = 40; // speed variance (total max = MIN + RANGE)
 
-// Rock fight — two opposing groups of people throwing pixel rocks
-export const ROCK_FIGHT_X = 115;
-export const ROCK_FIGHT_Y = 85; // above camel race (y=98)
+// Rock fight — two opposing groups of people throwing pixel rocks (position via tileX/tileY)
 export const ROCK_FIGHT_GROUP_SIZE = 20; // people per group (two groups face each other)
 export const ROCK_FIGHT_GROUP_SPACING = 220; // gap between the two groups (px)
 export const ROCK_FIGHT_GROUP_WIDTH = 200; // horizontal spread of each group (px)
 export const ROCK_FIGHT_GROUP_DEPTH = 340; // vertical spread of each group (px)
-export const ROCK_FIGHT_THROW_INTERVAL_MIN = 20.0; // min seconds between throws per person
-export const ROCK_FIGHT_THROW_INTERVAL_RANGE = 45.0; // random range added (total max = MIN + RANGE)
-export const ROCK_FIGHT_ROCK_SPEED = 160; // rock horizontal travel speed (px/s)
+export const ROCK_FIGHT_THROW_INTERVAL_MIN = 16.0; // min seconds between throws per person
+export const ROCK_FIGHT_THROW_INTERVAL_RANGE = 40.0; // random range added (total max = MIN + RANGE)
+export const ROCK_FIGHT_ROCK_SPEED = 200; // rock horizontal travel speed (px/s)
 export const ROCK_FIGHT_ROCK_ARC_HEIGHT = 40; // parabolic arc peak height (px)
 export const ROCK_FIGHT_WINDUP_DURATION = 0.35; // seconds of arm-cocked-back windup before release
 export const ROCK_FIGHT_THROW_POSE_DURATION = 0.58; // seconds the thrower holds the release pose after the rock flies
@@ -126,21 +90,10 @@ export const ROCK_FIGHT_MIN_SPACING = 14; // min world px between any two rock-f
 export const ROCK_FIGHT_SPAWN_MAX_TRIES = 30; // attempts to find a non-overlapping spot before giving up
 
 // --- Dirt biker no-go zones (in tiles — center x, center y, half-width, half-height) ---
-// Bikers steer around these areas to stay in open desert
-export const BIKER_NO_GO_ZONES = [
-  { x: TOWN_X + 30, y: TOWN_Y + 30, hw: 35, hh: 35 }, // Town
-  { x: FARM_X, y: FARM_Y, hw: 15, hh: 10 }, // Farm compound
-  { x: FLOCK_X, y: FLOCK_Y, hw: 15, hh: 15 }, // Goat flock
-  { x: OIL_X, y: OIL_Y, hw: 20, hh: 15 }, // Oilfield
-  { x: WEDDING_X, y: WEDDING_Y, hw: 8, hh: 8 }, // Wedding
-  { x: SOCCER_X, y: SOCCER_Y, hw: 10, hh: 8 }, // Soccer
-  { x: AIRFIELD_X, y: AIRFIELD_Y, hw: 12, hh: 20 }, // Airfield
-  { x: CHICKEN_FIGHT_X, y: CHICKEN_FIGHT_Y, hw: 5, hh: 5 }, // Chicken fight
-  { x: CAMEL_RACE_X, y: CAMEL_RACE_Y, hw: 8, hh: 6 }, // Camel race
-  { x: FARM_FIELD_X, y: FARM_FIELD_Y, hw: 12, hh: 15 }, // Farm field
-  { x: CONCERT_X, y: CONCERT_Y, hw: 9, hh: 7 }, // Concert
-  { x: ROCK_FIGHT_X, y: ROCK_FIGHT_Y, hw: 10, hh: 8 }, // Rock fight
-];
+// Set-piece instances publish their own bounds via `scene.setPieces[i].bounds`,
+// which vehicleSystem merges at runtime. Anything added here is for no-go zones
+// that are NOT set pieces (e.g. map-wide hazards).
+export const BIKER_NO_GO_ZONES = [];
 
 // --- Music ---
 export const MUSIC_VOLUME = 0.4; // background music volume (0-1)

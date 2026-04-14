@@ -4,8 +4,6 @@ import {
   WORLD_H,
   TILE,
   SCALE,
-  AIRFIELD_X,
-  AIRFIELD_Y,
   DRONE_TURN_RATE,
   DRONE_ACCEL,
   DRONE_MIN_SPEED_AIRBORNE,
@@ -30,11 +28,8 @@ import {
 } from "../systems/audioSystem.js";
 import { playIntroCutscene } from "../systems/introSystem.js";
 import { showBriefingModal } from "../systems/briefingModal.js";
-import { createWedding } from "../systems/weddingSetup.js";
-import { createSoccer, updateSoccer } from "../systems/soccerSystem.js";
 import { createBuildings } from "../systems/buildingSystem.js";
 import { createAnimals, updateAnimals } from "../systems/animalSystem.js";
-import { createOilfield, updateOilWells } from "../systems/oilfieldSystem.js";
 import { fireMissile, updateMissiles } from "../systems/missileSystem.js";
 import {
   createPeople,
@@ -47,27 +42,19 @@ import {
   updateDirtBikers,
 } from "../systems/vehicleSystem.js";
 import { isOnRunway } from "../systems/droneSystem.js";
-import {
-  createChickenFight,
-  updateChickenFight,
-} from "../systems/chickenFightSystem.js";
-import {
-  createCamelRace,
-  updateCamelRace,
-} from "../systems/camelRaceSystem.js";
-import {
-  createRockFight,
-  updateRockFight,
-} from "../systems/rockFightSystem.js";
-import {
-  createFarmField,
-  updateFarmField,
-} from "../systems/farmFieldSystem.js";
-import {
-  createConcert,
-  updateConcert,
-} from "../systems/concertSystem.js";
-import { createBusRoute, updateBusSystem } from "../systems/busSystem.js";
+// Set-piece factories — each returns { type, bounds, update, destroy }
+import { createWedding } from "../systems/weddingSetup.js";
+import { createSoccer } from "../systems/soccerSystem.js";
+import { createOilfield } from "../systems/oilfieldSystem.js";
+import { createChickenFight } from "../systems/chickenFightSystem.js";
+import { createCamelRace } from "../systems/camelRaceSystem.js";
+import { createRockFight } from "../systems/rockFightSystem.js";
+import { createFarmField } from "../systems/farmFieldSystem.js";
+import { createConcert } from "../systems/concertSystem.js";
+import { createAirfield } from "../systems/airfieldSystem.js";
+import { createTown } from "../systems/townSystem.js";
+import { createFarmCompound } from "../systems/farmCompoundSystem.js";
+import { createSheepFlock } from "../systems/sheepFlockSystem.js";
 import {
   CANNON_FIRE_RATE,
   CLUSTER_FIRE_RATE,
@@ -132,63 +119,35 @@ export class GameScene extends Phaser.Scene {
     // Initialize people array early (wedding + regular people both push to it)
     this.people = [];
 
-    // --- Systems: create ---
+    // --- Set-piece registry ---
+    // Each factory returns { type, bounds, update(dt), destroy() }.
+    // bikerSystem merges these bounds with the static BIKER_NO_GO_ZONES.
+    // createBuildings (shell) initializes scene.buildings and scene._addBuilding
+    // for set-piece modules that register buildings (town, farmCompound, oilfield).
     createBuildings(this, rng);
-    createWedding(this, rng);
-    createSoccer(this, rng);
     createAnimals(this, rng);
-    createOilfield(this, rng);
-    createChickenFight(this, rng);
-    createCamelRace(this, rng);
-    createRockFight(this, rng);
-    createFarmField(this, rng);
-    createConcert(this, rng);
 
-    // --- Runway ---
-    const rwX = AIRFIELD_X * TILE * SCALE;
-    const rwTiles = 2; // 1/4 the original length (was 6)
-    const rwWidthMult = 1.5; // 50% wider than original
-    const rwTileH = 128 * SCALE;
-    const rwTotalH = rwTiles * rwTileH;
-    // Runway positioned centered on AIRFIELD_Y
-    const rwCenterY = AIRFIELD_Y * TILE * SCALE;
-    const rwTop = rwCenterY - rwTotalH / 2;
-    const rwBottom = rwCenterY + rwTotalH / 2;
-    for (let i = 0; i < rwTiles; i++) {
-      this.add
-        .image(rwX, rwTop + i * rwTileH + rwTileH / 2, "runway")
-        .setScale(SCALE * rwWidthMult, SCALE)
-        .setDepth(1.5);
-    }
-    // Store runway bounds for collision
-    this.runway = {
-      x: rwX,
-      y: rwCenterY,
-      halfW: (32 * SCALE * rwWidthMult) / 2,
-      halfH: rwTotalH / 2,
-    };
-
-    // --- Hangar (to the right of the runway bottom) ---
-    const rwHalfW = (32 * SCALE * rwWidthMult) / 2;
-    const hangarOffset = (48 * SCALE) / 2 + rwHalfW + 16 * SCALE * 3; // hangar half + runway half + taxiway gap
-    this.hangarX = rwX + hangarOffset;
-    this.hangarY = rwBottom - (48 * SCALE) / 2;
-    this.add
-      .image(this.hangarX, this.hangarY, "hangar")
-      .setScale(SCALE)
-      .setDepth(1.5);
-
-    // --- Taxiway connecting hangar door to runway ---
-    const taxiStartX = rwX + rwHalfW; // right edge of runway
-    const taxiEndX = this.hangarX - (48 * SCALE) / 2; // left edge of hangar (door side)
-    const taxiY = this.hangarY;
-    for (let tx = taxiStartX; tx < taxiEndX; tx += 16 * SCALE) {
-      this.add
-        .image(tx + 8 * SCALE, taxiY, "taxiway")
-        .setScale(SCALE)
-        .setAngle(90) // rotate so center line runs horizontally
-        .setDepth(1.5);
-    }
+    this.setPieces = [];
+    this.setPieces.push(createTown(this, rng, { tileX: 2, tileY: 2 }));
+    this.setPieces.push(
+      createFarmCompound(this, rng, { tileX: 112, tileY: 40 }),
+    );
+    this.setPieces.push(createSheepFlock(this, rng, { tileX: 152, tileY: 40 }));
+    this.setPieces.push(createOilfield(this, rng, { tileX: 117, tileY: 57 }));
+    this.setPieces.push(createWedding(this, rng, { tileX: 150, tileY: 120 }));
+    this.setPieces.push(createSoccer(this, rng, { tileX: 160, tileY: 80 }));
+    this.setPieces.push(
+      createChickenFight(this, rng, { tileX: 115, tileY: 108 }),
+    );
+    this.setPieces.push(createCamelRace(this, rng, { tileX: 115, tileY: 98 }));
+    this.setPieces.push(createRockFight(this, rng, { tileX: 115, tileY: 85 }));
+    this.setPieces.push(createFarmField(this, rng, { tileX: 76, tileY: 100 }));
+    this.setPieces.push(createConcert(this, rng, { tileX: 76, tileY: 62 }));
+    // Airfield last: scene.runway is needed immediately below for the drone spawn
+    const airfield = createAirfield(this, rng, { tileX: 100, tileY: 100 });
+    this.setPieces.push(airfield);
+    const rwBottom = this.runway.bottom;
+    const rwX = this.runway.x;
 
     // --- Create people & vehicles (need town layout info from buildings) ---
     createPeople(this, rng);
@@ -678,16 +637,12 @@ export class GameScene extends Phaser.Scene {
     updateCannonBullets(this, dt);
     updateClusterBombs(this, dt);
     updatePeople(this, dt, delta);
-    updateSoccer(this, dt, delta);
     updateAnimals(this, dt);
-    updateOilWells(this, delta);
     updateDirtBikers(this, dt, delta);
     updateTownCars(this, dt);
-    updateChickenFight(this, dt);
-    updateCamelRace(this, dt);
-    updateRockFight(this, dt);
-    updateFarmField(this, dt);
-    updateConcert(this, dt);
+    // All set-piece instance updates (soccer, oilfield, chicken fight, camel
+    // race, rock fight, farm field, concert, etc.)
+    for (const sp of this.setPieces) sp.update(dt, delta);
 
     // --- HUD ---
     const spdDisplay = Math.round(speedKnots);
