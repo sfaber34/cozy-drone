@@ -36,6 +36,32 @@ export const SOCCER_Y = 80;
 export const AIRFIELD_X = 100;
 export const AIRFIELD_Y = 100;
 
+// Farm field — left of runway, worked by tractors + pickers with roaming animals
+export const FARM_FIELD_X = 76; // tile (center)
+export const FARM_FIELD_Y = 100; // tile (center)
+export const FARM_FIELD_WIDTH_PX = 900; // field width (px)
+export const FARM_FIELD_HEIGHT_PX = 1200; // field height (px)
+export const FARM_FIELD_TRACTOR_COUNT = 3;
+export const FARM_FIELD_TRACTOR_SPEED = 14; // px/s along the row length (slow, real-world tractor feel)
+export const FARM_FIELD_TRACTOR_ROWS_PER_STRIP = 4; // discrete plow rows per strip; tractor U-turns to next row at each end
+export const FARM_FIELD_TRACTOR_TURN_DURATION = 1.6; // seconds to complete each U-turn at the strip edge
+export const FARM_FIELD_TRACTOR_TURN_ARC = 18; // px of arc "bulge" during U-turn (overshoots the strip edge)
+export const FARM_FIELD_TRACTOR_DUST_INTERVAL = 260; // ms between dust-puff spawns behind a driving tractor
+export const FARM_FIELD_TRACTOR_DUST_DURATION = 5000; // ms each dust puff lives
+export const FARM_FIELD_TRACTOR_DUST_OPACITY = 0.75; // starting alpha of each dust puff (+random jitter on top)
+export const FARM_FIELD_TRACTOR_DUST_OPACITY_JITTER = 0.2; // random alpha added per puff
+export const FARM_FIELD_REMOUNT_DIST = 18; // px proximity for driver to climb back on
+export const FARM_FIELD_PICKER_COUNT = 18; // people picking crops in the field
+export const FARM_FIELD_PICKER_WALK_SPEED = 22; // px/s when walking between pick spots
+export const FARM_FIELD_PICKER_PICK_DURATION_MIN = 1.6; // seconds of pick animation before moving on
+export const FARM_FIELD_PICKER_PICK_DURATION_RANGE = 1.4; // random added
+export const FARM_FIELD_PICKER_HOP_DIST_MIN = 30; // px min distance to next pick spot
+export const FARM_FIELD_PICKER_HOP_DIST_RANGE = 80; // px random added
+export const FARM_FIELD_ANIMAL_PIGS = 5;
+export const FARM_FIELD_ANIMAL_CHICKENS = 8;
+export const FARM_FIELD_ANIMAL_CAMELS = 3;
+export const FARM_FIELD_ANIMAL_SHEEP = 6; // uses goat texture as a sheep stand-in
+
 // Chicken fight — cockfighting ring with spectators
 export const CHICKEN_FIGHT_X = 115;
 export const CHICKEN_FIGHT_Y = 108;
@@ -83,6 +109,7 @@ export const BIKER_NO_GO_ZONES = [
   { x: AIRFIELD_X, y: AIRFIELD_Y, hw: 12, hh: 20 }, // Airfield
   { x: CHICKEN_FIGHT_X, y: CHICKEN_FIGHT_Y, hw: 5, hh: 5 }, // Chicken fight
   { x: CAMEL_RACE_X, y: CAMEL_RACE_Y, hw: 8, hh: 6 }, // Camel race
+  { x: FARM_FIELD_X, y: FARM_FIELD_Y, hw: 12, hh: 15 }, // Farm field
   { x: ROCK_FIGHT_X, y: ROCK_FIGHT_Y, hw: 10, hh: 8 }, // Rock fight
 ];
 

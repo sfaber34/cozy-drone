@@ -12,33 +12,55 @@ export function showBriefingModal(scene, onStart) {
   const h = scene.scale.height;
   const items = [];
 
-  const overlay = scene.add.rectangle(w / 2, h / 2, w, h, 0x000000, 0.85)
+  const overlay = scene.add
+    .rectangle(w / 2, h / 2, w, h, 0x000000, 0.85)
     .setDepth(500);
   items.push(overlay);
 
-  const title = scene.add.text(w / 2, h * 0.22, "MISSION BRIEFING", {
-    fontFamily: "monospace", fontSize: "28px", color: "#ff4444",
-  }).setOrigin(0.5).setDepth(501);
+  const title = scene.add
+    .text(w / 2, h * 0.22, "MISSION BRIEFING", {
+      fontFamily: "monospace",
+      fontSize: "28px",
+      color: "#ff4444",
+    })
+    .setOrigin(0.5)
+    .setDepth(501);
   items.push(title);
 
-  const body = scene.add.text(w / 2, h * 0.42,
-    "Eliminate hostile targets.\nProtect civilians at your discretion.\n\nTAP BELOW TO BEGIN.",
-    {
-      fontFamily: "monospace", fontSize: "16px", color: "#cccccc",
-      align: "center", lineSpacing: 6,
-    }).setOrigin(0.5).setDepth(501);
+  const body = scene.add
+    .text(
+      w / 2,
+      h * 0.42,
+      "ISR has identified a strong enemy presence within this AO. Enemy combatants will use civilian population as concealment. Prosecute targets of opportunity with extreme prejudice. Weapons hot!\n\n\nAvailable armament:\n- Infinity laser-guided Hellfire missiles\n- Infinity 30 mm anti material cannon\n\n\nRemember: We fight them there so we don't have to fight them at home!",
+      {
+        fontFamily: "monospace",
+        fontSize: "16px",
+        color: "#cccccc",
+        align: "center",
+        lineSpacing: 6,
+      },
+    )
+    .setOrigin(0.5)
+    .setDepth(501);
   items.push(body);
 
   const btnW = Math.min(w * 0.7, 360);
   const btnH = 70;
   const btnY = h * 0.72;
-  const btn = scene.add.rectangle(w / 2, btnY, btnW, btnH, 0xff3300, 0.9)
-    .setStrokeStyle(3, 0xffffff, 0.9).setDepth(501);
+  const btn = scene.add
+    .rectangle(w / 2, btnY, btnW, btnH, 0xff3300, 0.9)
+    .setStrokeStyle(3, 0xffffff, 0.9)
+    .setDepth(501);
   items.push(btn);
 
-  const btnLabel = scene.add.text(w / 2, btnY, "START MISSION", {
-    fontFamily: "monospace", fontSize: "22px", color: "#ffffff",
-  }).setOrigin(0.5).setDepth(502);
+  const btnLabel = scene.add
+    .text(w / 2, btnY, "START MISSION", {
+      fontFamily: "monospace",
+      fontSize: "22px",
+      color: "#ffffff",
+    })
+    .setOrigin(0.5)
+    .setDepth(502);
   items.push(btnLabel);
 
   scene.cameras.main.ignore(items);
@@ -46,7 +68,9 @@ export function showBriefingModal(scene, onStart) {
   scene.tweens.add({
     targets: [btn, btnLabel],
     alpha: { from: 1.0, to: 0.75 },
-    duration: 600, yoyo: true, repeat: -1,
+    duration: 600,
+    yoyo: true,
+    repeat: -1,
   });
 
   scene.briefingActive = true;
@@ -94,7 +118,7 @@ export function showBriefingModal(scene, onStart) {
     mgr.locked = false;
     if (mgr.emit) mgr.emit("unlocked", mgr);
 
-    canvas.removeEventListener("touchend",  onTouchEnd);
+    canvas.removeEventListener("touchend", onTouchEnd);
     canvas.removeEventListener("mousedown", onMouseDown);
     scene.tweens.killTweensOf([btn, btnLabel]);
     for (const it of items) it.destroy();
@@ -103,9 +127,14 @@ export function showBriefingModal(scene, onStart) {
     if (onStart) onStart();
   };
 
-  const onTouchEnd  = (e) => { e.preventDefault(); unlockAndDismiss(); };
-  const onMouseDown = ()   => { unlockAndDismiss(); };
+  const onTouchEnd = (e) => {
+    e.preventDefault();
+    unlockAndDismiss();
+  };
+  const onMouseDown = () => {
+    unlockAndDismiss();
+  };
 
-  canvas.addEventListener("touchend",  onTouchEnd,  { passive: false });
+  canvas.addEventListener("touchend", onTouchEnd, { passive: false });
   canvas.addEventListener("mousedown", onMouseDown);
 }
