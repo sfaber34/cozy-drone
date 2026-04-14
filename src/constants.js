@@ -51,6 +51,26 @@ export const CAMEL_RACE_SPECTATORS = 30; // spectators around the track
 export const CAMEL_RACE_SPEED_MIN = 50; // slowest camel (px/s)
 export const CAMEL_RACE_SPEED_RANGE = 40; // speed variance (total max = MIN + RANGE)
 
+// Rock fight — two opposing groups of people throwing pixel rocks
+export const ROCK_FIGHT_X = 115;
+export const ROCK_FIGHT_Y = 85; // above camel race (y=98)
+export const ROCK_FIGHT_GROUP_SIZE = 20; // people per group (two groups face each other)
+export const ROCK_FIGHT_GROUP_SPACING = 220; // gap between the two groups (px)
+export const ROCK_FIGHT_GROUP_WIDTH = 200; // horizontal spread of each group (px)
+export const ROCK_FIGHT_GROUP_DEPTH = 340; // vertical spread of each group (px)
+export const ROCK_FIGHT_THROW_INTERVAL_MIN = 20.0; // min seconds between throws per person
+export const ROCK_FIGHT_THROW_INTERVAL_RANGE = 45.0; // random range added (total max = MIN + RANGE)
+export const ROCK_FIGHT_ROCK_SPEED = 160; // rock horizontal travel speed (px/s)
+export const ROCK_FIGHT_ROCK_ARC_HEIGHT = 40; // parabolic arc peak height (px)
+export const ROCK_FIGHT_WINDUP_DURATION = 0.35; // seconds of arm-cocked-back windup before release
+export const ROCK_FIGHT_THROW_POSE_DURATION = 0.58; // seconds the thrower holds the release pose after the rock flies
+export const ROCK_FIGHT_HIT_FLASH_DURATION = 0.3; // seconds the hit target flashes red
+export const ROCK_FIGHT_HIT_KNOCKBACK = 3; // px the target sprite jolts on hit
+export const ROCK_FIGHT_IDLE_WAVE_INTERVAL_MIN = 220; // ms between idle angry-wave frames (per person)
+export const ROCK_FIGHT_IDLE_WAVE_INTERVAL_RANGE = 180; // random ms added (total max = MIN + RANGE)
+export const ROCK_FIGHT_MIN_SPACING = 14; // min world px between any two rock-fight people (anti-stack)
+export const ROCK_FIGHT_SPAWN_MAX_TRIES = 30; // attempts to find a non-overlapping spot before giving up
+
 // --- Dirt biker no-go zones (in tiles — center x, center y, half-width, half-height) ---
 // Bikers steer around these areas to stay in open desert
 export const BIKER_NO_GO_ZONES = [
@@ -63,6 +83,7 @@ export const BIKER_NO_GO_ZONES = [
   { x: AIRFIELD_X, y: AIRFIELD_Y, hw: 12, hh: 20 }, // Airfield
   { x: CHICKEN_FIGHT_X, y: CHICKEN_FIGHT_Y, hw: 5, hh: 5 }, // Chicken fight
   { x: CAMEL_RACE_X, y: CAMEL_RACE_Y, hw: 8, hh: 6 }, // Camel race
+  { x: ROCK_FIGHT_X, y: ROCK_FIGHT_Y, hw: 10, hh: 8 }, // Rock fight
 ];
 
 // --- Music ---
@@ -129,6 +150,7 @@ export const CANNON_BULLET_SPEED = 1000; // bullet travel speed (px/s)
 export const CANNON_RANGE_FACTOR = 0.05; // impact distance = altitude * this factor
 export const CANNON_SPREAD = 0.1; // random spread in radians
 export const CANNON_KILL_RADIUS = 30; // explosion radius per bullet
+export const CANNON_PANIC_RADIUS = 250; // radius within which people/animals panic from a cannon impact
 export const CANNON_SHAKE_DURATION = 50; // screen shake per shot (ms)
 export const CANNON_SHAKE_INTENSITY = 0.001; // screen shake intensity
 export const CANNON_IMPACT_VOLUME_FRAC = 0.15; // fraction of EXPLOSION_VOLUME for cannon impacts
@@ -164,6 +186,10 @@ export const PEOPLE_GREETING_MIN_DIST = 150;
 export const PEOPLE_SPAWN_COUNT = 60;
 export const PEOPLE_TOWN_SPAWN_COUNT = 80;
 export const PEOPLE_SPAWN_AVOID_DIST = 2000;
+// Y-sorting: living people occupy a narrow depth band so they layer by screen Y
+// without disturbing drone/explosion/HUD depths. Ghosts (depth 13) are skipped.
+export const PEOPLE_DEPTH_BASE = 2.0;
+export const PEOPLE_DEPTH_BAND = 0.99;
 
 // --- Animal AI ---
 export const ANIMAL_KILL_RADIUS = 50;

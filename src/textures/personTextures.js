@@ -182,6 +182,126 @@ export function generatePersonTextures(scene) {
     r2.fillRect(3, 11, 2, 2);
     r2.fillRect(6, 12, 2, 2);
     run2C.refresh();
+
+    // --- Angry stand (downturned/widened eyes, frown) ---
+    const angryC = scene.textures.createCanvas(`person-angry-${suffix}`, 10, 14);
+    const ac = angryC.context;
+    drawPersonHead(ac, s, 0);
+    // Widen eyes into angry slits (extend downward 1px)
+    ac.fillStyle = '#222';
+    ac.fillRect(4, 2, 1, 1);
+    ac.fillRect(6, 2, 1, 1);
+    // Frowning mouth — 2px lower corners
+    ac.fillStyle = '#7a2222';
+    ac.fillRect(4, 3, 3, 1);
+    ac.fillStyle = '#441111';
+    ac.fillRect(4, 3, 1, 1);
+    ac.fillRect(6, 3, 1, 1);
+    // Body (same as stand)
+    ac.fillStyle = s.robe;
+    ac.fillRect(3, 4, 4, 6);
+    ac.fillStyle = s.skin;
+    ac.fillRect(2, 5, 1, 3);
+    ac.fillRect(7, 5, 1, 3);
+    ac.fillStyle = s.robe;
+    ac.fillRect(3, 9, 2, 3);
+    ac.fillRect(5, 9, 2, 3);
+    ac.fillStyle = s.shoes;
+    ac.fillRect(3, 12, 2, 2);
+    ac.fillRect(5, 12, 2, 2);
+    angryC.refresh();
+
+    // --- Throw windup (arm cocked back over shoulder, rock in hand) ---
+    const throw1C = scene.textures.createCanvas(`person-throw1-${suffix}`, 10, 14);
+    const t1 = throw1C.context;
+    drawPersonHead(t1, s, 0);
+    // Angry face reuse
+    t1.fillStyle = '#222';
+    t1.fillRect(4, 2, 1, 1);
+    t1.fillRect(6, 2, 1, 1);
+    t1.fillStyle = '#7a2222';
+    t1.fillRect(4, 3, 3, 1);
+    // Body
+    t1.fillStyle = s.robe;
+    t1.fillRect(3, 4, 4, 6);
+    // Front/planted arm down at left
+    t1.fillStyle = s.skin;
+    t1.fillRect(2, 5, 1, 3);
+    // Throw arm cocked back and high — hand sweeping up-behind over the head
+    t1.fillStyle = s.skin;
+    t1.fillRect(7, 4, 1, 1); // shoulder
+    t1.fillRect(7, 2, 1, 1); // bicep back
+    t1.fillRect(8, 1, 1, 1); // forearm behind head
+    t1.fillRect(9, 0, 1, 1); // hand
+    // Rock in the raised hand
+    t1.fillStyle = '#555';
+    t1.fillRect(9, 0, 1, 1);
+    // Legs + shoes (braced stance, slightly wider)
+    t1.fillStyle = s.robe;
+    t1.fillRect(3, 9, 2, 3);
+    t1.fillRect(5, 9, 2, 3);
+    t1.fillStyle = s.shoes;
+    t1.fillRect(2, 12, 2, 2);
+    t1.fillRect(6, 12, 2, 2);
+    throw1C.refresh();
+
+    // --- Angry shake (fist raised, no rock — for idle anger animation) ---
+    const shakeC = scene.textures.createCanvas(`person-shake-${suffix}`, 10, 14);
+    const sh = shakeC.context;
+    drawPersonHead(sh, s, 0);
+    sh.fillStyle = '#222';
+    sh.fillRect(4, 2, 1, 1);
+    sh.fillRect(6, 2, 1, 1);
+    sh.fillStyle = '#7a2222';
+    sh.fillRect(4, 3, 3, 1);
+    sh.fillStyle = s.robe;
+    sh.fillRect(3, 4, 4, 6);
+    // Resting arm at left
+    sh.fillStyle = s.skin;
+    sh.fillRect(2, 5, 1, 3);
+    // Right arm raised in fist (bent up at the elbow)
+    sh.fillStyle = s.skin;
+    sh.fillRect(7, 4, 1, 1); // shoulder
+    sh.fillRect(8, 3, 1, 1); // bicep
+    sh.fillRect(8, 1, 1, 2); // forearm + fist
+    // Legs + shoes
+    sh.fillStyle = s.robe;
+    sh.fillRect(3, 9, 2, 3);
+    sh.fillRect(5, 9, 2, 3);
+    sh.fillStyle = s.shoes;
+    sh.fillRect(3, 12, 2, 2);
+    sh.fillRect(5, 12, 2, 2);
+    shakeC.refresh();
+
+    // --- Throw release (arm extended forward/high, rock gone) ---
+    const throw2C = scene.textures.createCanvas(`person-throw2-${suffix}`, 10, 14);
+    const t2 = throw2C.context;
+    drawPersonHead(t2, s, 0);
+    // Shouting mouth (open)
+    t2.fillStyle = '#222';
+    t2.fillRect(4, 2, 1, 1);
+    t2.fillRect(6, 2, 1, 1);
+    t2.fillStyle = '#441111';
+    t2.fillRect(4, 3, 3, 1);
+    // Body leaning forward (slight shift visible via arm layout)
+    t2.fillStyle = s.robe;
+    t2.fillRect(3, 4, 4, 6);
+    // Back arm pulled in (short)
+    t2.fillStyle = s.skin;
+    t2.fillRect(2, 5, 1, 2);
+    // Throw arm extended forward and up — diagonal from shoulder toward top-right
+    t2.fillStyle = s.skin;
+    t2.fillRect(7, 4, 1, 1);
+    t2.fillRect(8, 3, 1, 1);
+    t2.fillRect(9, 2, 1, 1);
+    // Legs — front foot planted, back foot pushed off
+    t2.fillStyle = s.robe;
+    t2.fillRect(3, 9, 2, 3);
+    t2.fillRect(5, 9, 2, 3);
+    t2.fillStyle = s.shoes;
+    t2.fillRect(2, 12, 2, 2);
+    t2.fillRect(6, 12, 2, 2);
+    throw2C.refresh();
   }
 
   // --- Bride (10x14) ---

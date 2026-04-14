@@ -4,6 +4,7 @@ import {
   CANNON_FIRE_RATE, CANNON_BULLET_SPEED, CANNON_RANGE_FACTOR,
   CANNON_SPREAD, CANNON_KILL_RADIUS,
   CANNON_SHAKE_DURATION, CANNON_SHAKE_INTENSITY, CANNON_IMPACT_VOLUME_FRAC,
+  CANNON_PANIC_RADIUS,
   CANNON_MUZZLE_NOSE_OFFSET, CANNON_MUZZLE_PUFFS, CANNON_MUZZLE_SPREAD,
   CANNON_MUZZLE_DURATION_MIN, CANNON_MUZZLE_DURATION_RANGE,
   CANNON_MUZZLE_SCALE_MIN, CANNON_MUZZLE_SCALE_RANGE,
@@ -404,7 +405,7 @@ export function cannonImpact(scene, x, y) {
   damageBusAt(scene, x, y, 0.5);
 
   // --- Panic nearby (smaller radius than missile) ---
-  const panicR = r * 3;
+  const panicR = CANNON_PANIC_RADIUS;
   for (const p of scene.people) {
     if (p.state === "ghost" || p.state === "gone" || p.state === "hiding" || p.state === "panicking") continue;
     const dist = Phaser.Math.Distance.Between(x, y, p.sprite.x, p.sprite.y);

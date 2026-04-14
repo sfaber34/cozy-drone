@@ -7,6 +7,7 @@ import {
   PANIC_DIR_INTERVAL_MIN, PANIC_DIR_INTERVAL_MAX, PANIC_DIR_CHANGE_ARC,
   PEOPLE_GREETING_MIN_DIST,
   PEOPLE_SPAWN_COUNT, PEOPLE_TOWN_SPAWN_COUNT, PEOPLE_SPAWN_AVOID_DIST,
+  PEOPLE_DEPTH_BASE, PEOPLE_DEPTH_BAND,
   MOBILE_DIALOG_SCALE,
 } from "../constants.js";
 import { greetings, ghostLines } from "../dialog.js";
@@ -542,5 +543,16 @@ export function updatePeople(scene, dt, delta) {
         p.carriedGoods.setPosition(p.sprite.x + 8, p.sprite.y - 5);
       }
     }
+  }
+
+  // --- Y-sort living people into a narrow depth band so front people
+  // (larger y) render in front of back people (smaller y). Ghost/gone
+  // states and hidden people keep their own depth (e.g. ghost=13). ---
+  const worldH = WORLD_H * TILE * SCALE;
+  for (const p of scene.people) {
+    if (p.state === "ghost" || p.state === "gone" || p.state === "hiding") continue;
+    if (!p.sprite) continue;
+    const frac = Phaser.Math.Clamp(p.sprite.y / worldH, 0, 1);
+    p.sprite.setDepth(PEOPLE_DEPTH_BASE + frac * PEOPLE_DEPTH_BAND);
   }
 }

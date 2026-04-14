@@ -55,6 +55,10 @@ import {
   createCamelRace,
   updateCamelRace,
 } from "../systems/camelRaceSystem.js";
+import {
+  createRockFight,
+  updateRockFight,
+} from "../systems/rockFightSystem.js";
 import { createBusRoute, updateBusSystem } from "../systems/busSystem.js";
 import {
   CANNON_FIRE_RATE,
@@ -128,6 +132,7 @@ export class GameScene extends Phaser.Scene {
     createOilfield(this, rng);
     createChickenFight(this, rng);
     createCamelRace(this, rng);
+    createRockFight(this, rng);
 
     // --- Runway ---
     const rwX = AIRFIELD_X * TILE * SCALE;
@@ -670,6 +675,7 @@ export class GameScene extends Phaser.Scene {
     updateTownCars(this, dt);
     updateChickenFight(this, dt);
     updateCamelRace(this, dt);
+    updateRockFight(this, dt);
 
     // --- HUD ---
     const spdDisplay = Math.round(speedKnots);
