@@ -22,6 +22,8 @@ import {
   FARM_FIELD_ANIMAL_CHICKENS,
   FARM_FIELD_ANIMAL_CAMELS,
   FARM_FIELD_ANIMAL_SHEEP,
+  FARM_FIELD_TRACTOR_HP,
+  FARM_FIELD_TRACTOR_HIT_RADIUS,
 } from "../constants.js";
 
 const TRACTOR_GREETINGS = [
@@ -70,6 +72,18 @@ export function createFarmField(scene, rng, opts) {
     update(dt) {
       for (const t of tractors) updateTractor(scene, t, dt);
       for (const p of pickers)  updatePicker (scene, p, dt, field);
+    },
+    damageAt(x, y, dmg) {
+      const r = FARM_FIELD_TRACTOR_HIT_RADIUS;
+      const rSq = r * r;
+      for (const t of tractors) {
+        if (!t.alive) continue;
+        const dx = t.sprite.x - x;
+        const dy = t.sprite.y - y;
+        if (dx * dx + dy * dy > rSq) continue;
+        t.hp -= dmg;
+        if (t.hp <= 0) destroyTractor(scene, t);
+      }
     },
     destroy() {},
   };
@@ -133,6 +147,8 @@ function spawnTractors(scene, rng, f, tractors) {
       sprite,
       driver: driverEntry,
       driving: true,
+      hp: FARM_FIELD_TRACTOR_HP,
+      alive: true,
       stripLeft,
       stripRight: stripLeft + stripW,
       rowMargin,
@@ -230,6 +246,7 @@ function spawnFarmAnimals(scene, rng, f) {
 // --- Tractor -----------------------------------------------------------------
 
 function updateTractor(scene, t, dt) {
+  if (!t.alive) return; // destroyed tractor is just wreckage
   const d = t.driver;
 
   if (!t.driving) {
@@ -429,3 +446,32 @@ function pickPicker(p, dt, field) {
     p.stalk.setVisible(false);
   }
 }
+
+// --- Tractor destruction --------------------------------------------------
+
+function destroyTractor(scene, t) {
+  t.alive = false;
+  t.driving = false;
+  // Explosion VFX at the tractor position
+  const exp = scene.add
+    .sprite(t.sprite.x, t.sprite.y, "explosion-sheet", 0)
+    .setScale(SCALE * 1.8)
+    .setDepth(11);
+  scene.hudCam.ignore(exp);
+  exp.play("explode");
+  exp.once("animationcomplete", () => exp.destroy());
+  // Darken + char the tractor — wreckage stays on the field
+  t.sprite.setTint(0x333333);
+  // Kick the driver off into a panic if they're still riding
+  const d = t.driver;
+  if (d && d.state !== "ghost" && d.state !== "gone") {
+    d.state = "panicking";
+    const awayAngle = Math.atan2(
+      d.sprite.y - t.sprite.y + 0.01,
+      d.sprite.x - t.sprite.x + 0.01,
+    );
+    d.runAngle = awayAngle;
+    d.hideTarget = null;
+  }
+}
+

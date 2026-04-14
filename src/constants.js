@@ -32,6 +32,8 @@ export const FARM_FIELD_ANIMAL_PIGS = 5;
 export const FARM_FIELD_ANIMAL_CHICKENS = 8;
 export const FARM_FIELD_ANIMAL_CAMELS = 3;
 export const FARM_FIELD_ANIMAL_SHEEP = 6; // uses goat texture as a sheep stand-in
+export const FARM_FIELD_TRACTOR_HP = 2; // HP per tractor. Missiles deal 1, cannon deals 0.5 → 2 missile hits / 4 cannon hits
+export const FARM_FIELD_TRACTOR_HIT_RADIUS = 40; // px explosion radius that counts as a hit on a tractor
 
 // Concert — stage with a 4-piece band and a dancing/cheering/wandering crowd
 // NOTE: no X/Y constants — concert is placed via createConcert(scene, rng, { tileX, tileY })

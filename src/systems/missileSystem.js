@@ -443,4 +443,12 @@ export function missileImpact(scene, x, y) {
 
   // Damage buses AFTER people loop so ejected riders aren't caught by kill radius
   damageBusAt(scene, x, y, 1.0);
+
+  // Set-piece damage dispatch — any instance exposing damageAt(x, y, dmg)
+  // opts into taking damage from explosions.
+  if (scene.setPieces) {
+    for (const sp of scene.setPieces) {
+      if (sp.damageAt) sp.damageAt(x, y, 1.0);
+    }
+  }
 }

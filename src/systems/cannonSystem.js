@@ -404,6 +404,13 @@ export function cannonImpact(scene, x, y) {
   // Damage buses (0.5 HP per cannon hit — 6 hits to destroy)
   damageBusAt(scene, x, y, 0.5);
 
+  // Set-piece damage dispatch — instances with damageAt opt into taking hits.
+  if (scene.setPieces) {
+    for (const sp of scene.setPieces) {
+      if (sp.damageAt) sp.damageAt(x, y, 0.5);
+    }
+  }
+
   // --- Panic nearby (smaller radius than missile) ---
   const panicR = CANNON_PANIC_RADIUS;
   for (const p of scene.people) {
