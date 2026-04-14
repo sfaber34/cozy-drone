@@ -1,3 +1,6 @@
 [
-  { "file": "death1.mp3",   "volume": 1.1 },
+  { "file": "pigDeath1.mp3",   "volume": 1.0 },
+  { "file": "pigDeath2.mp3",   "volume": 1.0 },
+  { "file": "pigDeath3.mp3",   "volume": 1.0 },
+  { "file": "pigDeath4.mp3",   "volume": 1.0 }
 ]
