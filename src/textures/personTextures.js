@@ -4,7 +4,17 @@ export const NUM_SKINS = 200;
 
 export const skinTones = ['#d4a574', '#c49a6c', '#b8885c', '#dbb08a', '#c8946a', '#a07850'];
 
-export function generatePersonTextures(scene) {
+// The full generation (skins + one-off characters) is expensive — 200 skin
+// variants x ~11 poses + a dozen other sprites. Call paths:
+//   generatePersonTextures(scene)                         — do everything
+//   generatePersonTextures(scene, { skinIndexEnd: 0 })    — characters only
+//   generatePersonTextures(scene, {                       — one chunk
+//     skinIndexStart: n, skinIndexEnd: n+25, includeCharacters: false })
+// See generateIntroPersonTextures + generatePersonSkinsAsync below.
+export function generatePersonTextures(scene, opts = {}) {
+  const skinIndexStart = opts.skinIndexStart ?? 0;
+  const skinIndexEnd = opts.skinIndexEnd ?? NUM_SKINS;
+  const includeCharacters = opts.includeCharacters ?? true;
   const headTypes = ['keffiyeh', 'keffiyeh', 'kufi', 'kufi', 'hijab', 'hijab'];
   const headColors = [
     '#fff', '#eee', '#ddd', '#cc3333', '#aa2222', '#dd8833', '#cc9944',
@@ -76,7 +86,7 @@ export function generatePersonTextures(scene) {
     }
   };
 
-  for (let si = 0; si < personSkins.length; si++) {
+  for (let si = skinIndexStart; si < skinIndexEnd && si < personSkins.length; si++) {
     const s = personSkins[si];
     const suffix = si;
 
@@ -303,6 +313,8 @@ export function generatePersonTextures(scene) {
     t2.fillRect(6, 12, 2, 2);
     throw2C.refresh();
   }
+
+  if (!includeCharacters) return;
 
   // --- Bride (10x14) ---
   const brideCanvas = scene.textures.createCanvas('bride', 10, 14);
@@ -654,4 +666,34 @@ export function generatePersonTextures(scene) {
   gc2.fillRect(2, 12, 2, 2);
   gc2.fillRect(6, 12, 2, 2);
   guyCheer2Canvas.refresh();
+}
+
+// Generate ONLY the one-off characters (guy1/guy2/cheer poses, bride,
+// groom, priest, arch, carpet, chair, lantern, clap, ghost). Skips the
+// expensive 200-skin loop — use this at boot time so the intro cutscene
+// can render immediately.
+export function generateIntroPersonTextures(scene) {
+  generatePersonTextures(scene, { skinIndexStart: 0, skinIndexEnd: 0 });
+}
+
+// Generate all 200 person skins in chunks, yielding to the event loop
+// between each chunk so the page stays responsive. Calls onDone when
+// every skin has been rasterised.
+export function generatePersonSkinsAsync(scene, onDone, chunkSize = 20) {
+  let i = 0;
+  const step = () => {
+    const end = Math.min(i + chunkSize, NUM_SKINS);
+    generatePersonTextures(scene, {
+      skinIndexStart: i,
+      skinIndexEnd: end,
+      includeCharacters: false,
+    });
+    i = end;
+    if (i >= NUM_SKINS) {
+      if (onDone) onDone();
+    } else {
+      setTimeout(step, 0);
+    }
+  };
+  step();
 }

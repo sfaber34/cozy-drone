@@ -14,7 +14,7 @@ const BRIEFING_BODY =
   "Prosecute targets of opportunity with extreme prejudice. Weapons hot!\n\n" +
   "Available armament:\n" +
   "- Infinity laser-guided Hellfire missiles\n" +
-  "- Infinity 30 mm anti material cannon\n\n" +
+  "- Infinity 30 mm anti-material cannon rounds\n\n" +
   "Return to base after eliminating all hostiles for a special surpise.\n\n" +
   "Remember: We fight them here so we don't have to fight them at home!";
 
@@ -102,6 +102,10 @@ export function showBriefingModal(scene, onStart) {
     items.push(btnLabel);
 
     scene.cameras.main.ignore(items);
+    // Published so later world-init code can exclude these from the HUD
+    // camera's catch-up ignore filter (otherwise the modal ends up
+    // ignored by BOTH cameras and vanishes).
+    scene._briefingModalItems = items;
 
     pulseTween = scene.tweens.add({
       targets: [btn, btnLabel],
@@ -183,6 +187,7 @@ export function showBriefingModal(scene, onStart) {
     scene.scale.off("resize", build);
     if (pulseTween) pulseTween.stop();
     for (const it of items) it.destroy();
+    scene._briefingModalItems = null;
     scene.briefingActive = false;
 
     if (onStart) onStart();

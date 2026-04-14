@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { generateDroneTextures } from '../textures/droneTextures.js';
 import { generateEffectTextures } from '../textures/effectTextures.js';
-import { generatePersonTextures } from '../textures/personTextures.js';
+import { generateIntroPersonTextures } from '../textures/personTextures.js';
 import { generateWorkerTextures } from '../textures/workerTextures.js';
 import { generateBuildingTextures } from '../textures/buildingTextures.js';
 import { generateVehicleTextures } from '../textures/vehicleTextures.js';
@@ -28,7 +28,10 @@ export class BootScene extends Phaser.Scene {
   create() {
     generateDroneTextures(this);
     generateEffectTextures(this);
-    generatePersonTextures(this);
+    // Only the one-off character textures at boot (guy1/guy2/bride/etc).
+    // The 200 person skins are generated async in GameScene so the briefing
+    // modal can render immediately.
+    generateIntroPersonTextures(this);
     generateWorkerTextures(this);
     generateBuildingTextures(this);
     generateVehicleTextures(this);

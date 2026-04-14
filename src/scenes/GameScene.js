@@ -58,6 +58,7 @@ import { createAirfield } from "../systems/airfieldSystem.js";
 import { createTown } from "../systems/townSystem.js";
 import { createFarmCompound } from "../systems/farmCompoundSystem.js";
 import { createSheepFlock } from "../systems/sheepFlockSystem.js";
+import { generatePersonSkinsAsync } from "../textures/personTextures.js";
 import {
   CANNON_FIRE_RATE,
   CLUSTER_FIRE_RATE,
@@ -119,43 +120,35 @@ export class GameScene extends Phaser.Scene {
       this.add.image(x, y, tex).setScale(SCALE).setDepth(1);
     }
 
-    // Initialize people array early (wedding + regular people both push to it)
+    // Initialize shared entity arrays early so damage systems + setpieces
+    // can safely push/iterate even while person textures are still loading.
     this.people = [];
-
-    // --- Set-piece registry ---
-    // Each factory returns { type, bounds, update(dt), destroy() }.
-    // bikerSystem merges these bounds with the static BIKER_NO_GO_ZONES.
-    // createBuildings (shell) initializes scene.buildings and scene._addBuilding
-    // for set-piece modules that register buildings (town, farmCompound, oilfield).
-    createBuildings(this, rng);
-    createAnimals(this, rng);
-
+    this.animals = [];
     this.setPieces = [];
-    this.setPieces.push(createTown(this, rng, { tileX: 2, tileY: 2 }));
-    this.setPieces.push(
-      createFarmCompound(this, rng, { tileX: 112, tileY: 40 }),
-    );
-    this.setPieces.push(createSheepFlock(this, rng, { tileX: 152, tileY: 40 }));
-    this.setPieces.push(createOilfield(this, rng, { tileX: 117, tileY: 57 }));
-    this.setPieces.push(createWedding(this, rng, { tileX: 150, tileY: 120 }));
-    this.setPieces.push(createSoccer(this, rng, { tileX: 160, tileY: 80 }));
-    this.setPieces.push(
-      createChickenFight(this, rng, { tileX: 115, tileY: 108 }),
-    );
-    this.setPieces.push(createCamelRace(this, rng, { tileX: 115, tileY: 98 }));
-    this.setPieces.push(createRockFight(this, rng, { tileX: 115, tileY: 85 }));
-    this.setPieces.push(createFarmField(this, rng, { tileX: 76, tileY: 100 }));
-    this.setPieces.push(createConcert(this, rng, { tileX: 76, tileY: 62 }));
-    this.setPieces.push(createTireFire(this, rng, { tileX: 100, tileY: 82 }));
-    // Airfield last: scene.runway is needed immediately below for the drone spawn
+    this.buildings = [];
+
+    // --- Airfield renders immediately so the drone can spawn on the runway
+    //     during the intro cutscene. It doesn't use any person-skin textures. ---
     const airfield = createAirfield(this, rng, { tileX: 100, tileY: 100 });
     this.setPieces.push(airfield);
     const rwBottom = this.runway.bottom;
     const rwX = this.runway.x;
 
-    // --- Create people & vehicles (need town layout info from buildings) ---
-    createPeople(this, rng);
-    createVehicles(this, rng);
+    // Everything else (town, farm compound, flock, oilfield, wedding, soccer,
+    // chicken fight, camel race, rock fight, farm field, concert, tire fire,
+    // plus createPeople / createVehicles) references the 200 person-skin
+    // textures, so we defer it until those finish generating in the background.
+    // See tryDeferredWorldInit below.
+    this._deferredWorldRng = rng;
+    this._personSkinsReady = false;
+    this._worldInitDone = false;
+
+    // Kick off async skin generation — yields to the event loop between
+    // chunks so the briefing modal renders immediately.
+    generatePersonSkinsAsync(this, () => {
+      this._personSkinsReady = true;
+      tryDeferredWorldInit(this);
+    });
 
     // --- Drone shadow ---
     this.droneShadow = this.add
@@ -369,9 +362,10 @@ export class GameScene extends Phaser.Scene {
       // MobileControls is launched after the briefing modal is dismissed
     }
 
-    // Kill counter
+    // Kill counter — totalPeople is re-counted once the deferred world init
+    // finishes spawning everyone.
     this.kills = 0;
-    this.totalPeople = countTotalPeople(this);
+    this.totalPeople = 0;
 
     // --- Audio (music + SFX + engine, loaded in one batch) ---
     initAudio(this);
@@ -382,7 +376,8 @@ export class GameScene extends Phaser.Scene {
       if (this.isMobile) {
         this.scene.launch("MobileControls", { gameScene: this });
       }
-      playIntroCutscene(this);
+      // Brief pause after tap before the intro cutscene starts
+      this.time.delayedCall(1500, () => playIntroCutscene(this));
     });
   }
 
@@ -725,4 +720,59 @@ export class GameScene extends Phaser.Scene {
       this.missionCompleteText.setPosition(10, hudBottom + 4);
     }
   }
+}
+
+// Deferred world initialization — runs once person-skin textures have
+// finished their async generation. Creates every set piece that spawns
+// people, plus the wandering-person and vehicle populations. Intro only
+// references guy1/guy2 so this can safely wait out the briefing modal +
+// intro cutscene.
+function tryDeferredWorldInit(scene) {
+  if (scene._worldInitDone) return;
+  if (!scene._personSkinsReady) return;
+  scene._worldInitDone = true;
+
+  const rng = scene._deferredWorldRng;
+
+  // Shell + scene._addBuilding registration (now that it can actually spawn)
+  createBuildings(scene, rng);
+  createAnimals(scene, rng);
+
+  // Set pieces that contain people. Order mostly matters for placement
+  // dependencies (busSystem reads scene.town* that createTown publishes).
+  scene.setPieces.push(createTown(scene, rng, { tileX: 2, tileY: 2 }));
+  scene.setPieces.push(createFarmCompound(scene, rng, { tileX: 112, tileY: 40 }));
+  scene.setPieces.push(createSheepFlock(scene, rng, { tileX: 152, tileY: 40 }));
+  scene.setPieces.push(createOilfield(scene, rng, { tileX: 117, tileY: 57 }));
+  scene.setPieces.push(createWedding(scene, rng, { tileX: 150, tileY: 120 }));
+  scene.setPieces.push(createSoccer(scene, rng, { tileX: 160, tileY: 80 }));
+  scene.setPieces.push(createChickenFight(scene, rng, { tileX: 115, tileY: 108 }));
+  scene.setPieces.push(createCamelRace(scene, rng, { tileX: 115, tileY: 98 }));
+  scene.setPieces.push(createRockFight(scene, rng, { tileX: 115, tileY: 85 }));
+  scene.setPieces.push(createFarmField(scene, rng, { tileX: 76, tileY: 100 }));
+  scene.setPieces.push(createConcert(scene, rng, { tileX: 76, tileY: 62 }));
+  scene.setPieces.push(createTireFire(scene, rng, { tileX: 100, tileY: 82 }));
+
+  createPeople(scene, rng);
+  createVehicles(scene, rng);
+
+  // These sprites were added after the HUD camera's initial `ignore`
+  // snapshot, so they'd be seen by both cameras. Re-apply the HUD
+  // camera's ignore to every sprite except the HUD text elements —
+  // and specifically SKIP the briefing modal items (if still up), since
+  // those are already in cameras.main.ignore and would otherwise end
+  // up invisible to both cameras.
+  const briefingItems = scene._briefingModalItems || [];
+  scene.hudCam.ignore(
+    scene.children.list.filter(
+      (child) =>
+        child !== scene.hudText &&
+        child !== scene.controlsText &&
+        child !== scene.missionCompleteText &&
+        !briefingItems.includes(child),
+    ),
+  );
+
+  // Kill counter caps on total people (built-out now)
+  scene.totalPeople = countTotalPeople(scene);
 }

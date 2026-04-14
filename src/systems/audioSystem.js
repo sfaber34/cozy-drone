@@ -87,19 +87,18 @@ export function initAudio(scene) {
     const engineFiles = results[sfxManifests.length + 1] || [];
     const cannonGunFiles = results[sfxManifests.length + 2] || [];
 
-    for (const filename of musicFiles) {
-      scene.load.audio(`music-${filename}`, `/music/${filename}`);
+    // --- PHASE 1: engine + ONE random music track ---
+    // Keeps the initial audio load tiny so the game becomes interactive
+    // quickly; everything else streams in during the intro modal + cutscene.
+    let firstMusicFile = null;
+    if (musicFiles.length > 0) {
+      firstMusicFile = Phaser.Utils.Array.GetRandom(musicFiles);
+      scene.load.audio(`music-${firstMusicFile}`, `/music/${firstMusicFile}`);
     }
-    scene.musicTracks = musicFiles;
-
-    for (const r of sfxResults) {
-      for (const entry of r.files) {
-        const { file, volume } = parseSfxEntry(entry);
-        const key = `sfx-${r.category}-${file}`;
-        scene.load.audio(key, `${r.path}/${file}`);
-        if (volume !== 1) scene.sfxVolumes.set(key, volume);
-      }
-    }
+    // musicTracks only contains tracks that are actually loaded so far;
+    // playRandomTrack will only pick from these. After phase 2 completes
+    // we expand it to the full list.
+    scene.musicTracks = firstMusicFile ? [firstMusicFile] : [];
 
     let engineKey = null;
     if (engineFiles.length > 0) {
@@ -107,30 +106,16 @@ export function initAudio(scene) {
       scene.load.audio(engineKey, `/sfx/engine/${engineFiles[0]}`);
     }
 
-    let cannonGunKey = null;
-    if (cannonGunFiles.length > 0) {
-      cannonGunKey = `sfx-cannonFiring-${cannonGunFiles[0]}`;
-      scene.load.audio(cannonGunKey, `/sfx/cannonFiring/${cannonGunFiles[0]}`);
-    }
-
-    if (
+    const nothingToLoad =
       musicFiles.length === 0 &&
       engineKey === null &&
-      cannonGunKey === null &&
-      sfxResults.every((r) => r.files.length === 0)
-    )
-      return;
+      cannonGunFiles.length === 0 &&
+      sfxResults.every((r) => r.files.length === 0);
+    if (nothingToLoad) return;
 
     scene.load.once("complete", () => {
       scene.audioLoaded = true;
       if (scene.sound.context) scene.sound.context.resume();
-
-      for (const r of sfxResults) {
-        for (const entry of r.files) {
-          const { file } = parseSfxEntry(entry);
-          scene.sfx[r.category].push(`sfx-${r.category}-${file}`);
-        }
-      }
 
       if (engineKey) {
         scene.engineKey = engineKey;
@@ -147,16 +132,18 @@ export function initAudio(scene) {
         scene.engineActive = null;
       }
 
-      if (cannonGunKey) {
-        scene.cannonGunKey = cannonGunKey;
-        scene.cannonGunA = scene.sound.add(cannonGunKey, { volume: 0, loop: false });
-        scene.cannonGunB = scene.sound.add(cannonGunKey, { volume: 0, loop: false });
-        scene.cannonGunActive = null;
-      }
-
       if (scene.musicTracks.length > 0) {
         playRandomTrack(scene);
       }
+
+      // --- PHASE 2: remaining music + all sfx + cannon gun (background) ---
+      loadDeferredAudio(
+        scene,
+        sfxResults,
+        cannonGunFiles,
+        musicFiles,
+        firstMusicFile,
+      );
     });
     scene.load.start();
   });
@@ -168,6 +155,56 @@ export function initAudio(scene) {
       }
     });
   }
+}
+
+// Phase-2 loader: kicks off during the intro modal so death/explosion/
+// missile/cannon-gun sfx and extra music tracks are ready by the time the
+// player can actually shoot anything.
+function loadDeferredAudio(scene, sfxResults, cannonGunFiles, musicFiles, firstMusicFile) {
+  // All sfx files (death, explosion, missileLaunch, animal deaths, ...)
+  for (const r of sfxResults) {
+    for (const entry of r.files) {
+      const { file, volume } = parseSfxEntry(entry);
+      const key = `sfx-${r.category}-${file}`;
+      scene.load.audio(key, `${r.path}/${file}`);
+      if (volume !== 1) scene.sfxVolumes.set(key, volume);
+    }
+  }
+
+  // Cannon firing loop
+  let cannonGunKey = null;
+  if (cannonGunFiles.length > 0) {
+    cannonGunKey = `sfx-cannonFiring-${cannonGunFiles[0]}`;
+    scene.load.audio(cannonGunKey, `/sfx/cannonFiring/${cannonGunFiles[0]}`);
+  }
+
+  // Remaining music tracks (skip the one phase 1 already loaded)
+  for (const filename of musicFiles) {
+    if (filename === firstMusicFile) continue;
+    scene.load.audio(`music-${filename}`, `/music/${filename}`);
+  }
+
+  scene.load.once("complete", () => {
+    // Publish sfx keys — playSfxAt / playDeathSfxAt / playAnimalDeathSfxAt
+    // read from these arrays, so until now those calls silently no-op.
+    for (const r of sfxResults) {
+      for (const entry of r.files) {
+        const { file } = parseSfxEntry(entry);
+        scene.sfx[r.category].push(`sfx-${r.category}-${file}`);
+      }
+    }
+
+    if (cannonGunKey) {
+      scene.cannonGunKey = cannonGunKey;
+      scene.cannonGunA = scene.sound.add(cannonGunKey, { volume: 0, loop: false });
+      scene.cannonGunB = scene.sound.add(cannonGunKey, { volume: 0, loop: false });
+      scene.cannonGunActive = null;
+    }
+
+    // Now enable full music cycling
+    scene.musicTracks = musicFiles;
+  });
+  scene.load.start();
 }
 
 export function playRandomTrack(scene) {
