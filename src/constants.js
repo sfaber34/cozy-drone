@@ -62,6 +62,34 @@ export const FARM_FIELD_ANIMAL_CHICKENS = 8;
 export const FARM_FIELD_ANIMAL_CAMELS = 3;
 export const FARM_FIELD_ANIMAL_SHEEP = 6; // uses goat texture as a sheep stand-in
 
+// Concert — stage with a 4-piece band and a dancing/cheering/wandering crowd
+export const CONCERT_X = 76;  // tile (center) — above farm field
+export const CONCERT_Y = 62;  // tile (center)
+export const CONCERT_STAGE_WIDTH_PX  = 320;
+export const CONCERT_STAGE_HEIGHT_PX = 80;
+export const CONCERT_MUSICIAN_COUNT = 4; // singer, guitarist, keyboardist, drummer
+export const CONCERT_CROWD_COUNT = 55;
+export const CONCERT_CROWD_WIDTH_PX  = 420;
+export const CONCERT_CROWD_HEIGHT_PX = 260;
+export const CONCERT_CROWD_TOP_GAP_PX = 24; // gap between stage and crowd
+export const CONCERT_CROWD_MIN_SPACING = 14; // anti-stack min px between crowd members
+export const CONCERT_CROWD_SPAWN_MAX_TRIES = 30;
+// Music note emojis rising from each musician
+export const CONCERT_NOTE_INTERVAL_MIN   = 700; // ms between spawns per musician
+export const CONCERT_NOTE_INTERVAL_RANGE = 600;
+export const CONCERT_NOTE_RISE_HEIGHT = 48;     // px the note floats upward
+export const CONCERT_NOTE_RISE_DURATION = 1800; // ms
+// Dance / cheer / wander state
+export const CONCERT_STATE_SWITCH_MIN   = 5;  // seconds between crowd-member state flips
+export const CONCERT_STATE_SWITCH_RANGE = 8;
+export const CONCERT_DANCE_FRAME_INTERVAL = 260; // ms between dance frames
+export const CONCERT_DANCE_BOB_HZ  = 2.0;        // bob-up-down frequency (Hz)
+export const CONCERT_DANCE_BOB_AMP = 2;          // px bob amplitude
+export const CONCERT_CHEER_FRAME_INTERVAL = 360; // ms
+export const CONCERT_WANDER_SPEED = 16;          // px/s while wandering
+export const CONCERT_WANDER_HOP_DIST_MIN   = 25;
+export const CONCERT_WANDER_HOP_DIST_RANGE = 60;
+
 // Chicken fight — cockfighting ring with spectators
 export const CHICKEN_FIGHT_X = 115;
 export const CHICKEN_FIGHT_Y = 108;
@@ -110,6 +138,7 @@ export const BIKER_NO_GO_ZONES = [
   { x: CHICKEN_FIGHT_X, y: CHICKEN_FIGHT_Y, hw: 5, hh: 5 }, // Chicken fight
   { x: CAMEL_RACE_X, y: CAMEL_RACE_Y, hw: 8, hh: 6 }, // Camel race
   { x: FARM_FIELD_X, y: FARM_FIELD_Y, hw: 12, hh: 15 }, // Farm field
+  { x: CONCERT_X, y: CONCERT_Y, hw: 9, hh: 7 }, // Concert
   { x: ROCK_FIGHT_X, y: ROCK_FIGHT_Y, hw: 10, hh: 8 }, // Rock fight
 ];
 
