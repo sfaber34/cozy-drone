@@ -142,8 +142,8 @@ export const DRONE_SHADOW_OPACITY = 0.75; // max shadow alpha at ground level (r
 // --- Tire fire set piece ---
 // A pile of burning tires with thick black smoke and a crowd gathered round
 // warming hands / roasting marshmallows / drinking.
-export const TIRE_FIRE_TIRE_COUNT = 14; // tire sprites stacked in the pile
-export const TIRE_FIRE_PILE_SPREAD = 26; // px random offset per tire in the pile
+export const TIRE_FIRE_TIRE_COUNT = 4; // tire sprites stacked in the pile
+export const TIRE_FIRE_PILE_SPREAD = 40; // px random offset per tire in the pile
 export const TIRE_FIRE_CROWD_COUNT = 22; // people gathered round the fire
 export const TIRE_FIRE_CROWD_RADIUS_MIN = 80; // min distance from fire center
 export const TIRE_FIRE_CROWD_RADIUS_RANGE = 25; // random extra distance

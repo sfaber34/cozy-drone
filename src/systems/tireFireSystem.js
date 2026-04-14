@@ -33,11 +33,22 @@ export function createTireFire(scene, rng, opts) {
   const cy = tileY * TILE * SCALE;
   const sprites = [];
 
-  // --- Tire pile ---
+  // --- Tire pile (arranged around the center so the fire always sits in the middle) ---
+  // 1 tire at the center, the rest spaced around it at TIRE_FIRE_PILE_SPREAD,
+  // each with a small random jitter so it still reads as a messy pile.
   for (let i = 0; i < TIRE_FIRE_TIRE_COUNT; i++) {
-    const tx = cx + rng.between(-TIRE_FIRE_PILE_SPREAD, TIRE_FIRE_PILE_SPREAD);
-    const ty =
-      cy + rng.between(-TIRE_FIRE_PILE_SPREAD / 2, TIRE_FIRE_PILE_SPREAD / 2);
+    let tx, ty;
+    if (i === 0) {
+      tx = cx;
+      ty = cy;
+    } else {
+      const angle = ((i - 1) / (TIRE_FIRE_TIRE_COUNT - 1)) * Math.PI * 2;
+      const jitterAng = angle + (Math.random() - 0.5) * 0.4;
+      const radius = TIRE_FIRE_PILE_SPREAD * (0.55 + Math.random() * 0.45);
+      // Squash vertically a touch for a flatter top-down pile shape
+      tx = cx + Math.cos(jitterAng) * radius;
+      ty = cy + Math.sin(jitterAng) * radius * 0.7;
+    }
     const t = scene.add
       .image(tx, ty, "tire")
       .setScale(SCALE)
@@ -51,7 +62,7 @@ export function createTireFire(scene, rng, opts) {
   // after create() adds all existing children to hudCam.ignore, so no
   // explicit ignore call is needed here.
   const fire = scene.add
-    .image(cx, cy - 12, "fire")
+    .image(cx, cy, "fire")
     .setScale(SCALE * 2.6)
     .setDepth(3);
   sprites.push(fire);
