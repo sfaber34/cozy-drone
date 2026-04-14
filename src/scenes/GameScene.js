@@ -129,9 +129,10 @@ export class GameScene extends Phaser.Scene {
     createChickenFight(this, rng);
     createCamelRace(this, rng);
 
-    // --- Runway (6 tiles long) ---
+    // --- Runway ---
     const rwX = AIRFIELD_X * TILE * SCALE;
-    const rwTiles = 6;
+    const rwTiles = 2; // 1/4 the original length (was 6)
+    const rwWidthMult = 1.5; // 50% wider than original
     const rwTileH = 128 * SCALE;
     const rwTotalH = rwTiles * rwTileH;
     // Runway positioned centered on AIRFIELD_Y
@@ -141,19 +142,20 @@ export class GameScene extends Phaser.Scene {
     for (let i = 0; i < rwTiles; i++) {
       this.add
         .image(rwX, rwTop + i * rwTileH + rwTileH / 2, "runway")
-        .setScale(SCALE)
+        .setScale(SCALE * rwWidthMult, SCALE)
         .setDepth(1.5);
     }
     // Store runway bounds for collision
     this.runway = {
       x: rwX,
       y: rwCenterY,
-      halfW: (32 * SCALE) / 2,
+      halfW: (32 * SCALE * rwWidthMult) / 2,
       halfH: rwTotalH / 2,
     };
 
     // --- Hangar (to the right of the runway bottom) ---
-    const hangarOffset = (48 * SCALE) / 2 + (32 * SCALE) / 2 + 16 * SCALE * 3; // hangar half + runway half + taxiway gap
+    const rwHalfW = (32 * SCALE * rwWidthMult) / 2;
+    const hangarOffset = (48 * SCALE) / 2 + rwHalfW + 16 * SCALE * 3; // hangar half + runway half + taxiway gap
     this.hangarX = rwX + hangarOffset;
     this.hangarY = rwBottom - (48 * SCALE) / 2;
     this.add
@@ -162,7 +164,7 @@ export class GameScene extends Phaser.Scene {
       .setDepth(1.5);
 
     // --- Taxiway connecting hangar door to runway ---
-    const taxiStartX = rwX + (32 * SCALE) / 2; // right edge of runway
+    const taxiStartX = rwX + rwHalfW; // right edge of runway
     const taxiEndX = this.hangarX - (48 * SCALE) / 2; // left edge of hangar (door side)
     const taxiY = this.hangarY;
     for (let tx = taxiStartX; tx < taxiEndX; tx += 16 * SCALE) {
