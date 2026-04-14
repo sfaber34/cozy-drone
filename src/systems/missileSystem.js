@@ -173,31 +173,6 @@ export function missileImpact(scene, x, y) {
   exp.play("explode");
   exp.once("animationcomplete", () => exp.destroy());
 
-  // Spawn cute symbols (randomized count, types, directions)
-  const symbols = ["heart", "flower", "smiley", "star", "rainbow"];
-  const count = Phaser.Math.Between(3, 12);
-  for (let i = 0; i < count; i++) {
-    const tex = Phaser.Utils.Array.GetRandom(symbols);
-    const s = SCALE * 0.5;
-    const sym = scene.add.image(x, y, tex).setScale(s).setDepth(12);
-    scene.hudCam.ignore(sym);
-    const angle = Math.random() * Math.PI * 2;
-    const dist = 30 + Math.random() * 120;
-    const duration = 400 + Math.random() * 800;
-    scene.tweens.add({
-      targets: sym,
-      x: x + Math.cos(angle) * dist,
-      y: y + Math.sin(angle) * dist - 20 - Math.random() * 30,
-      scale: s * (0.3 + Math.random() * 0.7),
-      alpha: 0,
-      angle: Phaser.Math.Between(-270, 270),
-      duration,
-      delay: Math.random() * 150,
-      ease: "Quad.easeOut",
-      onComplete: () => sym.destroy(),
-    });
-  }
-
   // Explosion SFX — directional relative to drone
   playSfxAt(scene, "explosion", x, y, EXPLOSION_VOLUME);
 

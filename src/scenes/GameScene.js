@@ -27,6 +27,7 @@ import {
   updateCannonFiringSound,
 } from "../systems/audioSystem.js";
 import { playIntroCutscene } from "../systems/introSystem.js";
+import { showBriefingModal } from "../systems/briefingModal.js";
 import { createWedding } from "../systems/weddingSetup.js";
 import { createSoccer, updateSoccer } from "../systems/soccerSystem.js";
 import { createBuildings } from "../systems/buildingSystem.js";
@@ -355,7 +356,7 @@ export class GameScene extends Phaser.Scene {
       this.controlsText.setVisible(false);
       // Apply mobile zoom immediately so the intro cutscene starts at the right zoom level
       this.cameras.main.setZoom(MOBILE_ZOOM_FACTOR);
-      this.scene.launch("MobileControls", { gameScene: this });
+      // MobileControls is launched after the briefing modal is dismissed
     }
 
     // Kill counter
@@ -365,9 +366,14 @@ export class GameScene extends Phaser.Scene {
     // --- Audio (music + SFX + engine, loaded in one batch) ---
     initAudio(this);
 
-    // --- Intro cutscene ---
+    // --- Intro cutscene (gated by briefing modal for audio unlock) ---
     this.introPlaying = true;
-    playIntroCutscene(this);
+    showBriefingModal(this, () => {
+      if (this.isMobile) {
+        this.scene.launch("MobileControls", { gameScene: this });
+      }
+      playIntroCutscene(this);
+    });
   }
 
   // Returns true if screen-space (px, py) falls on a mobile control widget
