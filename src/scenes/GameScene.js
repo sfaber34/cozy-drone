@@ -19,6 +19,9 @@ import {
   VICTORY_KILL_THRESHOLD,
   CAMERA_FOLLOW_LERP,
   MOBILE_ZOOM_FACTOR,
+  INTRO_TARGET_RIGHT_PX,
+  INTRO_ZOOM_MAX,
+  INTRO_ZOOM_OUT_DURATION_MS,
 } from "../constants.js";
 import { createWater, WATER_BOUNDS } from "../systems/waterSystem.js";
 
@@ -223,7 +226,19 @@ export class GameScene extends Phaser.Scene {
       CAMERA_FOLLOW_LERP,
       CAMERA_FOLLOW_LERP,
     );
-    this.cameras.main.setZoom(1);
+    // Detect mobile up-front so computeIntroZoom picks the right gameplay-
+    // zoom floor (portrait phones should stay at MOBILE_ZOOM_FACTOR, not
+    // desktop's 1.0). The actual mobile-controls launch is still deferred
+    // to after the briefing dismisses.
+    this.isMobile = this.sys.game.device.input.touch;
+
+    // Start zoomed in during intro — hides off-screen texture pop-in while
+    // person skins are still generating. introZoomActive gates the altitude
+    // zoom logic in update() until the tween finishes. Zoom is computed
+    // from viewport width so narrow screens aren't over-zoomed and wide
+    // screens don't show too much empty desert.
+    this.introZoomActive = true;
+    this.cameras.main.setZoom(computeIntroZoom(this));
 
     // --- Input ---
     this.cursors = this.input.keyboard.addKeys({
@@ -340,7 +355,8 @@ export class GameScene extends Phaser.Scene {
     this.controlsText.setY(this.scale.height - 30);
 
     // --- Mobile controls ---
-    this.isMobile = this.sys.game.device.input.touch;
+    // isMobile was set earlier (near the camera setup) so computeIntroZoom
+    // could use the right gameplay-zoom floor.
     this.mobileInput = {
       left: false,
       right: false,
@@ -357,8 +373,9 @@ export class GameScene extends Phaser.Scene {
     this.mobileControlZones = null; // populated by MobileControlsScene.buildControls()
     if (this.isMobile) {
       this.controlsText.setVisible(false);
-      // Apply mobile zoom immediately so the intro cutscene starts at the right zoom level
-      this.cameras.main.setZoom(MOBILE_ZOOM_FACTOR);
+      // Intro zoom was set above via computeIntroZoom (already viewport-aware
+      // and clamped to at least MOBILE_ZOOM_FACTOR), so no mobile override
+      // is needed. The tween in update() lands at MOBILE_ZOOM_FACTOR.
       // MobileControls is launched after the briefing modal is dismissed
     }
 
@@ -408,6 +425,24 @@ export class GameScene extends Phaser.Scene {
 
     // --- Intro cutscene playing ---
     if (this.introPlaying) return;
+
+    // --- Intro just finished — tween the camera from its zoomed-in intro
+    //     framing back to the normal gameplay zoom once, then hand zoom
+    //     control back to the altitude-based logic below.
+    if (this.introZoomActive && !this._introZoomTweenStarted) {
+      this._introZoomTweenStarted = true;
+      const mobileZoom = this.isMobile ? MOBILE_ZOOM_FACTOR : 1.0;
+      const targetZoom = DRONE_ZOOM_MAX * mobileZoom;
+      this.tweens.add({
+        targets: this.cameras.main,
+        zoom: targetZoom,
+        duration: INTRO_ZOOM_OUT_DURATION_MS,
+        ease: "Sine.easeInOut",
+        onComplete: () => {
+          this.introZoomActive = false;
+        },
+      });
+    }
 
     // --- Crashed state ---
     if (this.flightState === "crashed") {
@@ -580,18 +615,21 @@ export class GameScene extends Phaser.Scene {
     }
 
     // --- Camera zoom (zoom out above threshold; mobile adds a constant 25% zoom-out) ---
-    const mobileZoom = this.isMobile ? MOBILE_ZOOM_FACTOR : 1.0;
-    if (ds.altitude <= DRONE_ZOOM_ALT_THRESHOLD) {
-      this.cameras.main.setZoom(DRONE_ZOOM_MAX * mobileZoom);
-      this.drone.setScale(SCALE);
-    } else {
-      const t =
-        (ds.altitude - DRONE_ZOOM_ALT_THRESHOLD) /
-        (ds.maxAlt - DRONE_ZOOM_ALT_THRESHOLD);
-      const worldZoom = Phaser.Math.Linear(DRONE_ZOOM_MAX, DRONE_ZOOM_MIN, t);
-      this.cameras.main.setZoom(worldZoom * mobileZoom);
-      // Drone compensates for altitude zoom only (mobile zoom intentionally shrinks it)
-      this.drone.setScale(SCALE / worldZoom);
+    // While the intro zoom-out tween is still running, leave the camera alone.
+    if (!this.introZoomActive) {
+      const mobileZoom = this.isMobile ? MOBILE_ZOOM_FACTOR : 1.0;
+      if (ds.altitude <= DRONE_ZOOM_ALT_THRESHOLD) {
+        this.cameras.main.setZoom(DRONE_ZOOM_MAX * mobileZoom);
+        this.drone.setScale(SCALE);
+      } else {
+        const t =
+          (ds.altitude - DRONE_ZOOM_ALT_THRESHOLD) /
+          (ds.maxAlt - DRONE_ZOOM_ALT_THRESHOLD);
+        const worldZoom = Phaser.Math.Linear(DRONE_ZOOM_MAX, DRONE_ZOOM_MIN, t);
+        this.cameras.main.setZoom(worldZoom * mobileZoom);
+        // Drone compensates for altitude zoom only (mobile zoom intentionally shrinks it)
+        this.drone.setScale(SCALE / worldZoom);
+      }
     }
 
     // --- Propeller animation (faster spin at higher speed) ---
@@ -720,6 +758,18 @@ export class GameScene extends Phaser.Scene {
       this.missionCompleteText.setPosition(10, hudBottom + 4);
     }
   }
+}
+
+// Compute a viewport-aware intro zoom. Goal: the camera (centered on the
+// drone at the runway) sees at least INTRO_TARGET_RIGHT_PX world-px to the
+// right so the hangar frames the right edge of the screen. Clamps to the
+// gameplay zoom as a minimum (never zoom OUT during intro) and
+// INTRO_ZOOM_MAX as a maximum (don't over-zoom on ultrawide monitors).
+function computeIntroZoom(scene) {
+  const gameplayZoom = scene.isMobile ? MOBILE_ZOOM_FACTOR : 1.0;
+  const halfScreen = scene.scale.width / 2;
+  const desired = halfScreen / INTRO_TARGET_RIGHT_PX;
+  return Phaser.Math.Clamp(desired, gameplayZoom, INTRO_ZOOM_MAX);
 }
 
 // Deferred world initialization — runs once person-skin textures have

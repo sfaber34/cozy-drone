@@ -313,6 +313,16 @@ export const CLUSTER_BOMBLET_FALL_TIME = 0.3; // seconds for bomblets to travel 
 
 // --- Mobile Controls ---
 export const MOBILE_ZOOM_FACTOR = 0.6; // base zoom multiplier on mobile (25% zoom out)
+// Intro zoom: camera starts zoomed-in during the cutscene so off-screen
+// texture pop-in is hidden and the hangar is framed next to the drone.
+// Zoom is computed from viewport width so wide desktop screens get a
+// bigger zoom-in than narrow phone portraits.
+//   zoom = clamp(screenWidth/2 / INTRO_TARGET_RIGHT_PX, min, max)
+// Where min is the normal gameplay zoom (no zoom-out during intro), and
+// max prevents extreme zoom-in on huge monitors.
+export const INTRO_TARGET_RIGHT_PX = 360; // world-px the camera should see to the right of the drone
+export const INTRO_ZOOM_MAX = 2.6;        // upper cap on the intro zoom
+export const INTRO_ZOOM_OUT_DURATION_MS = 1500; // ms tween from intro zoom back to normal gameplay zoom
 export const MOBILE_JOYSTICK_RADIUS = 65; // virtual joystick radius (px)
 export const MOBILE_BUTTON_RADIUS = 42; // fire/alt button radius (px)
 export const MOBILE_BUTTON_MARGIN = 18; // gap from screen edge and between buttons (px)
