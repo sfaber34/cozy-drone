@@ -10,10 +10,10 @@ export const MOAT_TILES = 30; // water tiles surrounding the map on every side
 // Per-setpiece BALANCE knobs live below; the positions live in GameScene.
 
 // Farm field — size/counts only (position via tileX/tileY)
-export const FARM_FIELD_WIDTH_PX = 900; // field width (px)
+export const FARM_FIELD_WIDTH_PX = 1600; // field width (px)
 export const FARM_FIELD_HEIGHT_PX = 1200; // field height (px)
-export const FARM_FIELD_TRACTOR_COUNT = 3;
-export const FARM_FIELD_TRACTOR_SPEED = 14; // px/s along the row length (slow, real-world tractor feel)
+export const FARM_FIELD_TRACTOR_COUNT = 6;
+export const FARM_FIELD_TRACTOR_SPEED = 20; // px/s along the row length (slow, real-world tractor feel)
 export const FARM_FIELD_TRACTOR_ROWS_PER_STRIP = 4; // discrete plow rows per strip; tractor U-turns to next row at each end
 export const FARM_FIELD_TRACTOR_TURN_DURATION = 1.6; // seconds to complete each U-turn at the strip edge
 export const FARM_FIELD_TRACTOR_TURN_ARC = 18; // px of arc "bulge" during U-turn (overshoots the strip edge)
@@ -22,16 +22,16 @@ export const FARM_FIELD_TRACTOR_DUST_DURATION = 5000; // ms each dust puff lives
 export const FARM_FIELD_TRACTOR_DUST_OPACITY = 0.75; // starting alpha of each dust puff (+random jitter on top)
 export const FARM_FIELD_TRACTOR_DUST_OPACITY_JITTER = 0.2; // random alpha added per puff
 export const FARM_FIELD_REMOUNT_DIST = 18; // px proximity for driver to climb back on
-export const FARM_FIELD_PICKER_COUNT = 18; // people picking crops in the field
+export const FARM_FIELD_PICKER_COUNT = 32; // people picking crops in the field
 export const FARM_FIELD_PICKER_WALK_SPEED = 22; // px/s when walking between pick spots
 export const FARM_FIELD_PICKER_PICK_DURATION_MIN = 1.6; // seconds of pick animation before moving on
 export const FARM_FIELD_PICKER_PICK_DURATION_RANGE = 1.4; // random added
 export const FARM_FIELD_PICKER_HOP_DIST_MIN = 30; // px min distance to next pick spot
 export const FARM_FIELD_PICKER_HOP_DIST_RANGE = 80; // px random added
-export const FARM_FIELD_ANIMAL_PIGS = 5;
-export const FARM_FIELD_ANIMAL_CHICKENS = 8;
-export const FARM_FIELD_ANIMAL_CAMELS = 3;
-export const FARM_FIELD_ANIMAL_SHEEP = 6; // uses goat texture as a sheep stand-in
+export const FARM_FIELD_ANIMAL_PIGS = 10;
+export const FARM_FIELD_ANIMAL_CHICKENS = 10;
+export const FARM_FIELD_ANIMAL_CAMELS = 8;
+export const FARM_FIELD_ANIMAL_SHEEP = 10; // uses goat texture as a sheep stand-in
 export const FARM_FIELD_TRACTOR_HP = 2; // HP per tractor. Missiles deal 1, cannon deals 0.5 → 2 missile hits / 4 cannon hits
 export const FARM_FIELD_TRACTOR_HIT_RADIUS = 40; // px explosion radius that counts as a hit on a tractor
 
