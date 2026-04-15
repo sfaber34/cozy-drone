@@ -174,29 +174,38 @@ export function affectNearbyAnimals(scene, x, y) {
     const dist = Phaser.Math.Distance.Between(x, y, a.sprite.x, a.sprite.y);
 
     if (dist < killRadius) {
-      // Explode into meat!
+      // Explode into meat (chickens poof into feathers instead)
       a.state = "dead";
       playAnimalDeathSfxAt(scene, a.type, a.sprite.x, a.sprite.y);
       a.sprite.setVisible(false);
-      const meatCount = Phaser.Math.Between(3, 6);
-      for (let m = 0; m < meatCount; m++) {
-        const meat = scene.add
-          .image(a.sprite.x, a.sprite.y, "meat")
+      const isChicken = a.type === "chicken";
+      const debrisTex = isChicken ? "feather" : "meat";
+      const debrisCount = isChicken
+        ? Phaser.Math.Between(6, 10)
+        : Phaser.Math.Between(3, 6);
+      for (let m = 0; m < debrisCount; m++) {
+        const bit = scene.add
+          .image(a.sprite.x, a.sprite.y, debrisTex)
           .setScale(SCALE * 0.7)
           .setDepth(12);
-        scene.hudCam.ignore(meat);
+        scene.hudCam.ignore(bit);
         const angle = Math.random() * Math.PI * 2;
-        const flingDist = 30 + Math.random() * 60;
+        // Feathers drift shorter + slower than meat chunks
+        const flingDist = isChicken
+          ? 15 + Math.random() * 35
+          : 30 + Math.random() * 60;
         scene.tweens.add({
-          targets: meat,
+          targets: bit,
           x: a.sprite.x + Math.cos(angle) * flingDist,
           y: a.sprite.y + Math.sin(angle) * flingDist,
           angle: Phaser.Math.Between(-360, 360),
           alpha: 0,
-          duration: 800 + Math.random() * 400,
+          duration: isChicken
+            ? 1400 + Math.random() * 800
+            : 800 + Math.random() * 400,
           delay: Math.random() * 100,
           ease: "Quad.easeOut",
-          onComplete: () => meat.destroy(),
+          onComplete: () => bit.destroy(),
         });
       }
     } else if (dist < panicRadius && a.state !== "panicking") {

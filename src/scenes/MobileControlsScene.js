@@ -139,8 +139,8 @@ export class MobileControlsScene extends Phaser.Scene {
     ];
 
     // Weapon selector rocker — horizontal pill at bottom center
-    const wrW = br * 2.4;
-    const wrH = br * 0.8;
+    const wrW = br * 3.0; // 25% larger than the old br * 2.4
+    const wrH = br * 1.0; // 25% larger than the old br * 0.8
     const wrCX = w / 2;
     const wrCY = safeH - m - wrH / 2;
     this.weaponRocker = { cx: wrCX, cy: wrCY, w: wrW, h: wrH };

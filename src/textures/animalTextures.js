@@ -209,4 +209,16 @@ export function generateAnimalTextures(scene) {
   mtc.fillRect(1, 3, 1, 2);
   mtc.fillRect(4, 3, 1, 2);
   meatCanvas.refresh();
+
+  // --- Feather (4x5) — small curved white plume ---
+  const featherCanvas = scene.textures.createCanvas('feather', 4, 5);
+  const fc = featherCanvas.context;
+  fc.fillStyle = '#ffffff';
+  fc.fillRect(1, 0, 2, 4);
+  fc.fillRect(0, 1, 4, 2);
+  fc.fillStyle = '#dddddd';   // soft shadow
+  fc.fillRect(2, 2, 1, 2);
+  fc.fillStyle = '#8a6a3a';   // quill at the base
+  fc.fillRect(1, 3, 2, 2);
+  featherCanvas.refresh();
 }

@@ -390,21 +390,30 @@ export function cannonImpact(scene, x, y) {
         a.state = "dead";
         playAnimalDeathSfxAt(scene, a.type, a.sprite.x, a.sprite.y);
         a.sprite.setVisible(false);
-        const meatCount = Phaser.Math.Between(3, 6);
-        for (let m = 0; m < meatCount; m++) {
-          const meat = scene.add.image(a.sprite.x, a.sprite.y, "meat")
+        const isChicken = a.type === "chicken";
+        const debrisTex = isChicken ? "feather" : "meat";
+        const debrisCount = isChicken
+          ? Phaser.Math.Between(6, 10)
+          : Phaser.Math.Between(3, 6);
+        for (let m = 0; m < debrisCount; m++) {
+          const bit = scene.add.image(a.sprite.x, a.sprite.y, debrisTex)
             .setScale(SCALE * 0.7).setDepth(12);
-          scene.hudCam.ignore(meat);
+          scene.hudCam.ignore(bit);
           const mAngle = Math.random() * Math.PI * 2;
-          const fDist = 20 + Math.random() * 40;
+          const fDist = isChicken
+            ? 10 + Math.random() * 25
+            : 20 + Math.random() * 40;
           scene.tweens.add({
-            targets: meat,
+            targets: bit,
             x: a.sprite.x + Math.cos(mAngle) * fDist,
             y: a.sprite.y + Math.sin(mAngle) * fDist,
             angle: Phaser.Math.Between(-360, 360),
-            alpha: 0, duration: 600 + Math.random() * 300,
+            alpha: 0,
+            duration: isChicken
+              ? 1200 + Math.random() * 600
+              : 600 + Math.random() * 300,
             ease: "Quad.easeOut",
-            onComplete: () => meat.destroy(),
+            onComplete: () => bit.destroy(),
           });
         }
       }
