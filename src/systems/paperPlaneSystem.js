@@ -26,9 +26,11 @@ import { createManagedPerson } from "./managedPersonUtils.js";
 
 // Plane depths: ground-sitting planes render BELOW the y-sorted people
 // band (2.0–2.99) so folks can walk over them; in-flight planes render
-// above the band so they're always visible.
+// above the band so they're always visible. The flying-plane shadow is
+// drawn even lower — below people — to read as "on the ground".
 const PLANE_DEPTH_GROUND = 1.9;
 const PLANE_DEPTH_AIR = 4;
+const PLANE_SHADOW_DEPTH = 1.7;
 
 const GREETINGS = [
   "Watch the\ndistance!", "Weeee!", "Plane\nlaunched!",
@@ -90,11 +92,24 @@ export function createPaperPlane(scene, rng, opts) {
       .setDepth(PLANE_DEPTH_GROUND);
     sprites.push(plane);
 
+    // Ground shadow — reuses the plane texture tinted black + semi-transparent.
+    // Rendered at PLANE_SHADOW_DEPTH so it sits below both the plane AND
+    // people, matching how other shadows in the game read.
+    const planeShadow = scene.add
+      .image(sx, sy - 6, "paper-plane")
+      .setScale(SCALE)
+      .setDepth(PLANE_SHADOW_DEPTH)
+      .setTint(0x000000)
+      .setAlpha(0.35)
+      .setVisible(false);
+    sprites.push(planeShadow);
+
     throwers.push({
       personEntry,
       sprite,
       skinId,
       plane,
+      planeShadow,
       // Throw direction + a live plane trajectory
       throwAngle: Math.random() * Math.PI * 2,
       planeX: sx,
@@ -169,8 +184,9 @@ function updateThrower(scene, area, t, dt) {
         t.phase = "release";
         t.phaseTimer = PAPER_PLANE_RELEASE_DURATION;
         t.sprite.setTexture(`person-throw2-${t.skinId}`);
-        // Plane is now airborne — render above people.
+        // Plane is now airborne — render above people, show ground shadow.
         t.plane.setDepth(PLANE_DEPTH_AIR);
+        t.planeShadow.setVisible(true);
       }
       break;
     }
@@ -284,9 +300,20 @@ function advancePlane(t, dt) {
   t.plane.setPosition(x, py);
   // Rotate the plane to face its flight direction
   t.plane.setRotation(t.throwAngle + Math.PI / 2); // texture points "up" by default
+
+  // Ground shadow — track directly under the plane (at the un-arced Y).
+  // Shrink slightly while the plane is highest so the "higher ≈ smaller
+  // shadow" reads intuitively.
+  t.planeShadow.setPosition(x, baseY + 2);
+  t.planeShadow.setRotation(t.plane.rotation);
+  const altFrac = Math.sin(Math.PI * tt); // 0 at ends, 1 at peak
+  t.planeShadow.setScale(SCALE * (1 - altFrac * 0.35));
+  t.planeShadow.setAlpha(0.4 - altFrac * 0.15);
+
   if (tt >= 1) {
     // Landed — drop the plane behind the y-sorted people so they can walk over it.
     t.plane.setDepth(PLANE_DEPTH_GROUND);
+    t.planeShadow.setVisible(false);
     return true;
   }
   return false;

@@ -18,6 +18,8 @@ import {
   RC_CAR_TARGET_ARRIVE_PX,
   RC_CAR_SCALE,
   RC_CAR_WHEEL_WOBBLE_HZ, RC_CAR_WHEEL_WOBBLE_AMP,
+  RC_CAR_DRIVER_JUMP_INTERVAL_MIN, RC_CAR_DRIVER_JUMP_INTERVAL_RANGE,
+  RC_CAR_DRIVER_JUMP_HEIGHT, RC_CAR_DRIVER_JUMP_DURATION,
 } from "../constants.js";
 import { createManagedPerson } from "./managedPersonUtils.js";
 
@@ -122,6 +124,13 @@ export function createRcCar(scene, rng, opts) {
       targetX: pickArenaX(arena),
       targetY: pickArenaY(arena),
       wobblePhase: Math.random() * Math.PI * 2,
+      // Excited-jump state — start each driver with a random offset
+      // so the group isn't synchronized.
+      jumping: false,
+      jumpElapsed: 0,
+      jumpTimer:
+        Math.random() *
+        (RC_CAR_DRIVER_JUMP_INTERVAL_MIN + RC_CAR_DRIVER_JUMP_INTERVAL_RANGE),
     });
   }
 
@@ -144,13 +153,39 @@ export function createRcCar(scene, rng, opts) {
 // ----------------------------------------------------------------------
 
 function updateDriver(scene, arena, d, dt) {
-  // Keep the controller pinned to the driver (in case the person drifts
-  // or flips during wander animations from other systems).
-  const ctrlOffsetX = d.personSprite.x < arena.cx ? 7 : -7;
-  d.controller.setPosition(d.personSprite.x + ctrlOffsetX, d.personSprite.y - 1);
   // Hide the controller if the driver isn't idle (panicking / hiding / gone)
   const idle = d.personEntry.state === "idle";
   d.controller.setVisible(idle);
+
+  // Excited-jump state machine — only advances while idle. Applied via a
+  // Y offset that wraps the controller too so it stays in the driver's hand.
+  let jumpBob = 0;
+  if (idle) {
+    if (d.jumping) {
+      d.jumpElapsed += dt * 1000;
+      const t = Math.min(1, d.jumpElapsed / RC_CAR_DRIVER_JUMP_DURATION);
+      jumpBob = Math.sin(Math.PI * t) * RC_CAR_DRIVER_JUMP_HEIGHT;
+      if (t >= 1) {
+        d.jumping = false;
+        d.jumpElapsed = 0;
+        d.jumpTimer =
+          RC_CAR_DRIVER_JUMP_INTERVAL_MIN +
+          Math.random() * RC_CAR_DRIVER_JUMP_INTERVAL_RANGE;
+      }
+    } else {
+      d.jumpTimer -= dt * 1000;
+      if (d.jumpTimer <= 0) {
+        d.jumping = true;
+        d.jumpElapsed = 0;
+      }
+    }
+  }
+  // Apply jump bob to the person's Y around their home, and keep the
+  // controller anchored to the hand (so it rides the jump with them).
+  const baseY = d.personEntry.homeY;
+  d.personSprite.y = baseY - jumpBob;
+  const ctrlOffsetX = d.personSprite.x < arena.cx ? 7 : -7;
+  d.controller.setPosition(d.personSprite.x + ctrlOffsetX, d.personSprite.y - 1);
 
   // Car only moves while the driver is actively controlling it. When the
   // driver isn't idle the car just sits still.

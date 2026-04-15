@@ -154,6 +154,11 @@ export const RC_CAR_TARGET_ARRIVE_PX = 14; // how close to target before picking
 export const RC_CAR_SCALE = 0.8; // sprite scale multiplier (× SCALE)
 export const RC_CAR_WHEEL_WOBBLE_HZ = 14; // wheel-bounce rate while driving
 export const RC_CAR_WHEEL_WOBBLE_AMP = 0.6; // px vertical wobble while driving
+// Driver excitement jumps (spaced out so 10 drivers aren't all jumping together)
+export const RC_CAR_DRIVER_JUMP_INTERVAL_MIN = 4000;   // ms between jumps per driver
+export const RC_CAR_DRIVER_JUMP_INTERVAL_RANGE = 6000; // random extra ms
+export const RC_CAR_DRIVER_JUMP_HEIGHT = 6;            // px peak jump height
+export const RC_CAR_DRIVER_JUMP_DURATION = 450;        // ms full up-down jump
 
 // --- Paper planes set piece ---
 // A group of people each throwing their own paper airplane, cheering
@@ -175,6 +180,33 @@ export const PAPER_PLANE_CHEER_BOB_HZ = 2.6; // Hz vertical bob while plane flie
 export const PAPER_PLANE_CHEER_BOB_AMP = 4; // px jump amplitude
 export const PAPER_PLANE_CHEER_FRAME_INTERVAL = 220; // ms between wave1/wave2 toggles
 export const PAPER_PLANE_CHASE_FRAME_INTERVAL = 180; // ms between run1/run2 toggles
+
+// --- Farm compound extras (laundry / mice / chores) ---
+// Fence vertical scaling — stretched so there's room for the extra activity.
+export const FARM_COMPOUND_HEIGHT_FACTOR = 1.6; // multiplies the original fence Y offsets
+// Laundry line: a person cycles between line and basket hanging/removing clothes
+export const FARM_COMPOUND_LAUNDRY_ITEMS = 4;        // clothes on the line
+export const FARM_COMPOUND_LAUNDRY_WALK_SPEED = 28;  // px/s
+export const FARM_COMPOUND_LAUNDRY_GRAB_MS = 450;    // pick pose duration
+export const FARM_COMPOUND_LAUNDRY_PLACE_MS = 400;   // place pose duration
+// Mice — invulnerable critters that wander around the compound
+export const FARM_COMPOUND_MICE_COUNT = 4;
+export const FARM_COMPOUND_MOUSE_SPEED = 60;         // px/s
+export const FARM_COMPOUND_MOUSE_TURN_MIN_MS = 400;  // ms between direction changes
+export const FARM_COMPOUND_MOUSE_TURN_RANGE_MS = 700;
+// Mouse chasers — people hunting the mice with sticks
+export const FARM_COMPOUND_CHASER_COUNT = 3;
+export const FARM_COMPOUND_CHASER_SPEED = 55;        // px/s
+export const FARM_COMPOUND_CHASER_SWING_RANGE = 22;  // px — mouse must be inside this to get hit
+export const FARM_COMPOUND_CHASER_SWING_INTERVAL = 650; // ms between swings when in range
+export const FARM_COMPOUND_CHASER_SWING_POSE_MS = 180;  // stick-swing frame duration
+// Chores (hole digger + corral feeder)
+export const FARM_COMPOUND_DIG_CYCLE_MS = 1400;      // ms between dig poses
+export const FARM_COMPOUND_DIG_POSE_MS = 500;        // ms the dig pose is held
+export const FARM_COMPOUND_FEED_INTERVAL_MS = 1600;  // ms between food-toss actions
+export const FARM_COMPOUND_FEED_POSE_MS = 300;       // throw-pose duration
+export const FARM_COMPOUND_FEED_PELLET_COUNT = 5;    // pellets per toss
+export const FARM_COMPOUND_FEED_PELLET_DURATION = 500; // ms
 
 // --- Dirt biker no-go zones (in tiles — center x, center y, half-width, half-height) ---
 // Set-piece instances publish their own bounds via `scene.setPieces[i].bounds`,
