@@ -268,6 +268,11 @@ export const SOCCER_FIELD_W = 300;
 export const SOCCER_FIELD_H = 200;
 export const SOCCER_PLAYERS_PER_TEAM = 5;
 export const SOCCER_TACKLE_COOLDOWN = 2.0; // seconds before ball can be stolen after a possession change
+export const SOCCER_GOAL_SPECTATORS_PER_SIDE = 9; // spectators packed behind each goal (was 4)
+export const SOCCER_SPECTATOR_JUMP_INTERVAL_MIN = 2200; // ms between jumps per spectator
+export const SOCCER_SPECTATOR_JUMP_INTERVAL_RANGE = 4000; // random ms added on top
+export const SOCCER_SPECTATOR_JUMP_HEIGHT = 6; // px peak jump height
+export const SOCCER_SPECTATOR_JUMP_DURATION = 420; // ms for a full up-down jump
 
 // --- Buildings ---
 export const BUILDING_HP_SMALL = 2;
@@ -322,7 +327,7 @@ export const MOBILE_ZOOM_FACTOR = 0.6; // base zoom multiplier on mobile (25% zo
 // Where min is the normal gameplay zoom (no zoom-out during intro), and
 // max prevents extreme zoom-in on huge monitors.
 export const INTRO_TARGET_RIGHT_PX = 360; // world-px the camera should see to the right of the drone
-export const INTRO_ZOOM_MAX = 2.6;        // upper cap on the intro zoom
+export const INTRO_ZOOM_MAX = 2.6; // upper cap on the intro zoom
 export const INTRO_ZOOM_OUT_DURATION_MS = 1500; // ms tween from intro zoom back to normal gameplay zoom
 export const MOBILE_JOYSTICK_RADIUS = 65; // virtual joystick radius (px)
 export const MOBILE_BUTTON_RADIUS = 42; // fire/alt button radius (px)

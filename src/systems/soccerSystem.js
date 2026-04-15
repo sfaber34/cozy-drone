@@ -2,6 +2,9 @@ import Phaser from "phaser";
 import {
   TILE, SCALE,
   SOCCER_FIELD_W, SOCCER_FIELD_H, SOCCER_PLAYERS_PER_TEAM, SOCCER_TACKLE_COOLDOWN,
+  SOCCER_GOAL_SPECTATORS_PER_SIDE,
+  SOCCER_SPECTATOR_JUMP_INTERVAL_MIN, SOCCER_SPECTATOR_JUMP_INTERVAL_RANGE,
+  SOCCER_SPECTATOR_JUMP_HEIGHT, SOCCER_SPECTATOR_JUMP_DURATION,
 } from "../constants.js";
 import { cheerPhrases } from "../dialog.js";
 
@@ -188,14 +191,21 @@ export function createSoccer(scene, rng, opts) {
         clapTimer: rng.between(0, 500),
         clapInterval: 400 + rng.between(0, 300),
         clapFrame: 0,
+        jumpTimer:
+          rng.between(0, SOCCER_SPECTATOR_JUMP_INTERVAL_MIN +
+                         SOCCER_SPECTATOR_JUMP_INTERVAL_RANGE),
+        jumpElapsed: 0,
+        jumping: false,
       });
     }
   }
-  // A few at the ends too
+  // Packed crowd at each goal end
   for (let side = -1; side <= 1; side += 2) {
-    for (let s = 0; s < 4; s++) {
+    const rowSpacing = 20;
+    const yStart = cy - ((SOCCER_GOAL_SPECTATORS_PER_SIDE - 1) * rowSpacing) / 2;
+    for (let s = 0; s < SOCCER_GOAL_SPECTATORS_PER_SIDE; s++) {
       const sx = cx + side * (fieldW / 2 + 35 + rng.between(0, 15));
-      const sy = cy - 60 + s * 40;
+      const sy = yStart + s * rowSpacing;
       const skinId = rng.between(0, 199);
       const sprite = scene.add
         .image(sx, sy, `person-wave1-${skinId}`)
@@ -232,6 +242,11 @@ export function createSoccer(scene, rng, opts) {
         clapTimer: rng.between(0, 500),
         clapInterval: 400 + rng.between(0, 300),
         clapFrame: 0,
+        jumpTimer:
+          rng.between(0, SOCCER_SPECTATOR_JUMP_INTERVAL_MIN +
+                         SOCCER_SPECTATOR_JUMP_INTERVAL_RANGE),
+        jumpElapsed: 0,
+        jumping: false,
       });
     }
   }
@@ -428,7 +443,7 @@ export function createSoccer(scene, rng, opts) {
         p.sprite.y = Phaser.Math.Clamp(p.sprite.y, fc.y - hh + 10, fc.y + hh - 10);
       }
 
-      // --- Spectator clapping (only while idle) ---
+      // --- Spectator clapping + periodic excited jumps (only while idle) ---
       for (const spec of spectators) {
         if (!spec.sprite.active) continue;
         if (spec.personEntry && spec.personEntry.state !== "idle") continue;
@@ -441,6 +456,29 @@ export function createSoccer(scene, rng, opts) {
               ? `person-wave1-${spec.skinId}`
               : `person-wave2-${spec.skinId}`,
           );
+        }
+
+        // Jump cycle
+        if (spec.jumping) {
+          spec.jumpElapsed += delta;
+          const t = Math.min(1, spec.jumpElapsed / SOCCER_SPECTATOR_JUMP_DURATION);
+          // Parabolic arc: up then back down
+          const bob = Math.sin(Math.PI * t) * SOCCER_SPECTATOR_JUMP_HEIGHT;
+          spec.sprite.y = spec.personEntry.homeY - bob;
+          if (t >= 1) {
+            spec.jumping = false;
+            spec.jumpElapsed = 0;
+            spec.sprite.y = spec.personEntry.homeY;
+            spec.jumpTimer =
+              SOCCER_SPECTATOR_JUMP_INTERVAL_MIN +
+              Math.random() * SOCCER_SPECTATOR_JUMP_INTERVAL_RANGE;
+          }
+        } else {
+          spec.jumpTimer -= delta;
+          if (spec.jumpTimer <= 0) {
+            spec.jumping = true;
+            spec.jumpElapsed = 0;
+          }
         }
       }
     },

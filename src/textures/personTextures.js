@@ -2,7 +2,10 @@ import Phaser from 'phaser';
 
 export const NUM_SKINS = 200;
 
-export const skinTones = ['#d4a574', '#c49a6c', '#b8885c', '#dbb08a', '#c8946a', '#a07850'];
+// NOTE: avoid values too close to the desert background (#d2b48c = 210,180,140).
+// '#dbb08a' was nearly identical to sand and made arms invisible; replaced
+// with a pinker/cooler fair tone that contrasts.
+export const skinTones = ['#d4a574', '#c49a6c', '#b8885c', '#e8a898', '#c8946a', '#a07850'];
 
 // The full generation (skins + one-off characters) is expensive — 200 skin
 // variants x ~11 poses + a dozen other sprites. Call paths:
