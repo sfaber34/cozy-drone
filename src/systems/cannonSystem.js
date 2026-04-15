@@ -51,6 +51,9 @@ export function updateCannonReticle(scene, ds) {
   const rx = ds.x + Math.cos(rad) * range;
   const ry = ds.y + Math.sin(rad) * range;
   scene.cannonReticle.setPosition(rx, ry);
+  // Rotate the reticle to match the drone's heading so its bottom cross
+  // always points back toward the nose.
+  scene.cannonReticle.setAngle(ds.angle);
   scene.cannonReticle.setVisible(true);
   const pulse = 0.7 + Math.sin(scene.time.now * 0.008) * 0.3;
   scene.cannonReticle.setAlpha(pulse);

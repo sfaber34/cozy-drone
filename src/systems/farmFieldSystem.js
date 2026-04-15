@@ -301,7 +301,13 @@ function updateTractor(scene, t, dt) {
   d.homeX = t.sprite.x;
   d.homeY = t.sprite.y;
 
-  if (d.state === "panicking") {
+  // Dismount when the driver panics OR dies (ghost/gone). A dead driver
+  // never returns, so the tractor just stops permanently.
+  if (
+    d.state === "panicking" ||
+    d.state === "ghost" ||
+    d.state === "gone"
+  ) {
     t.driving = false;
   }
 }
