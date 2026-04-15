@@ -19,6 +19,7 @@ import { generateTireFireTextures } from '../textures/tireFireTextures.js';
 import { generateRockTargetTextures } from '../textures/rockTargetTextures.js';
 import { generateHookahTextures } from '../textures/hookahTextures.js';
 import { generateRcCarTextures } from '../textures/rcCarTextures.js';
+import { generatePaperPlaneTextures } from '../textures/paperPlaneTextures.js';
 import { generateWeaponTextures } from '../textures/weaponTextures.js';
 import { generateBusTextures } from '../textures/busTextures.js';
 import { generateWaterTextures } from '../textures/waterTextures.js';
@@ -52,6 +53,7 @@ export class BootScene extends Phaser.Scene {
     generateRockTargetTextures(this);
     generateHookahTextures(this);
     generateRcCarTextures(this);
+    generatePaperPlaneTextures(this);
     generateWeaponTextures(this);
     generateBusTextures(this);
     generateWaterTextures(this);

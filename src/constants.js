@@ -155,6 +155,27 @@ export const RC_CAR_SCALE = 0.8; // sprite scale multiplier (× SCALE)
 export const RC_CAR_WHEEL_WOBBLE_HZ = 14; // wheel-bounce rate while driving
 export const RC_CAR_WHEEL_WOBBLE_AMP = 0.6; // px vertical wobble while driving
 
+// --- Paper planes set piece ---
+// A group of people each throwing their own paper airplane, cheering
+// while it flies, running to fetch it, then throwing again.
+export const PAPER_PLANE_THROWER_COUNT = 10;
+export const PAPER_PLANE_AREA_WIDTH_PX = 1400;
+export const PAPER_PLANE_AREA_HEIGHT_PX = 1400;
+export const PAPER_PLANE_MIN_SPACING = 40; // min spacing between throwers
+export const PAPER_PLANE_FLY_DIST_MIN = 300; // px — plane travel distance before landing
+export const PAPER_PLANE_FLY_DIST_RANGE = 800;
+export const PAPER_PLANE_FLY_SPEED = 80; // px/s forward speed
+export const PAPER_PLANE_ARC_HEIGHT = 28; // px parabolic arc peak
+export const PAPER_PLANE_SIDE_DRIFT_MAX = 45; // random lateral offset at landing
+export const PAPER_PLANE_WINDUP_DURATION = 0.35; // s arm-cocked-back
+export const PAPER_PLANE_RELEASE_DURATION = 0.18; // s release pose before plane launches
+export const PAPER_PLANE_PICKUP_DURATION = 0.35; // s bent-over pick pose
+export const PAPER_PLANE_CHASE_SPEED = 55; // px/s running to fetch
+export const PAPER_PLANE_CHEER_BOB_HZ = 2.6; // Hz vertical bob while plane flies
+export const PAPER_PLANE_CHEER_BOB_AMP = 4; // px jump amplitude
+export const PAPER_PLANE_CHEER_FRAME_INTERVAL = 220; // ms between wave1/wave2 toggles
+export const PAPER_PLANE_CHASE_FRAME_INTERVAL = 180; // ms between run1/run2 toggles
+
 // --- Dirt biker no-go zones (in tiles — center x, center y, half-width, half-height) ---
 // Set-piece instances publish their own bounds via `scene.setPieces[i].bounds`,
 // which vehicleSystem merges at runtime. Anything added here is for no-go zones
