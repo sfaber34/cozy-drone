@@ -91,6 +91,32 @@ export const ROCK_FIGHT_IDLE_WAVE_INTERVAL_RANGE = 180; // random ms added (tota
 export const ROCK_FIGHT_MIN_SPACING = 14; // min world px between any two rock-fight people (anti-stack)
 export const ROCK_FIGHT_SPAWN_MAX_TRIES = 30; // attempts to find a non-overlapping spot before giving up
 
+// Rock target practice — a group throwing rocks at breakable vases/bottles
+// (position via tileX/tileY). Targets respawn after a cooldown so there's
+// always something to hit.
+export const ROCK_TARGET_THROWER_COUNT = 15;
+export const ROCK_TARGET_OBJECT_COUNT = 18; // total breakable targets
+export const ROCK_TARGET_OBJECT_ROWS = 3; // rows of targets stacked back-to-front
+export const ROCK_TARGET_THROWER_SPREAD_PX = 320; // horizontal spread of throwers
+export const ROCK_TARGET_OBJECT_SPREAD_PX = 350; // horizontal spread of targets
+export const ROCK_TARGET_FIELD_DEPTH_PX = 220; // distance from throwers to nearest target row
+export const ROCK_TARGET_THROW_INTERVAL_MIN = 2.5; // seconds between throws per person
+export const ROCK_TARGET_THROW_INTERVAL_RANGE = 3.0;
+export const ROCK_TARGET_WINDUP_DURATION = 0.35; // seconds of arm-cocked-back
+export const ROCK_TARGET_RELEASE_POSE_DURATION = 0.45; // seconds holding the release pose
+export const ROCK_TARGET_ROCK_SPEED = 180; // rock travel speed (px/s)
+export const ROCK_TARGET_ROCK_ARC_HEIGHT = 45; // parabolic arc peak (px)
+export const ROCK_TARGET_MISS_CHANCE = 0.45; // fraction of throws that miss
+export const ROCK_TARGET_MISS_SPREAD_PX = 40; // how wide the miss can land
+export const ROCK_TARGET_RESPAWN_MIN = 3500; // ms before a broken target returns
+export const ROCK_TARGET_RESPAWN_RANGE = 4500; // random ms added
+export const ROCK_TARGET_CHEER_DURATION = 1400; // ms the thrower cheers after a hit
+export const ROCK_TARGET_SHARD_COUNT = 7; // debris particles per break
+export const ROCK_TARGET_SHARD_DURATION = 700; // ms each shard flies before vanishing
+export const ROCK_TARGET_SHARD_SPREAD = 34; // px fling distance on break
+export const ROCK_TARGET_MIN_SPACING_PX = 28; // min spacing between throwers (anti-stack)
+export const ROCK_TARGET_OBJECT_SCALE = 0.75; // scale multiplier for target sprites (× SCALE)
+
 // --- Dirt biker no-go zones (in tiles — center x, center y, half-width, half-height) ---
 // Set-piece instances publish their own bounds via `scene.setPieces[i].bounds`,
 // which vehicleSystem merges at runtime. Anything added here is for no-go zones

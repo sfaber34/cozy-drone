@@ -57,6 +57,7 @@ import { createRockFight } from "../systems/rockFightSystem.js";
 import { createFarmField } from "../systems/farmFieldSystem.js";
 import { createConcert } from "../systems/concertSystem.js";
 import { createTireFire } from "../systems/tireFireSystem.js";
+import { createRockTarget } from "../systems/rockTargetSystem.js";
 import { createAirfield } from "../systems/airfieldSystem.js";
 import { createTown } from "../systems/townSystem.js";
 import { createFarmCompound } from "../systems/farmCompoundSystem.js";
@@ -806,6 +807,7 @@ function tryDeferredWorldInit(scene) {
   scene.setPieces.push(createFarmField(scene, rng, { tileX: 76, tileY: 100 }));
   scene.setPieces.push(createConcert(scene, rng, { tileX: 76, tileY: 62 }));
   scene.setPieces.push(createTireFire(scene, rng, { tileX: 100, tileY: 82 }));
+  scene.setPieces.push(createRockTarget(scene, rng, { tileX: 88, tileY: 118 }));
 
   createPeople(scene, rng);
   createVehicles(scene, rng);
