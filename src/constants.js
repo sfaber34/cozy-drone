@@ -117,6 +117,29 @@ export const ROCK_TARGET_SHARD_SPREAD = 34; // px fling distance on break
 export const ROCK_TARGET_MIN_SPACING_PX = 28; // min spacing between throwers (anti-stack)
 export const ROCK_TARGET_OBJECT_SCALE = 0.75; // scale multiplier for target sprites (× SCALE)
 
+// --- Hookah lounge set piece ---
+// Row of hookahs with smokers seated around each one, cycling inhale →
+// hold → exhale. Continuous smoke rises from the hookah tops; exhaled
+// puffs drift away from each smoker's mouth.
+export const HOOKAH_COUNT = 3;
+export const HOOKAH_SPACING_PX = 170; // horizontal distance between hookahs
+export const HOOKAH_SMOKERS_PER = 6; // smokers around each hookah
+export const HOOKAH_SMOKER_RADIUS_PX = 46; // distance from hookah center to smoker
+export const HOOKAH_AMBIENT_SMOKE_INTERVAL_MIN = 240; // ms between ambient hookah-top puffs
+export const HOOKAH_AMBIENT_SMOKE_INTERVAL_RANGE = 260;
+export const HOOKAH_AMBIENT_SMOKE_RISE_HEIGHT = 90; // px each ambient puff rises
+export const HOOKAH_AMBIENT_SMOKE_DURATION_MIN = 1400;
+export const HOOKAH_AMBIENT_SMOKE_DURATION_RANGE = 700;
+export const HOOKAH_AMBIENT_SMOKE_OPACITY = 0.55;
+export const HOOKAH_INHALE_DURATION_MS = 1200; // arm-to-mouth pose
+export const HOOKAH_HOLD_DURATION_MS = 700; // pause before exhale
+export const HOOKAH_EXHALE_DURATION_MS = 900; // exhale + puff drift
+export const HOOKAH_CYCLE_GAP_MIN_MS = 1400; // idle ms between puff cycles
+export const HOOKAH_CYCLE_GAP_RANGE_MS = 2600;
+export const HOOKAH_EXHALE_PUFF_COUNT = 10; // puffs per exhale
+export const HOOKAH_EXHALE_PUFF_DRIFT = 24; // px each exhale puff drifts
+export const HOOKAH_EXHALE_PUFF_DURATION = 900; // ms
+
 // --- Dirt biker no-go zones (in tiles — center x, center y, half-width, half-height) ---
 // Set-piece instances publish their own bounds via `scene.setPieces[i].bounds`,
 // which vehicleSystem merges at runtime. Anything added here is for no-go zones

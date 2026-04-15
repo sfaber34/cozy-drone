@@ -40,20 +40,6 @@ export function createWater(scene) {
   // Right strip
   g.fillRect(MAP_W,    0,  MOAT_PX, MAP_H);
 
-  // Subtle horizontal wave highlights (lighter blue lines every 4 tiles)
-  g.fillStyle(0x2e8fd4, 0.35);
-  const step = TILE * SCALE * 4;
-  for (let y = -MOAT_PX; y < MAP_H + MOAT_PX; y += step) {
-    const lineY = y + step * 0.3;
-    // Only paint in the moat strips, not over the map interior
-    if (lineY < 0 || lineY >= MAP_H) {
-      g.fillRect(-MOAT_PX, lineY, MAP_W + MOAT_PX * 2, 2);
-    } else {
-      g.fillRect(-MOAT_PX, lineY, MOAT_PX, 2);
-      g.fillRect(MAP_W,    lineY, MOAT_PX, 2);
-    }
-  }
-
   // --- Scatter wave props across the moat strips ---
   const rng = new Phaser.Math.RandomDataGenerator(["water-waves"]);
 
