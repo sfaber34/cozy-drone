@@ -7,7 +7,7 @@
 //   fight.update(dt);
 import Phaser from "phaser";
 import {
-  TILE, SCALE,
+  TILE, SCALE, MOBILE_DIALOG_SCALE,
   ROCK_FIGHT_GROUP_SIZE, ROCK_FIGHT_GROUP_SPACING,
   ROCK_FIGHT_GROUP_WIDTH, ROCK_FIGHT_GROUP_DEPTH,
   ROCK_FIGHT_THROW_INTERVAL_MIN, ROCK_FIGHT_THROW_INTERVAL_RANGE,
@@ -247,7 +247,7 @@ function hitPerson(scene, target) {
     fontFamily: "monospace", fontSize: "10px",
     color: "#ff4444", backgroundColor: "#000000aa",
     padding: { x: 3, y: 2 },
-  }).setOrigin(0.5, 1).setScale(SCALE * 0.5).setDepth(14);
+  }).setOrigin(0.5, 1).setScale(SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1)).setDepth(14);
   scene.hudCam.ignore(bubble);
   scene.tweens.add({
     targets: bubble,

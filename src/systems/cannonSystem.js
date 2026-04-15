@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import {
-  SCALE,
+  SCALE, MOBILE_DIALOG_SCALE,
   CANNON_FIRE_RATE, CANNON_BULLET_SPEED, CANNON_RANGE_FACTOR,
   CANNON_SPREAD, CANNON_KILL_RADIUS,
   CANNON_SHAKE_DURATION, CANNON_SHAKE_INTENSITY, CANNON_IMPACT_VOLUME_FRAC,
@@ -202,7 +202,7 @@ export function cannonImpact(scene, x, y) {
             color: "#aaccff", backgroundColor: "#000000aa",
             padding: { x: 4, y: 3 },
           })
-          .setScale(SCALE * 0.5).setDepth(14);
+          .setScale(SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1)).setDepth(14);
         scene.hudCam.ignore(p.bubble);
       }
     }
@@ -313,7 +313,7 @@ export function cannonImpact(scene, x, y) {
               fontFamily: "monospace", fontSize: "8px",
               color: "#aaccff", backgroundColor: "#000000aa",
               padding: { x: 4, y: 3 },
-            }).setScale(SCALE * 0.5).setDepth(14);
+            }).setScale(SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1)).setDepth(14);
             scene.hudCam.ignore(bubble);
             const driftX = Math.cos(spawnAngle) * (15 + Math.random() * 25);
             const driftY = -(20 + Math.random() * 20);
@@ -365,7 +365,7 @@ export function cannonImpact(scene, x, y) {
           fontFamily: "monospace", fontSize: "8px",
           color: "#aaccff", backgroundColor: "#000000aa",
           padding: { x: 4, y: 3 },
-        }).setScale(SCALE * 0.5).setDepth(14);
+        }).setScale(SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1)).setDepth(14);
         scene.hudCam.ignore(bk.bubble);
       }
     }

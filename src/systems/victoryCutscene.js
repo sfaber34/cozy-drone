@@ -280,7 +280,7 @@ function showVictoryModal(scene) {
       .setDepth(601);
     items.push(sub);
 
-    const bodySize = Math.max(12, Math.min(16, Math.round(narrow * 0.028)));
+    const bodySize = Math.max(14, Math.min(20, Math.round(narrow * 0.034)));
     const body = scene.add
       .text(
         w / 2,

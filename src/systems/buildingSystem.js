@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import {
-  SCALE,
+  SCALE, MOBILE_DIALOG_SCALE,
   BUILDING_HP_SMALL, BUILDING_HP_MEDIUM, BUILDING_HP_LARGE,
   BUILDING_RADIUS_SMALL, BUILDING_RADIUS_MEDIUM, BUILDING_RADIUS_LARGE,
 } from "../constants.js";
@@ -91,7 +91,7 @@ export function killPeopleInBuilding(scene, building) {
           backgroundColor: "#000000aa",
           padding: { x: 4, y: 3 },
         })
-        .setScale(SCALE * 0.5)
+        .setScale(SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1))
         .setDepth(14);
       scene.hudCam.ignore(p.bubble);
     });

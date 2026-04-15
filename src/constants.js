@@ -97,6 +97,11 @@ export const ROCK_FIGHT_SPAWN_MAX_TRIES = 30; // attempts to find a non-overlapp
 // that are NOT set pieces (e.g. map-wide hazards).
 export const BIKER_NO_GO_ZONES = [];
 
+// --- Audio ---
+// Master multiplier applied to every sound (music + sfx + engine + gun loop).
+// Set 0 to mute the entire game.
+export const MASTER_VOLUME = 0.7;
+
 // --- Music ---
 export const MUSIC_VOLUME = 0.4; // background music volume (0-1)
 
@@ -162,19 +167,19 @@ export const TIRE_FIRE_SWAY_HZ = 0.8; // Hz — warming-hands sway oscillation
 // Set to 1 during development; bump to `scene.totalPeople` for real play.
 export const VICTORY_KILL_THRESHOLD = 1;
 export const VICTORY_CROWD_COUNT = 10;
-export const VICTORY_SURROUND_RADIUS = 70; // px — where guys stop around the drone
+export const VICTORY_SURROUND_RADIUS = 80; // px — where guys stop around the drone
 export const VICTORY_WALK_SPEED = 80; // px/s running out of the hangar
 export const VICTORY_JUMP_HZ = 2.2; // cheer jump frequency per guy
-export const VICTORY_JUMP_AMP = 10; // px vertical jump amplitude
+export const VICTORY_JUMP_AMP = 7; // px vertical jump amplitude
 export const VICTORY_FRAME_INTERVAL = 140; // ms between guy1/guy2 (or cheer1/cheer2) pose toggles
-export const VICTORY_CELEBRATION_DURATION = 6000; // ms of cheering before modal
+export const VICTORY_CELEBRATION_DURATION = 8000; // ms of cheering before modal
 export const VICTORY_EMOJI_INTERVAL_MIN = 120; // ms between emoji spawns
 export const VICTORY_EMOJI_INTERVAL_RANGE = 180;
 export const VICTORY_EMOJI_RISE_DURATION = 1600; // ms
 export const VICTORY_EMOJI_RISE_HEIGHT = 80; // px
-export const VICTORY_EXIT_STAGGER_MS = 180; // ms delay between each guy leaving the hangar
+export const VICTORY_EXIT_STAGGER_MS = 280; // ms delay between each guy leaving the hangar
 export const VICTORY_EXIT_JITTER_MS = 120; // extra random ms per guy
-export const VICTORY_DRONE_AVOID_RADIUS = 90; // guys steer around this radius instead of cutting through the drone
+export const VICTORY_DRONE_AVOID_RADIUS = 120; // guys steer around this radius instead of cutting through the drone
 
 // --- Missile ---
 export const MISSILE_SPEED = 280;

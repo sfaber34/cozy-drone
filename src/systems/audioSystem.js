@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import {
+  MASTER_VOLUME,
   MUSIC_VOLUME,
   DEATH_SFX_VOLUME,
   DEATH_SFX_MIN_VOLUME_FRAC,
@@ -52,6 +53,9 @@ export function initAudio(scene) {
   scene.cannonGunA = null;
   scene.cannonGunB = null;
   scene.cannonGunActive = null;
+
+  // Master volume applies to every sound the Phaser sound manager plays.
+  scene.sound.volume = MASTER_VOLUME;
 
   if (scene.sound.context) scene.sound.context.resume();
 

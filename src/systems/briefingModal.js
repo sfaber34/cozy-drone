@@ -8,15 +8,19 @@
 // runs BEFORE Phaser touches the event. We also hit-test the tap against
 // the button rect so only the START button dismisses the modal.
 
-const BRIEFING_BODY =
-  "ISR has identified a strong enemy presence within this AO. " +
-  "Enemy combatants will use civilian population as concealment. " +
-  "Prosecute targets of opportunity with extreme prejudice. Weapons hot!\n\n" +
-  "Available armament:\n" +
-  "- Infinity laser-guided Hellfire missiles\n" +
-  "- Infinity 30 mm anti-material cannon rounds\n\n" +
-  "Return to base after eliminating all hostiles for a special surpise.\n\n" +
-  "Remember: We fight them here so we don't have to fight them at home!";
+function buildBriefingBody(scene) {
+  const tapWord = scene.isMobile ? "tap" : "click";
+  return (
+    "ISR has identified a strong enemy presence within this AO. " +
+    "Enemy combatants will use civilian population as concealment. " +
+    "Prosecute targets of opportunity with extreme prejudice. Weapons hot!\n\n" +
+    "Available Armament:\n" +
+    `•Infinity laser-guided Hellfire missiles [${tapWord} to target]\n` +
+    "•Infinity 30 mm anti-material cannon rounds\n\n" +
+    "Return to base after eliminating all hostiles for a special surpise.\n\n" +
+    "Remember: We fight them here so we don't have to fight them at home!"
+  );
+}
 
 export function showBriefingModal(scene, onStart) {
   let items = [];
@@ -68,12 +72,15 @@ export function showBriefingModal(scene, onStart) {
     const btnY = h - bottomSafe - btnH / 2 - 20;
 
     // Body — wrap to fit viewport width, centered between title and button
-    const bodySize = Math.max(11, Math.min(16, Math.round(narrow * 0.028)));
-    const bodyMaxW = Math.min(w - 40, 560);
+    const bodySize = Math.max(14, Math.min(20, Math.round(narrow * 0.034)));
+    // Use most of the viewport width in landscape — 560px cap was making
+    // wide screens look empty. Cap at 900 for readability on very wide
+    // screens (too-long lines hurt scanability).
+    const bodyMaxW = Math.min(w - 40, 900);
     const titleBottom = titleY + titleSize;
     const bodyCenter = (titleBottom + (btnY - btnH / 2)) / 2;
     const body = scene.add
-      .text(w / 2, bodyCenter, BRIEFING_BODY, {
+      .text(w / 2, bodyCenter, buildBriefingBody(scene), {
         fontFamily: "monospace",
         fontSize: `${bodySize}px`,
         color: "#cccccc",
@@ -87,7 +94,8 @@ export function showBriefingModal(scene, onStart) {
     const btn = scene.add
       .rectangle(w / 2, btnY, btnW, btnH, 0xff3300, 0.9)
       .setStrokeStyle(3, 0xffffff, 0.9)
-      .setDepth(501);
+      .setDepth(501)
+      .setInteractive({ useHandCursor: true });
     items.push(btn);
 
     const labelSize = Math.max(14, Math.min(22, Math.round(narrow * 0.04)));

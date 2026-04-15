@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import {
-  TILE, SCALE,
+  TILE, SCALE, MOBILE_DIALOG_SCALE,
   BUS_ROUTE_BLOCK_COL, BUS_ROUTE_ROAD_TILES, BUS_ROAD_GAP_TILES,
   BUS_TERMINAL_OFFSET_TILES, BUS_LOOP_EXTENSION_TILES,
   BUS_COUNT, BUS_SPEED, BUS_CAPACITY, BUS_RIDER_COUNT,
@@ -418,7 +418,7 @@ function _destroyBus(scene, bus, hitX, hitY) {
         color: "#aaccff", backgroundColor: "#000000aa",
         padding: { x: 4, y: 3 },
       })
-      .setScale(SCALE * 0.5).setDepth(14);
+      .setScale(SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1)).setDepth(14);
     scene.hudCam.ignore(r.bubble);
   }
   bus.riders = [];
