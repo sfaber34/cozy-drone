@@ -77,10 +77,12 @@ export function generateDroneTextures(scene) {
   dc2.fillRect(15, 27, 2, 3);
   drone2Canvas.refresh();
 
-  // --- Drone shadow (same silhouette, semi-transparent) ---
+  // --- Drone shadow (same silhouette, fully opaque — transparency is
+  //     applied uniformly at the sprite level via setAlpha in GameScene.
+  //     Baking alpha into the pixels here caused overlapping fills
+  //     (fuselage × wings) to stack darker than the rest.) ---
   const shadowCanvas = scene.textures.createCanvas("drone-shadow", 32, 32);
   const sc = shadowCanvas.context;
-  sc.globalAlpha = 0.3;
   sc.fillStyle = "#000";
   // Fuselage
   sc.fillRect(14, 2, 4, 24);

@@ -78,9 +78,9 @@ export const ROCK_FIGHT_GROUP_SIZE = 20; // people per group (two groups face ea
 export const ROCK_FIGHT_GROUP_SPACING = 220; // gap between the two groups (px)
 export const ROCK_FIGHT_GROUP_WIDTH = 200; // horizontal spread of each group (px)
 export const ROCK_FIGHT_GROUP_DEPTH = 340; // vertical spread of each group (px)
-export const ROCK_FIGHT_THROW_INTERVAL_MIN = 16.0; // min seconds between throws per person
-export const ROCK_FIGHT_THROW_INTERVAL_RANGE = 40.0; // random range added (total max = MIN + RANGE)
-export const ROCK_FIGHT_ROCK_SPEED = 200; // rock horizontal travel speed (px/s)
+export const ROCK_FIGHT_THROW_INTERVAL_MIN = 12.0; // min seconds between throws per person
+export const ROCK_FIGHT_THROW_INTERVAL_RANGE = 34.0; // random range added (total max = MIN + RANGE)
+export const ROCK_FIGHT_ROCK_SPEED = 230; // rock horizontal travel speed (px/s)
 export const ROCK_FIGHT_ROCK_ARC_HEIGHT = 40; // parabolic arc peak height (px)
 export const ROCK_FIGHT_WINDUP_DURATION = 0.35; // seconds of arm-cocked-back windup before release
 export const ROCK_FIGHT_THROW_POSE_DURATION = 0.58; // seconds the thrower holds the release pose after the rock flies
