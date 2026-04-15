@@ -4,7 +4,7 @@ import {
   CANNON_FIRE_RATE, CANNON_BULLET_SPEED, CANNON_RANGE_FACTOR,
   CANNON_SPREAD, CANNON_KILL_RADIUS,
   CANNON_SHAKE_DURATION, CANNON_SHAKE_INTENSITY, CANNON_IMPACT_VOLUME_FRAC,
-  CANNON_PANIC_RADIUS,
+  CANNON_PANIC_RADIUS, CANNON_RETICLE_MIN_DISTANCE,
   CANNON_MUZZLE_NOSE_OFFSET, CANNON_MUZZLE_PUFFS, CANNON_MUZZLE_SPREAD,
   CANNON_MUZZLE_DURATION_MIN, CANNON_MUZZLE_DURATION_RANGE,
   CANNON_MUZZLE_SCALE_MIN, CANNON_MUZZLE_SCALE_RANGE,
@@ -39,8 +39,17 @@ export function updateCannonReticle(scene, ds) {
     scene.cannonReticle.setVisible(false);
     return;
   }
-  const impact = getCannonImpactPoint(ds);
-  scene.cannonReticle.setPosition(impact.x, impact.y);
+  // Clamp the reticle's display distance so it never visually overlaps the
+  // drone at low altitude. Actual bullet impact (getCannonImpactPoint) still
+  // uses the true altitude-based range — this just moves the INDICATOR out.
+  const range = Math.max(
+    ds.altitude * CANNON_RANGE_FACTOR,
+    CANNON_RETICLE_MIN_DISTANCE,
+  );
+  const rad = Phaser.Math.DegToRad(ds.angle - 90);
+  const rx = ds.x + Math.cos(rad) * range;
+  const ry = ds.y + Math.sin(rad) * range;
+  scene.cannonReticle.setPosition(rx, ry);
   scene.cannonReticle.setVisible(true);
   const pulse = 0.7 + Math.sin(scene.time.now * 0.008) * 0.3;
   scene.cannonReticle.setAlpha(pulse);

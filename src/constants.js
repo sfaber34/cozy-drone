@@ -206,6 +206,7 @@ export const CANNON_KILL_RADIUS = 30; // explosion radius per bullet
 export const CANNON_PANIC_RADIUS = 250; // radius within which people/animals panic from a cannon impact
 export const CANNON_SHAKE_DURATION = 50; // screen shake per shot (ms)
 export const CANNON_SHAKE_INTENSITY = 0.001; // screen shake intensity
+export const CANNON_RETICLE_MIN_DISTANCE = 50; // min px the gun reticle is displayed ahead of the drone (prevents overlap at low altitude)
 export const CANNON_IMPACT_VOLUME_FRAC = 0.15; // fraction of EXPLOSION_VOLUME for cannon impacts
 // Muzzle smoke
 export const CANNON_MUZZLE_NOSE_OFFSET = 40; // px ahead of drone center where puffs spawn
