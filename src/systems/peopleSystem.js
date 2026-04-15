@@ -13,6 +13,7 @@ import {
 import { greetings, ghostLines } from "../dialog.js";
 import { findNearestBuilding, steerAroundBuildings } from "./buildingSystem.js";
 import { playDeathSfxAt } from "./audioSystem.js";
+import { tryRegisterGhostBubble } from "./ghostBubbleUtils.js";
 
 export function countTotalPeople(scene) {
   let total = scene.people.length;
@@ -137,20 +138,22 @@ export function affectNearbyPeople(scene, x, y) {
       p.ghostDriftY = -(20 + Math.random() * 20);
       p.ghostWobbleOffset = Math.random() * Math.PI * 2;
 
-      // Ghost speech bubble
-      const line = Phaser.Utils.Array.GetRandom(ghostLines);
-      const ghostBubbleScale = SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1);
-      p.bubble = scene.add
-        .text(p.sprite.x + 20, p.sprite.y - 20, line, {
-          fontFamily: "monospace",
-          fontSize: "8px",
-          color: "#aaccff",
-          backgroundColor: "#000000aa",
-          padding: { x: 4, y: 3 },
-        })
-        .setScale(ghostBubbleScale)
-        .setDepth(14);
-      scene.hudCam.ignore(p.bubble);
+      // Ghost speech bubble — skip if too many already visible in this cluster
+      if (tryRegisterGhostBubble(scene, p.sprite.x, p.sprite.y)) {
+        const line = Phaser.Utils.Array.GetRandom(ghostLines);
+        const ghostBubbleScale = SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1);
+        p.bubble = scene.add
+          .text(p.sprite.x + 20, p.sprite.y - 20, line, {
+            fontFamily: "monospace",
+            fontSize: "8px",
+            color: "#aaccff",
+            backgroundColor: "#000000aa",
+            padding: { x: 4, y: 3 },
+          })
+          .setScale(ghostBubbleScale)
+          .setDepth(14);
+        scene.hudCam.ignore(p.bubble);
+      }
     } else if (
       dist < panicRadius &&
       p.state !== "panicking" &&

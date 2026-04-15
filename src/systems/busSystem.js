@@ -10,6 +10,7 @@ import {
 import { ghostLines } from "../dialog.js";
 import { skinTex } from "./peopleSystem.js";
 import { playSfxAt, playDeathSfxAt } from "./audioSystem.js";
+import { tryRegisterGhostBubble } from "./ghostBubbleUtils.js";
 
 // ---------------------------------------------------------------------------
 // Route geometry helpers
@@ -411,15 +412,17 @@ function _destroyBus(scene, bus, hitX, hitY) {
     r.ghostDriftX        = Math.cos(awayAngle) * (15 + Math.random() * 25);
     r.ghostDriftY        = -(20 + Math.random() * 20);
     r.ghostWobbleOffset  = Math.random() * Math.PI * 2;
-    const line = Phaser.Utils.Array.GetRandom(ghostLines);
-    r.bubble = scene.add
-      .text(r.sprite.x + 20, r.sprite.y - 20, line, {
-        fontFamily: "monospace", fontSize: "8px",
-        color: "#aaccff", backgroundColor: "#000000aa",
-        padding: { x: 4, y: 3 },
-      })
-      .setScale(SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1)).setDepth(14);
-    scene.hudCam.ignore(r.bubble);
+    if (tryRegisterGhostBubble(scene, r.sprite.x, r.sprite.y)) {
+      const line = Phaser.Utils.Array.GetRandom(ghostLines);
+      r.bubble = scene.add
+        .text(r.sprite.x + 20, r.sprite.y - 20, line, {
+          fontFamily: "monospace", fontSize: "8px",
+          color: "#aaccff", backgroundColor: "#000000aa",
+          padding: { x: 4, y: 3 },
+        })
+        .setScale(SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1)).setDepth(14);
+      scene.hudCam.ignore(r.bubble);
+    }
   }
   bus.riders = [];
   bus.scatteredRiders = [];

@@ -13,6 +13,7 @@ import {
   EXPLOSION_VOLUME,
 } from "../constants.js";
 import { playSfxAt, playDeathSfxAt, playAnimalDeathSfxAt } from "./audioSystem.js";
+import { tryRegisterGhostBubble } from "./ghostBubbleUtils.js";
 import { killPeopleInBuilding, findNearestBuilding } from "./buildingSystem.js";
 import { ghostLines } from "../dialog.js";
 import { damageBusAt } from "./busSystem.js";
@@ -204,15 +205,17 @@ export function cannonImpact(scene, x, y) {
         p.ghostDriftX = Math.cos(awayAngle) * (15 + Math.random() * 25);
         p.ghostDriftY = -(20 + Math.random() * 20);
         p.ghostWobbleOffset = Math.random() * Math.PI * 2;
-        const line = Phaser.Utils.Array.GetRandom(ghostLines);
-        p.bubble = scene.add
-          .text(p.sprite.x + 20, p.sprite.y - 20, line, {
-            fontFamily: "monospace", fontSize: "8px",
-            color: "#aaccff", backgroundColor: "#000000aa",
-            padding: { x: 4, y: 3 },
-          })
-          .setScale(SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1)).setDepth(14);
-        scene.hudCam.ignore(p.bubble);
+        if (tryRegisterGhostBubble(scene, p.sprite.x, p.sprite.y)) {
+          const line = Phaser.Utils.Array.GetRandom(ghostLines);
+          p.bubble = scene.add
+            .text(p.sprite.x + 20, p.sprite.y - 20, line, {
+              fontFamily: "monospace", fontSize: "8px",
+              color: "#aaccff", backgroundColor: "#000000aa",
+              padding: { x: 4, y: 3 },
+            })
+            .setScale(SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1)).setDepth(14);
+          scene.hudCam.ignore(p.bubble);
+        }
       }
     }
   }
@@ -317,13 +320,16 @@ export function cannonImpact(scene, x, y) {
               "ghost",
             ).setScale(SCALE).setDepth(13).setAlpha(0.8);
             scene.hudCam.ignore(ghost);
-            const line = Phaser.Utils.Array.GetRandom(ghostLines);
-            const bubble = scene.add.text(ghost.x + 20, ghost.y - 20, line, {
-              fontFamily: "monospace", fontSize: "8px",
-              color: "#aaccff", backgroundColor: "#000000aa",
-              padding: { x: 4, y: 3 },
-            }).setScale(SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1)).setDepth(14);
-            scene.hudCam.ignore(bubble);
+            let bubble = null;
+            if (tryRegisterGhostBubble(scene, ghost.x, ghost.y)) {
+              const line = Phaser.Utils.Array.GetRandom(ghostLines);
+              bubble = scene.add.text(ghost.x + 20, ghost.y - 20, line, {
+                fontFamily: "monospace", fontSize: "8px",
+                color: "#aaccff", backgroundColor: "#000000aa",
+                padding: { x: 4, y: 3 },
+              }).setScale(SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1)).setDepth(14);
+              scene.hudCam.ignore(bubble);
+            }
             const driftX = Math.cos(spawnAngle) * (15 + Math.random() * 25);
             const driftY = -(20 + Math.random() * 20);
             const wobble = Math.random() * Math.PI * 2;
@@ -332,10 +338,15 @@ export function cannonImpact(scene, x, y) {
               onUpdate: () => {
                 ghost.x += driftX * 0.016;
                 ghost.x += Math.sin(ghost.y * 0.04 + wobble) * 0.3;
-                bubble.setPosition(ghost.x + 20, ghost.y - 20);
-                bubble.setAlpha(ghost.alpha);
+                if (bubble) {
+                  bubble.setPosition(ghost.x + 20, ghost.y - 20);
+                  bubble.setAlpha(ghost.alpha);
+                }
               },
-              onComplete: () => { ghost.destroy(); bubble.destroy(); },
+              onComplete: () => {
+                ghost.destroy();
+                if (bubble) bubble.destroy();
+              },
             });
           });
         }
@@ -369,13 +380,15 @@ export function cannonImpact(scene, x, y) {
         bk.ghostDriftY = -(20 + Math.random() * 20);
         bk.ghostWobble = Math.random() * Math.PI * 2;
         bk.isGhost = true;
-        const line = Phaser.Utils.Array.GetRandom(ghostLines);
-        bk.bubble = scene.add.text(bk.sprite.x + 20, bk.sprite.y - 20, line, {
-          fontFamily: "monospace", fontSize: "8px",
-          color: "#aaccff", backgroundColor: "#000000aa",
-          padding: { x: 4, y: 3 },
-        }).setScale(SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1)).setDepth(14);
-        scene.hudCam.ignore(bk.bubble);
+        if (tryRegisterGhostBubble(scene, bk.sprite.x, bk.sprite.y)) {
+          const line = Phaser.Utils.Array.GetRandom(ghostLines);
+          bk.bubble = scene.add.text(bk.sprite.x + 20, bk.sprite.y - 20, line, {
+            fontFamily: "monospace", fontSize: "8px",
+            color: "#aaccff", backgroundColor: "#000000aa",
+            padding: { x: 4, y: 3 },
+          }).setScale(SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1)).setDepth(14);
+          scene.hudCam.ignore(bk.bubble);
+        }
       }
     }
   }

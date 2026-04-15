@@ -152,7 +152,7 @@ export const ENGINE_RATE_RANGE = 0.8; // additional rate at max speed (total max
 export const ENGINE_CROSSFADE_SEC = 0.5; // seconds of overlap when crossfading the engine loop
 
 // --- Spatial audio (shared by explosion + death SFX) ---
-export const SFX_MAX_DISTANCE = 2000; // distance in px at which spatial SFX reaches minimum volume
+export const SFX_MAX_DISTANCE = 1000; // distance in px at which spatial SFX reaches minimum volume
 export const SFX_MIN_VOLUME_FRAC = 0.05; // volume fraction at SFX_MAX_DISTANCE (0.05 = 5% of max)
 export const SFX_PAN_AMOUNT = 0.25; // max stereo pan amount (0 = center, 1 = hard left/right)
 
@@ -221,7 +221,7 @@ export const MISSILE_FIRE_RATE = 0.3; // seconds between missile launches
 
 // --- Cannon firing SFX ---
 export const CANNON_GUN_VOLUME = 0.35; // volume of the looping gun sound
-export const CANNON_GUN_CROSSFADE_SEC = 0.3; // crossfade overlap between chained gun loops
+export const CANNON_GUN_CROSSFADE_SEC = 0.05; // crossfade overlap between chained gun loops
 
 // --- Cannon ---
 export const CANNON_FIRE_RATE = 0.075; // seconds between shots (hold to auto-fire)
@@ -247,6 +247,15 @@ export const CANNON_MUZZLE_SCALE_END_RANGE = 0.4; // end scale random range
 export const CANNON_MUZZLE_ALPHA = 0.45; // initial alpha
 export const CANNON_MUZZLE_ALPHA_RANGE = 0.2; // initial alpha random range
 export const CANNON_MUZZLE_DRIFT_SPREAD = 10; // extra end-position scatter (px)
+
+// --- Ghost dialog clustering ---
+// When many people die in a small area their death-dialog bubbles overlap
+// and become unreadable. These knobs cap how many ghost bubbles can appear
+// within a rolling time window, per radius cluster. Additional deaths still
+// happen and still spawn ghosts — they just skip the speech bubble.
+export const GHOST_BUBBLE_CLUSTER_RADIUS = 140; // px — radius of a "cluster"
+export const GHOST_BUBBLE_CLUSTER_MAX = 2; // max visible bubbles per cluster
+export const GHOST_BUBBLE_CLUSTER_WINDOW_MS = 3000; // rolling time window
 
 // --- People AI ---
 export const PEOPLE_DETECT_RADIUS = 600;

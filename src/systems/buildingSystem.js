@@ -6,6 +6,7 @@ import {
 } from "../constants.js";
 import { buildingGhostLines } from "../dialog.js";
 import { playDeathSfxAt } from "./audioSystem.js";
+import { tryRegisterGhostBubble } from "./ghostBubbleUtils.js";
 
 // Initializes scene.buildings and registers the scene._addBuilding helper.
 // The actual set pieces (town, farm compound, oilfield, ...) are built by
@@ -82,18 +83,20 @@ export function killPeopleInBuilding(scene, building) {
       p.ghostDriftY = -(20 + Math.random() * 20); // always float up, but at different speeds
       p.ghostWobbleOffset = Math.random() * Math.PI * 2;
 
-      const line = Phaser.Utils.Array.GetRandom(buildingGhostLines);
-      p.bubble = scene.add
-        .text(p.sprite.x + 20, p.sprite.y - 20, line, {
-          fontFamily: "monospace",
-          fontSize: "8px",
-          color: "#aaccff",
-          backgroundColor: "#000000aa",
-          padding: { x: 4, y: 3 },
-        })
-        .setScale(SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1))
-        .setDepth(14);
-      scene.hudCam.ignore(p.bubble);
+      if (tryRegisterGhostBubble(scene, p.sprite.x, p.sprite.y)) {
+        const line = Phaser.Utils.Array.GetRandom(buildingGhostLines);
+        p.bubble = scene.add
+          .text(p.sprite.x + 20, p.sprite.y - 20, line, {
+            fontFamily: "monospace",
+            fontSize: "8px",
+            color: "#aaccff",
+            backgroundColor: "#000000aa",
+            padding: { x: 4, y: 3 },
+          })
+          .setScale(SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1))
+          .setDepth(14);
+        scene.hudCam.ignore(p.bubble);
+      }
     });
   }
 }
