@@ -331,9 +331,12 @@ export function updatePeople(scene, dt, delta) {
         } else {
           p.sprite.setTexture(skinTex(p, "stand"));
         }
-        // Clamp to world
-        p.sprite.x = Phaser.Math.Clamp(p.sprite.x, 50, WORLD_W * TILE * SCALE - 50);
-        p.sprite.y = Phaser.Math.Clamp(p.sprite.y, 50, WORLD_H * TILE * SCALE - 50);
+        // Clamp to world — use the SAME margin as the panic-mode bounce
+        // below so a person transitioning idle → panic isn't snapped a
+        // tile inward on the first panic frame.
+        const margin = 100;
+        p.sprite.x = Phaser.Math.Clamp(p.sprite.x, margin, WORLD_W * TILE * SCALE - margin);
+        p.sprite.y = Phaser.Math.Clamp(p.sprite.y, margin, WORLD_H * TILE * SCALE - margin);
       }
     }
 
