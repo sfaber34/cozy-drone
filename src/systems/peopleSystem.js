@@ -489,16 +489,50 @@ export function updatePeople(scene, dt, delta) {
         p.noGreet = true;
         p.wanderDuration = 999;
         p.wanderAngle = null;
+        p._returnHeading = undefined; // reset smoothing so next panic starts fresh
         p.sprite.setTexture(skinTex(p, "stand"));
       } else {
-        // Walk toward home
-        const angle = Phaser.Math.Angle.Between(
+        // Path home — try a fan of flanking angles and pick the first one
+        // that avoids buildings. Much more stable than raw "steer away"
+        // (which causes rapid flipping when the straight path is blocked).
+        const desired = Phaser.Math.Angle.Between(
           p.sprite.x, p.sprite.y, homeX, homeY,
         );
-        const steered = steerAroundBuildings(scene, p.sprite.x, p.sprite.y, angle, dt);
-        p.sprite.x += Math.cos(steered) * wanderSpeed * 1.5 * dt;
-        p.sprite.y += Math.sin(steered) * wanderSpeed * 1.5 * dt;
-        p.sprite.setFlipX(Math.cos(steered) < 0);
+        const probeDist = 40;
+        const buildings = scene.buildings || [];
+        const isClear = (ang) => {
+          const nx = p.sprite.x + Math.cos(ang) * probeDist;
+          const ny = p.sprite.y + Math.sin(ang) * probeDist;
+          for (const b of buildings) {
+            if (b.destroyed) continue;
+            if (Phaser.Math.Distance.Between(nx, ny, b.x, b.y) < b.radius + 14) {
+              return false;
+            }
+          }
+          return true;
+        };
+        const tryOrder = [0, 0.5, -0.5, 1.0, -1.0, 1.6, -1.6];
+        let chosen = desired;
+        for (const off of tryOrder) {
+          if (isClear(desired + off)) { chosen = desired + off; break; }
+        }
+
+        // Smooth heading with a turn-rate limit so changes ease in
+        if (p._returnHeading === undefined) p._returnHeading = chosen;
+        const deltaA = Phaser.Math.Angle.Wrap(chosen - p._returnHeading);
+        const maxTurn = 5 * dt;
+        if (Math.abs(deltaA) <= maxTurn) p._returnHeading = chosen;
+        else p._returnHeading += Math.sign(deltaA) * maxTurn;
+
+        const step = wanderSpeed * 1.5 * dt;
+        p.sprite.x += Math.cos(p._returnHeading) * step;
+        p.sprite.y += Math.sin(p._returnHeading) * step;
+
+        // Flip hysteresis — avoid rapid left/right flicker near vertical headings
+        const fx = Math.cos(p._returnHeading);
+        if (fx < -0.2) p.sprite.setFlipX(true);
+        else if (fx > 0.2) p.sprite.setFlipX(false);
+
         // Walk animation
         p.runTimer = (p.runTimer || 0) + delta;
         if (p.runTimer > 200) {
