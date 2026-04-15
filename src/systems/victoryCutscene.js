@@ -76,7 +76,8 @@ function createVictoryCutscene(scene) {
       homeY: targetY,
       state: "waiting", // "waiting" | "walking" | "cheering"
       // Stagger exits so they trickle out of the door instead of as a glob
-      exitDelay: i * VICTORY_EXIT_STAGGER_MS + Math.random() * VICTORY_EXIT_JITTER_MS,
+      exitDelay:
+        i * VICTORY_EXIT_STAGGER_MS + Math.random() * VICTORY_EXIT_JITTER_MS,
       walkFrameTimer: Math.random() * VICTORY_FRAME_INTERVAL,
       walkFrame: 0,
       jumpPhase: Math.random() * Math.PI * 2,
@@ -140,7 +141,8 @@ function createVictoryCutscene(scene) {
           const droneDist = Math.hypot(dronedx, dronedy) || 0.0001;
           if (droneDist < VICTORY_DRONE_AVOID_RADIUS) {
             const pushStrength =
-              (VICTORY_DRONE_AVOID_RADIUS - droneDist) / VICTORY_DRONE_AVOID_RADIUS;
+              (VICTORY_DRONE_AVOID_RADIUS - droneDist) /
+              VICTORY_DRONE_AVOID_RADIUS;
             moveX += (dronedx / droneDist) * pushStrength * 2;
             moveY += (dronedy / droneDist) * pushStrength * 2;
             const m = Math.hypot(moveX, moveY) || 1;
@@ -183,7 +185,8 @@ function createVictoryCutscene(scene) {
         emojiTimer -= dt * 1000;
         if (emojiTimer <= 0) {
           emojiTimer =
-            VICTORY_EMOJI_INTERVAL_MIN + Math.random() * VICTORY_EMOJI_INTERVAL_RANGE;
+            VICTORY_EMOJI_INTERVAL_MIN +
+            Math.random() * VICTORY_EMOJI_INTERVAL_RANGE;
           spawnEmoji(scene, dx, dy);
         }
         if (!modalShown && celebrationElapsed >= VICTORY_CELEBRATION_DURATION) {
@@ -267,9 +270,28 @@ function showVictoryModal(scene) {
       .setDepth(601);
     items.push(title);
 
+    // Elapsed mission time — from the end of the intro cutscene to the
+    // moment the drone came to rest on the runway
+    const timeSize = Math.max(16, Math.min(26, Math.round(narrow * 0.045)));
+    const elapsedStr = formatElapsed(
+      scene.missionStartTime,
+      scene.missionEndTime,
+    );
+    const timeText = scene.add
+      .text(w / 2, h * 0.42, `MISSION TIME: ${elapsedStr}`, {
+        fontFamily: "monospace",
+        fontSize: `${timeSize}px`,
+        color: "#ffffff",
+        stroke: "#000",
+        strokeThickness: 3,
+      })
+      .setOrigin(0.5)
+      .setDepth(601);
+    items.push(timeText);
+
     const subSize = Math.max(18, Math.min(28, Math.round(narrow * 0.05)));
     const sub = scene.add
-      .text(w / 2, h * 0.5, "YOU RULE!", {
+      .text(w / 2, h * 0.52, "YOU RULE!", {
         fontFamily: "monospace",
         fontSize: `${subSize}px`,
         color: "#ff88cc",
@@ -336,4 +358,15 @@ function showVictoryModal(scene) {
   };
   build();
   scene.scale.on("resize", build);
+}
+
+function formatElapsed(startMs, endMs) {
+  if (!startMs || !endMs) return "--:--";
+  const totalSec = Math.max(0, Math.floor((endMs - startMs) / 1000));
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  const mm = String(m).padStart(2, "0");
+  const ss = String(s).padStart(2, "0");
+  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
 }

@@ -431,6 +431,8 @@ export class GameScene extends Phaser.Scene {
     //     control back to the altitude-based logic below.
     if (this.introZoomActive && !this._introZoomTweenStarted) {
       this._introZoomTweenStarted = true;
+      // Mission clock starts the instant the intro cutscene ends.
+      this.missionStartTime = Date.now();
       const mobileZoom = this.isMobile ? MOBILE_ZOOM_FACTOR : 1.0;
       const targetZoom = DRONE_ZOOM_MAX * mobileZoom;
       this.tweens.add({
@@ -547,6 +549,8 @@ export class GameScene extends Phaser.Scene {
       ds.speed === 0 &&
       isOnRunway(this, ds.x, ds.y)
     ) {
+      // Stop the mission clock the moment the drone comes to rest on the runway
+      this.missionEndTime = Date.now();
       startVictory(this);
     }
 
