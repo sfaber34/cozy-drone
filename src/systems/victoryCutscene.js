@@ -2,6 +2,7 @@
 // of people and lands back at the runway. 10 "guy1/guy2" little guys run out
 // of the hangar, surround the drone, jump + cheer, and emojis rain down.
 // After VICTORY_CELEBRATION_DURATION a modal announces victory.
+import { getBrowserBottomInset } from "./viewportUtils.js";
 import {
   SCALE,
   VICTORY_CROWD_COUNT,
@@ -250,6 +251,13 @@ function showVictoryModal(scene) {
     const w = scene.scale.width;
     const h = scene.scale.height;
     const narrow = Math.min(w, h);
+    const isLandscape = w > h;
+
+    // Bottom margin (Chrome iOS nav bar + landscape safe area). SAME logic
+    // as the briefing modal — which works on every viewport.
+    const browserInset = getBrowserBottomInset();
+    const bottomSafe =
+      (isLandscape ? Math.max(Math.round(h * 0.14), 50) : 28) + browserInset;
 
     const overlay = scene.add
       .rectangle(-20, -20, w + 40, h + 40, 0x000000, 0.85)
@@ -257,28 +265,49 @@ function showVictoryModal(scene) {
       .setDepth(600);
     items.push(overlay);
 
+    // --- Title (pinned near the TOP — identical anchoring to briefing modal) ---
     const titleSize = Math.max(24, Math.min(48, Math.round(narrow * 0.08)));
+    const titleY = Math.max(28, h * 0.08);
     const title = scene.add
-      .text(w / 2, h * 0.32, "MISSION COMPLETE!!", {
+      .text(w / 2, titleY, "MISSION COMPLETE!!", {
         fontFamily: "monospace",
         fontSize: `${titleSize}px`,
         color: "#ffee66",
         stroke: "#000",
         strokeThickness: 4,
       })
-      .setOrigin(0.5)
+      .setOrigin(0.5, 0)
       .setDepth(601);
     items.push(title);
 
-    // Elapsed mission time — from the end of the intro cutscene to the
-    // moment the drone came to rest on the runway
+    // --- Restart button (pinned near the BOTTOM — identical to briefing) ---
+    const btnW = Math.min(w * 0.75, 360);
+    const btnH = Math.max(50, Math.min(74, Math.round(narrow * 0.11)));
+    const btnY = h - bottomSafe - btnH / 2 - 5;
+
+    // --- Middle stack: time / YOU RULE / body — vertically centered
+    //     between title bottom and button top, exactly like briefing does
+    //     with its single body text. ---
     const timeSize = Math.max(16, Math.min(26, Math.round(narrow * 0.045)));
+    const subSize  = Math.max(18, Math.min(28, Math.round(narrow * 0.05)));
+    const bodySize = Math.max(14, Math.min(20, Math.round(narrow * 0.034)));
+    const gap = Math.max(10, Math.round(narrow * 0.025));
+    // Body is 2 lines with ~4px spacing
+    const bodyH = bodySize * 2 + 4;
+    const stackH = timeSize + gap + subSize + gap + bodyH;
+    const titleBottom = titleY + titleSize;
+    const midCenter = (titleBottom + (btnY - btnH / 2)) / 2;
+    const stackTop = midCenter - stackH / 2;
+    const timeY = stackTop + timeSize / 2;
+    const subY  = timeY + timeSize / 2 + gap + subSize / 2;
+    const bodyY = subY + subSize / 2 + gap + bodyH / 2;
+
     const elapsedStr = formatElapsed(
       scene.missionStartTime,
       scene.missionEndTime,
     );
     const timeText = scene.add
-      .text(w / 2, h * 0.42, `MISSION TIME: ${elapsedStr}`, {
+      .text(w / 2, timeY, `MISSION TIME: ${elapsedStr}`, {
         fontFamily: "monospace",
         fontSize: `${timeSize}px`,
         color: "#ffffff",
@@ -289,9 +318,8 @@ function showVictoryModal(scene) {
       .setDepth(601);
     items.push(timeText);
 
-    const subSize = Math.max(18, Math.min(28, Math.round(narrow * 0.05)));
     const sub = scene.add
-      .text(w / 2, h * 0.52, "YOU RULE!", {
+      .text(w / 2, subY, "YOU RULE!", {
         fontFamily: "monospace",
         fontSize: `${subSize}px`,
         color: "#ff88cc",
@@ -302,11 +330,10 @@ function showVictoryModal(scene) {
       .setDepth(601);
     items.push(sub);
 
-    const bodySize = Math.max(14, Math.min(20, Math.round(narrow * 0.034)));
     const body = scene.add
       .text(
         w / 2,
-        h * 0.62,
+        bodyY,
         "All hostiles eliminated.\nYou are the drone master!",
         {
           fontFamily: "monospace",
@@ -319,13 +346,6 @@ function showVictoryModal(scene) {
       .setOrigin(0.5)
       .setDepth(601);
     items.push(body);
-
-    // --- Restart Mission button ---
-    const isLandscape = w > h;
-    const bottomSafe = isLandscape ? Math.max(Math.round(h * 0.14), 50) : 28;
-    const btnW = Math.min(w * 0.75, 360);
-    const btnH = Math.max(50, Math.min(74, Math.round(narrow * 0.11)));
-    const btnY = h - bottomSafe - btnH / 2 - 5;
     const btn = scene.add
       .rectangle(w / 2, btnY, btnW, btnH, 0x226a2a, 0.9)
       .setStrokeStyle(3, 0xffffff, 0.9)
@@ -358,6 +378,9 @@ function showVictoryModal(scene) {
   };
   build();
   scene.scale.on("resize", build);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", build);
+  }
 }
 
 function formatElapsed(startMs, endMs) {

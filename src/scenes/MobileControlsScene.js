@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { getBrowserBottomInset } from "../systems/viewportUtils.js";
 import {
   MOBILE_JOYSTICK_RADIUS,
   MOBILE_BUTTON_RADIUS,
@@ -40,6 +41,9 @@ export class MobileControlsScene extends Phaser.Scene {
     this.input.on("pointerupoutside", this.onUp, this);
 
     this.scale.on("resize", () => this.buildControls());
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", () => this.buildControls());
+    }
   }
 
   buildControls() {
@@ -67,7 +71,13 @@ export class MobileControlsScene extends Phaser.Scene {
     const tsW = jr * 2.4;
     const tsH = jr * 0.9;
 
-    const extraBottomPad = isLandscape ? Math.max(Math.round(h * 0.1), 30) : 0;
+    // Chrome on iOS keeps a persistent bottom nav bar that covers the canvas;
+    // reserve that height so controls aren't hidden underneath it.
+    const browserInset = getBrowserBottomInset();
+    const extraBottomPad = Math.max(
+      isLandscape ? Math.max(Math.round(h * 0.1), 30) : 0,
+      browserInset,
+    );
     // Lift everything up 5 px for visual breathing room from the bottom edge
     const safeH = h - extraBottomPad - 15;
 

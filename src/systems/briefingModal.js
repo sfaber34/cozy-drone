@@ -1,3 +1,5 @@
+import { getBrowserBottomInset } from "./viewportUtils.js";
+
 // Briefing modal shown before gameplay starts.
 // Its primary job is to provide a user-gesture hook that reliably unlocks
 // the Web Audio context on iOS Safari (auto-unlock is unreliable there).
@@ -12,12 +14,12 @@ function buildBriefingBody(scene) {
   const tapWord = scene.isMobile ? "tap" : "click";
   return (
     "ISR has identified a strong enemy presence within this AO. " +
-    "Enemy combatants will use civilian population as concealment. " +
+    "Enemy combatants are known to use the civilian population as concealment. " +
     "Prosecute targets of opportunity with extreme prejudice. Weapons hot!\n\n" +
     "Available Armament:\n" +
     `•Infinity laser-guided Hellfire missiles [${tapWord} to target]\n` +
     "•Infinity 30 mm anti-material cannon rounds\n\n" +
-    "Return to base after eliminating all hostiles for a special surpise.\n\n" +
+    "Return to base after eliminating all hostiles for a special surprise!\n\n" +
     "Remember: We fight them here so we don't have to fight them at home!"
   );
 }
@@ -43,7 +45,11 @@ export function showBriefingModal(scene, onStart) {
     // Mobile browser chrome (URL bar, home indicator) eats into the bottom
     // of the canvas in landscape. Reserve extra space so the button stays on
     // screen.
-    const bottomSafe = isLandscape ? Math.max(Math.round(h * 0.14), 50) : 28;
+    // Reserve Chrome iOS's persistent bottom nav bar (if present) on top of
+    // the landscape/portrait safe margin.
+    const browserInset = getBrowserBottomInset();
+    const bottomSafe =
+      (isLandscape ? Math.max(Math.round(h * 0.14), 50) : 28) + browserInset;
 
     // Full-bleed overlay — over-extended by 20 px in every direction so no
     // sub-pixel / letterbox gap can show the world through at the edges.
@@ -129,6 +135,11 @@ export function showBriefingModal(scene, onStart) {
 
   build();
   scene.scale.on("resize", build);
+  // Also rebuild when browser UI chrome toggles (e.g. Chrome iOS's bottom
+  // nav bar appearing/disappearing changes the visible area)
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", build);
+  }
   scene.briefingActive = true;
 
   // Hide the initial HTML loading spinner — the briefing modal is now
@@ -193,6 +204,9 @@ export function showBriefingModal(scene, onStart) {
     canvas.removeEventListener("touchend", onTouchEnd);
     canvas.removeEventListener("mousedown", onMouseDown);
     scene.scale.off("resize", build);
+    if (window.visualViewport) {
+      window.visualViewport.removeEventListener("resize", build);
+    }
     if (pulseTween) pulseTween.stop();
     for (const it of items) it.destroy();
     scene._briefingModalItems = null;
