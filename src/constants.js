@@ -140,6 +140,21 @@ export const HOOKAH_EXHALE_PUFF_COUNT = 10; // puffs per exhale
 export const HOOKAH_EXHALE_PUFF_DRIFT = 24; // px each exhale puff drifts
 export const HOOKAH_EXHALE_PUFF_DURATION = 900; // ms
 
+// --- RC cars set piece ---
+// A ring of people holding controllers, each driving a tiny RC car around
+// a flat arena in the middle. Panicked/dead drivers pause their car; cars
+// resume when the driver returns to idle.
+export const RC_CAR_DRIVER_COUNT = 10;
+export const RC_CAR_ARENA_WIDTH_PX = 360;
+export const RC_CAR_ARENA_HEIGHT_PX = 260;
+export const RC_CAR_DRIVER_MARGIN_PX = 40; // distance drivers stand OUTSIDE the arena edge
+export const RC_CAR_SPEED = 75; // px/s
+export const RC_CAR_TURN_RATE = 4.5; // rad/s — how fast a car can rotate
+export const RC_CAR_TARGET_ARRIVE_PX = 14; // how close to target before picking a new one
+export const RC_CAR_SCALE = 0.8; // sprite scale multiplier (× SCALE)
+export const RC_CAR_WHEEL_WOBBLE_HZ = 14; // wheel-bounce rate while driving
+export const RC_CAR_WHEEL_WOBBLE_AMP = 0.6; // px vertical wobble while driving
+
 // --- Dirt biker no-go zones (in tiles — center x, center y, half-width, half-height) ---
 // Set-piece instances publish their own bounds via `scene.setPieces[i].bounds`,
 // which vehicleSystem merges at runtime. Anything added here is for no-go zones

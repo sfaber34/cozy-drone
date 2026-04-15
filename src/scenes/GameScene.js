@@ -59,6 +59,7 @@ import { createConcert } from "../systems/concertSystem.js";
 import { createTireFire } from "../systems/tireFireSystem.js";
 import { createRockTarget } from "../systems/rockTargetSystem.js";
 import { createHookah } from "../systems/hookahSystem.js";
+import { createRcCar } from "../systems/rcCarSystem.js";
 import { createAirfield } from "../systems/airfieldSystem.js";
 import { createTown } from "../systems/townSystem.js";
 import { createFarmCompound } from "../systems/farmCompoundSystem.js";
@@ -810,6 +811,7 @@ function tryDeferredWorldInit(scene) {
   scene.setPieces.push(createTireFire(scene, rng, { tileX: 100, tileY: 82 }));
   scene.setPieces.push(createRockTarget(scene, rng, { tileX: 88, tileY: 118 }));
   scene.setPieces.push(createHookah(scene, rng, { tileX: 45, tileY: 130 }));
+  scene.setPieces.push(createRcCar(scene, rng, { tileX: 155, tileY: 165 }));
 
   createPeople(scene, rng);
   createVehicles(scene, rng);
