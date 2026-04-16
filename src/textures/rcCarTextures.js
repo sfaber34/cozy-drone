@@ -12,10 +12,8 @@ export function generateRcCarTextures(scene) {
   c.fillStyle = "#2a2a2a";        // joystick stems
   c.fillRect(1, 2, 1, 1);
   c.fillRect(4, 2, 1, 1);
-  c.fillStyle = "#8a8a8a";        // antenna
+  c.fillStyle = "#8a8a8a";        // antenna tip (silver — matches body)
   c.fillRect(2, 0, 1, 1);
-  c.fillStyle = "#ff3333";        // tip of antenna
-  c.fillRect(2, 0, 1, 1);          // (re-drawn red on top of grey for a bright tip)
   c.fillStyle = "#888";            // seam under the grip
   c.fillRect(0, 4, 6, 1);
   ctrlC.refresh();

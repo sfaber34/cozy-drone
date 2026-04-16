@@ -94,6 +94,9 @@ export function generateDroneTextures(scene) {
   // Tail
   sc.fillRect(10, 24, 4, 2);
   sc.fillRect(18, 24, 4, 2);
+  // Rear prop hub / shaft — connects the fuselage to the prop shadow
+  // so the propeller doesn't appear to float behind the drone.
+  sc.fillRect(15, 26, 2, 2);
   shadowCanvas.refresh();
 
   // --- Propeller shadows (horizontal + vertical blade silhouettes) ---

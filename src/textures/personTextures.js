@@ -196,14 +196,10 @@ export function generatePersonTextures(scene, opts = {}) {
     r2.fillRect(6, 12, 2, 2);
     run2C.refresh();
 
-    // --- Angry stand (downturned/widened eyes, frown) ---
+    // --- Angry stand (normal eyes, frown) ---
     const angryC = scene.textures.createCanvas(`person-angry-${suffix}`, 10, 14);
     const ac = angryC.context;
     drawPersonHead(ac, s, 0);
-    // Widen eyes into angry slits (extend downward 1px)
-    ac.fillStyle = '#222';
-    ac.fillRect(4, 2, 1, 1);
-    ac.fillRect(6, 2, 1, 1);
     // Frowning mouth — 2px lower corners
     ac.fillStyle = '#7a2222';
     ac.fillRect(4, 3, 3, 1);
@@ -228,10 +224,7 @@ export function generatePersonTextures(scene, opts = {}) {
     const throw1C = scene.textures.createCanvas(`person-throw1-${suffix}`, 10, 14);
     const t1 = throw1C.context;
     drawPersonHead(t1, s, 0);
-    // Angry face reuse
-    t1.fillStyle = '#222';
-    t1.fillRect(4, 2, 1, 1);
-    t1.fillRect(6, 2, 1, 1);
+    // Frown mouth
     t1.fillStyle = '#7a2222';
     t1.fillRect(4, 3, 3, 1);
     // Body
@@ -262,9 +255,6 @@ export function generatePersonTextures(scene, opts = {}) {
     const shakeC = scene.textures.createCanvas(`person-shake-${suffix}`, 10, 14);
     const sh = shakeC.context;
     drawPersonHead(sh, s, 0);
-    sh.fillStyle = '#222';
-    sh.fillRect(4, 2, 1, 1);
-    sh.fillRect(6, 2, 1, 1);
     sh.fillStyle = '#7a2222';
     sh.fillRect(4, 3, 3, 1);
     sh.fillStyle = s.robe;
@@ -291,9 +281,6 @@ export function generatePersonTextures(scene, opts = {}) {
     const t2 = throw2C.context;
     drawPersonHead(t2, s, 0);
     // Shouting mouth (open)
-    t2.fillStyle = '#222';
-    t2.fillRect(4, 2, 1, 1);
-    t2.fillRect(6, 2, 1, 1);
     t2.fillStyle = '#441111';
     t2.fillRect(4, 3, 3, 1);
     // Body leaning forward (slight shift visible via arm layout)

@@ -157,27 +157,30 @@ function updateDriver(scene, arena, d, dt) {
   const idle = d.personEntry.state === "idle";
   d.controller.setVisible(idle);
 
+  // Car only moves while the driver is actively controlling it. When the
+  // driver isn't idle the car just sits still, and we do NOT touch the
+  // driver's sprite position — peopleSystem is driving them during panic.
+  if (!idle) return;
+
   // Excited-jump state machine — only advances while idle. Applied via a
   // Y offset that wraps the controller too so it stays in the driver's hand.
   let jumpBob = 0;
-  if (idle) {
-    if (d.jumping) {
-      d.jumpElapsed += dt * 1000;
-      const t = Math.min(1, d.jumpElapsed / RC_CAR_DRIVER_JUMP_DURATION);
-      jumpBob = Math.sin(Math.PI * t) * RC_CAR_DRIVER_JUMP_HEIGHT;
-      if (t >= 1) {
-        d.jumping = false;
-        d.jumpElapsed = 0;
-        d.jumpTimer =
-          RC_CAR_DRIVER_JUMP_INTERVAL_MIN +
-          Math.random() * RC_CAR_DRIVER_JUMP_INTERVAL_RANGE;
-      }
-    } else {
-      d.jumpTimer -= dt * 1000;
-      if (d.jumpTimer <= 0) {
-        d.jumping = true;
-        d.jumpElapsed = 0;
-      }
+  if (d.jumping) {
+    d.jumpElapsed += dt * 1000;
+    const t = Math.min(1, d.jumpElapsed / RC_CAR_DRIVER_JUMP_DURATION);
+    jumpBob = Math.sin(Math.PI * t) * RC_CAR_DRIVER_JUMP_HEIGHT;
+    if (t >= 1) {
+      d.jumping = false;
+      d.jumpElapsed = 0;
+      d.jumpTimer =
+        RC_CAR_DRIVER_JUMP_INTERVAL_MIN +
+        Math.random() * RC_CAR_DRIVER_JUMP_INTERVAL_RANGE;
+    }
+  } else {
+    d.jumpTimer -= dt * 1000;
+    if (d.jumpTimer <= 0) {
+      d.jumping = true;
+      d.jumpElapsed = 0;
     }
   }
   // Apply jump bob to the person's Y around their home, and keep the
@@ -186,10 +189,6 @@ function updateDriver(scene, arena, d, dt) {
   d.personSprite.y = baseY - jumpBob;
   const ctrlOffsetX = d.personSprite.x < arena.cx ? 7 : -7;
   d.controller.setPosition(d.personSprite.x + ctrlOffsetX, d.personSprite.y - 1);
-
-  // Car only moves while the driver is actively controlling it. When the
-  // driver isn't idle the car just sits still.
-  if (!idle) return;
 
   // Steer toward the current target, clamped by turn rate
   const dx = d.targetX - d.carX;

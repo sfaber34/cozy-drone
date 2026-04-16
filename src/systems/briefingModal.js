@@ -18,7 +18,7 @@ function buildBriefingBody(scene) {
     "Prosecute targets of opportunity with extreme prejudice. Weapons hot!\n\n" +
     "Available Armament:\n" +
     `• Infinity laser-guided Hellfire missiles [${tapWord} to target]\n` +
-    "• Infinity 30 mm anti-material cannon rounds\n\n" +
+    "• Infinity 30 mm anti-materiel cannon rounds\n\n" +
     "Return to base after eliminating all hostiles for a special surprise!\n\n" +
     "Remember: We fight them here so we don't have to fight them at home!"
   );

@@ -144,7 +144,15 @@ export function createPaperPlane(scene, rng, opts) {
 // ----------------------------------------------------------------------
 
 function updateThrower(scene, area, t, dt) {
-  if (t.personEntry.state !== "idle") return;
+  // If the thrower isn't idle (panicking/dying), keep any in-flight plane
+  // animating so it finishes its arc and lands on the ground instead of
+  // freezing mid-air. The rest of the state machine is gated on idle.
+  if (t.personEntry.state !== "idle") {
+    if ((t.phase === "release" || t.phase === "watching") && t.planeT < 1) {
+      advancePlane(t, dt);
+    }
+    return;
+  }
   t.phaseTimer -= dt;
 
   const pe = t.personEntry;
