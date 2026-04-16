@@ -116,9 +116,15 @@ export class MobileControlsScene extends Phaser.Scene {
     // notch is actually on. Padding both sides always clears the notch
     // regardless of orientation; the non-notch side loses ~47 CSS px but
     // that's barely noticeable on a phone.
+    //
+    // Reduce the inset by SAFE_AREA_OUTWARD_NUDGE_PX in landscape so the
+    // controls sit closer to the edge — the full safe area is a bit too
+    // conservative and leaves obvious dead space on the non-notch side.
+    const SAFE_AREA_OUTWARD_NUDGE_PX = 20;
+    const nudge = isLandscape ? SAFE_AREA_OUTWARD_NUDGE_PX * boost : 0;
     const sai = getSafeAreaInsets();
-    const safeLeft  = sai.left  * boost;
-    const safeRight = sai.right * boost;
+    const safeLeft  = Math.max(0, sai.left  * boost - nudge);
+    const safeRight = Math.max(0, sai.right * boost - nudge);
 
     // Bottom-right: speed rocker + right fire button above
     const speedCX = w - safeRight - m - srW / 2;
