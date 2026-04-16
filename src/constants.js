@@ -223,6 +223,18 @@ export const FARM_COMPOUND_FEED_PELLET_DURATION = 500; // ms
 // that are NOT set pieces (e.g. map-wide hazards).
 export const BIKER_NO_GO_ZONES = [];
 
+// --- Set-piece random placement (see setPieceRegistry.js) ---
+// Minimum pixel distance every set piece's footprint stays from the map edge.
+export const SET_PIECE_PLACE_MARGIN_PX = 150;
+// Minimum pixel gap between any two set-piece footprints.
+export const SET_PIECE_PLACE_GAP_PX = 80;
+// Best-of-K random candidate sampling — larger values give a more uniform
+// spread (feels over-regulated if too high); smaller values feel clumpier.
+export const SET_PIECE_PLACE_BEST_OF_K = 5;
+// Max random candidates tried per set piece before the placer gives up on
+// the "respect the gap" pass and tries a tighter no-gap fallback.
+export const SET_PIECE_PLACE_MAX_TRIES = 2000;
+
 // --- Audio ---
 // Master multiplier applied to every sound (music + sfx + engine + gun loop).
 // Set 0 to mute the entire game.

@@ -47,24 +47,11 @@ import {
 } from "../systems/vehicleSystem.js";
 import { isOnRunway } from "../systems/droneSystem.js";
 import { startVictory } from "../systems/victoryCutscene.js";
-// Set-piece factories — each returns { type, bounds, update, destroy }
-import { createWedding } from "../systems/weddingSetup.js";
-import { createSoccer } from "../systems/soccerSystem.js";
-import { createOilfield } from "../systems/oilfieldSystem.js";
-import { createChickenFight } from "../systems/chickenFightSystem.js";
-import { createCamelRace } from "../systems/camelRaceSystem.js";
-import { createRockFight } from "../systems/rockFightSystem.js";
-import { createFarmField } from "../systems/farmFieldSystem.js";
-import { createConcert } from "../systems/concertSystem.js";
-import { createTireFire } from "../systems/tireFireSystem.js";
-import { createRockTarget } from "../systems/rockTargetSystem.js";
-import { createHookah } from "../systems/hookahSystem.js";
-import { createRcCar } from "../systems/rcCarSystem.js";
-import { createPaperPlane } from "../systems/paperPlaneSystem.js";
+// Set-piece factories — each returns { type, bounds, update, destroy }.
+// Airfield is special-cased (runs at intro, fixed position). Everything else
+// goes through the placer in setPieceRegistry so random spawns don't overlap.
 import { createAirfield } from "../systems/airfieldSystem.js";
-import { createTown } from "../systems/townSystem.js";
-import { createFarmCompound } from "../systems/farmCompoundSystem.js";
-import { createSheepFlock } from "../systems/sheepFlockSystem.js";
+import { placeSetPieces, reservedRectFromBounds } from "../systems/setPieceRegistry.js";
 import { generatePersonSkinsAsync } from "../textures/personTextures.js";
 import {
   CANNON_FIRE_RATE,
@@ -811,24 +798,34 @@ function tryDeferredWorldInit(scene) {
   createBuildings(scene, rng);
   createAnimals(scene, rng);
 
-  // Set pieces that contain people. Order mostly matters for placement
-  // dependencies (set pieces may read scene.town* that createTown publishes).
-  scene.setPieces.push(createTown(scene, rng, { tileX: 2, tileY: 2 }));
-  scene.setPieces.push(createFarmCompound(scene, rng, { tileX: 112, tileY: 40 }));
-  scene.setPieces.push(createSheepFlock(scene, rng, { tileX: 152, tileY: 40 }));
-  scene.setPieces.push(createOilfield(scene, rng, { tileX: 117, tileY: 57 }));
-  scene.setPieces.push(createWedding(scene, rng, { tileX: 150, tileY: 120 }));
-  scene.setPieces.push(createSoccer(scene, rng, { tileX: 160, tileY: 80 }));
-  scene.setPieces.push(createChickenFight(scene, rng, { tileX: 115, tileY: 108 }));
-  scene.setPieces.push(createCamelRace(scene, rng, { tileX: 115, tileY: 98 }));
-  scene.setPieces.push(createRockFight(scene, rng, { tileX: 115, tileY: 85 }));
-  scene.setPieces.push(createFarmField(scene, rng, { tileX: 76, tileY: 100 }));
-  scene.setPieces.push(createConcert(scene, rng, { tileX: 76, tileY: 62 }));
-  scene.setPieces.push(createTireFire(scene, rng, { tileX: 100, tileY: 82 }));
-  scene.setPieces.push(createRockTarget(scene, rng, { tileX: 88, tileY: 118 }));
-  scene.setPieces.push(createHookah(scene, rng, { tileX: 45, tileY: 130 }));
-  scene.setPieces.push(createRcCar(scene, rng, { tileX: 155, tileY: 165 }));
-  scene.setPieces.push(createPaperPlane(scene, rng, { tileX: 100, tileY: 135 }));
+  // Set pieces that contain people. Any entry with both tileX and tileY
+  // goes exactly there; any entry that omits them gets a random, non-
+  // overlapping, well-spaced placement. The airfield is already in
+  // scene.setPieces by this point; we hand its bounds in as a reserved
+  // rect so auto-placed pieces steer clear of the runway.
+  const airfieldPiece = scene.setPieces[0]; // placed at intro time
+  const reserved = airfieldPiece?.bounds
+    ? [reservedRectFromBounds(airfieldPiece.bounds)]
+    : [];
+  const placed = placeSetPieces(scene, rng, [
+    { type: "town", tileX: 2, tileY: 2 },
+    { type: "farmCompound" },
+    { type: "sheepFlock" },
+    { type: "oilfield" },
+    { type: "wedding" },
+    { type: "soccer" },
+    { type: "chickenFight" },
+    { type: "camelRace" },
+    { type: "rockFight" },
+    { type: "farmField" },
+    { type: "concert" },
+    { type: "tireFire" },
+    { type: "rockTarget" },
+    { type: "hookah" },
+    { type: "rcCar" },
+    { type: "paperPlane" },
+  ], reserved);
+  scene.setPieces.push(...placed);
 
   createPeople(scene, rng);
   createVehicles(scene, rng);
