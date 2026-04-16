@@ -812,7 +812,7 @@ function tryDeferredWorldInit(scene) {
   createAnimals(scene, rng);
 
   // Set pieces that contain people. Order mostly matters for placement
-  // dependencies (busSystem reads scene.town* that createTown publishes).
+  // dependencies (set pieces may read scene.town* that createTown publishes).
   scene.setPieces.push(createTown(scene, rng, { tileX: 2, tileY: 2 }));
   scene.setPieces.push(createFarmCompound(scene, rng, { tileX: 112, tileY: 40 }));
   scene.setPieces.push(createSheepFlock(scene, rng, { tileX: 152, tileY: 40 }));

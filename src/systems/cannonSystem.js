@@ -16,7 +16,6 @@ import { playSfxAt, playDeathSfxAt, playAnimalDeathSfxAt } from "./audioSystem.j
 import { tryRegisterGhostBubble } from "./ghostBubbleUtils.js";
 import { killPeopleInBuilding, findNearestBuilding } from "./buildingSystem.js";
 import { ghostLines } from "../dialog.js";
-import { damageBusAt } from "./busSystem.js";
 import { isInWater, splashAt } from "./waterSystem.js";
 
 export function initCannon(scene) {
@@ -435,9 +434,6 @@ export function cannonImpact(scene, x, y) {
       }
     }
   }
-
-  // Damage buses (0.5 HP per cannon hit — 6 hits to destroy)
-  damageBusAt(scene, x, y, 0.5);
 
   // Set-piece damage dispatch — instances with damageAt opt into taking hits.
   if (scene.setPieces) {

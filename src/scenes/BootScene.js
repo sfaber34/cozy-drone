@@ -22,7 +22,6 @@ import { generateRcCarTextures } from '../textures/rcCarTextures.js';
 import { generatePaperPlaneTextures } from '../textures/paperPlaneTextures.js';
 import { generateFarmCompoundTextures } from '../textures/farmCompoundTextures.js';
 import { generateWeaponTextures } from '../textures/weaponTextures.js';
-import { generateBusTextures } from '../textures/busTextures.js';
 import { generateWaterTextures } from '../textures/waterTextures.js';
 
 export class BootScene extends Phaser.Scene {
@@ -57,7 +56,6 @@ export class BootScene extends Phaser.Scene {
     generatePaperPlaneTextures(this);
     generateFarmCompoundTextures(this);
     generateWeaponTextures(this);
-    generateBusTextures(this);
     generateWaterTextures(this);
 
     this.scene.start('Game');

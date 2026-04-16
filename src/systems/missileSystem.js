@@ -12,7 +12,6 @@ import { tryRegisterGhostBubble } from "./ghostBubbleUtils.js";
 import { affectNearbyPeople } from "./peopleSystem.js";
 import { affectNearbyAnimals } from "./animalSystem.js";
 import { killPeopleInBuilding } from "./buildingSystem.js";
-import { damageBusAt } from "./busSystem.js";
 import { isInWater, splashAt } from "./waterSystem.js";
 
 export function fireMissile(scene) {
@@ -448,9 +447,6 @@ export function missileImpact(scene, x, y) {
 
   // Kill or panic nearby people
   affectNearbyPeople(scene, x, y);
-
-  // Damage buses AFTER people loop so ejected riders aren't caught by kill radius
-  damageBusAt(scene, x, y, 1.0);
 
   // Set-piece damage dispatch — any instance exposing damageAt(x, y, dmg)
   // opts into taking damage from explosions.

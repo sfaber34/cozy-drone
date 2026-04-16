@@ -278,7 +278,7 @@ export function createTown(scene, rng, opts) {
     }
   }
 
-  // Export town layout info for vehicles (read by busSystem.js)
+  // Export town layout info (for future systems that need grid coords)
   scene.townStartX = townStartX;
   scene.townStartY = townStartY;
   scene.townGridCols = gridCols;

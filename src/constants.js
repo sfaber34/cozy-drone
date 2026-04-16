@@ -469,17 +469,3 @@ export const MOBILE_BUTTON_RADIUS = 42; // fire/alt button radius (px)
 export const MOBILE_BUTTON_MARGIN = 18; // gap from screen edge and between buttons (px)
 export const MOBILE_DIALOG_SCALE = 1.6; // speech bubble / dialog scale multiplier on mobile
 
-// --- Bus Route ---
-export const BUS_ROUTE_BLOCK_COL = 4; // town grid column (0-7) for bus road centerline
-export const BUS_ROUTE_ROAD_TILES = 25; // tile length of route between the two terminals
-export const BUS_TERMINAL_OFFSET_TILES = 4; // gap tiles between town edge and terminal A
-export const BUS_LOOP_EXTENSION_TILES = 3; // tiles beyond each terminal for the corner/connecting road
-export const BUS_ROAD_GAP_TILES = 3; // tiles each road is offset from center
-export const BUS_COUNT = 2; // buses circulating (one per direction)
-export const BUS_SPEED = 80; // px/s
-export const BUS_CAPACITY = 8; // max riders per bus
-export const BUS_RIDER_COUNT = 10; // riders pooled at each terminal
-export const BUS_HP = 3; // missile hits to destroy
-export const BUS_HIT_RADIUS = 40; // weapon collision radius (px)
-export const BUS_LOAD_TIME = 4.0; // seconds to board/alight at terminal
-export const BUS_RECOVER_TIME = 15.0; // max seconds waiting for scattered riders to return
