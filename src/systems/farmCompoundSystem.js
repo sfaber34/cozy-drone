@@ -583,7 +583,7 @@ function buildHoleDigger(scene, rng, farmX, farmY, sprites) {
 
   // Person stands to the WEST of the hole so the shovel arcs INTO it
   const personX = holeX - 22;
-  const personY = holeY - 2;
+  const personY = holeY - 17;
   const skinId = rng.between(0, 199);
   const { sprite, personEntry } = createManagedPerson(scene, {
     x: personX, y: personY, skinId,
@@ -596,7 +596,7 @@ function buildHoleDigger(scene, rng, farmX, farmY, sprites) {
   });
   const shovel = scene.add
     .image(personX + 6, personY - 2, "farm-shovel")
-    .setOrigin(0.5, 1) // pivot from the person's hand (top of shovel handle)
+    .setOrigin(0.5, 0) // pivot from the HANDLE end (person's hand grips the top)
     .setScale(SCALE).setDepth(2.9);
   sprites.push(shovel);
   return {
@@ -615,13 +615,15 @@ function updateDigger(scene, D, dt) {
   }
   D.shovel.setVisible(true);
   D.phaseTimer -= dt * 1000;
-  // Shovel pivots from the person's hand. Rotation angle rotates the blade
-  // toward the hole (east of the digger).
+  // Shovel pivots from the HANDLE end (origin 0.5, 0). The blade sits on
+  // the local +Y axis, which is 90° offset from Phaser's rotation
+  // reference (+X). So NEGATIVE rotation swings the blade to the RIGHT
+  // toward the hole. Idle keeps the blade nearly straight down; digging
+  // tips it far right into the dirt.
   const handX = D.sprite.x + 4;
   const handY = D.sprite.y - 2;
   D.shovel.setPosition(handX, handY);
-  // Upright at rest, tipped TOWARD the hole when digging (+0.9 rad ≈ 52° east)
-  D.shovel.setRotation(D.phase === "digging" ? 0.9 : 0.15);
+  D.shovel.setRotation(D.phase === "digging" ? -1.4 : -0.15);
 
   if (D.phase === "idle" && D.phaseTimer <= 0) {
     D.phase = "digging";
@@ -631,6 +633,30 @@ function updateDigger(scene, D, dt) {
     D.phase = "idle";
     D.phaseTimer = FARM_COMPOUND_DIG_CYCLE_MS;
     D.sprite.setTexture(`person-stand-${D.skinId}`);
+    // Throw a little dirt when the shovel lifts out of the hole
+    spawnDigDirt(scene, D.holeX, D.holeY);
+  }
+}
+
+function spawnDigDirt(scene, holeX, holeY) {
+  const count = 3 + Math.floor(Math.random() * 2);
+  for (let i = 0; i < count; i++) {
+    const px = holeX + Phaser.Math.Between(-6, 6);
+    const py = holeY + Phaser.Math.Between(-4, 4);
+    const clump = scene.add.rectangle(px, py, 3, 3, 0x6a4a2a)
+      .setDepth(2.8).setAlpha(0.9);
+    scene.hudCam.ignore(clump);
+    // Dirt arcs to the RIGHT (away from the digger, who stands left of hole)
+    const landX = px + Phaser.Math.Between(10, 30);
+    const landY = py + Phaser.Math.Between(-20, -5);
+    scene.tweens.add({
+      targets: clump,
+      x: landX,
+      y: { value: landY, ease: "Sine.easeOut" },
+      alpha: 0,
+      duration: 450 + Math.random() * 200,
+      onComplete: () => clump.destroy(),
+    });
   }
 }
 
