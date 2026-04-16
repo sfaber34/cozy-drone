@@ -466,6 +466,11 @@ export const CLUSTER_BOMBLET_FALL_TIME = 0.3; // seconds for bomblets to travel 
 
 // --- Mobile Controls ---
 export const MOBILE_ZOOM_FACTOR = 0.6; // base zoom multiplier on mobile (25% zoom out)
+// Quantize the final camera zoom on mobile to eliminate pixel-rasterization
+// jitter at fractional zooms. 0.5 snaps to {0.5, 1.0, 1.5, ...}. Smaller
+// values (0.25, 0.1) give more altitude-zoom granularity at the cost of
+// more residual jitter. Set 0 to disable (no quantization).
+export const MOBILE_ZOOM_QUANTIZE = 0.5;
 // Intro zoom: camera starts zoomed-in during the cutscene so off-screen
 // texture pop-in is hidden and the hangar is framed next to the drone.
 // Zoom is computed from viewport width so wide desktop screens get a

@@ -19,6 +19,7 @@ import {
   VICTORY_KILL_THRESHOLD,
   CAMERA_FOLLOW_LERP,
   MOBILE_ZOOM_FACTOR,
+  MOBILE_ZOOM_QUANTIZE,
   INTRO_TARGET_RIGHT_PX,
   INTRO_ZOOM_MAX,
   INTRO_ZOOM_OUT_DURATION_MS,
@@ -438,7 +439,7 @@ export class GameScene extends Phaser.Scene {
       // Mission clock starts the instant the intro cutscene ends.
       this.missionStartTime = Date.now();
       const mobileZoom = this.isMobile ? MOBILE_ZOOM_FACTOR : 1.0;
-      const targetZoom = DRONE_ZOOM_MAX * mobileZoom;
+      const targetZoom = snapMobileZoom(this, DRONE_ZOOM_MAX * mobileZoom);
       this.tweens.add({
         targets: this.cameras.main,
         zoom: targetZoom,
@@ -640,14 +641,14 @@ export class GameScene extends Phaser.Scene {
     if (!this.introZoomActive) {
       const mobileZoom = this.isMobile ? MOBILE_ZOOM_FACTOR : 1.0;
       if (ds.altitude <= DRONE_ZOOM_ALT_THRESHOLD) {
-        this.cameras.main.setZoom(DRONE_ZOOM_MAX * mobileZoom);
+        this.cameras.main.setZoom(snapMobileZoom(this, DRONE_ZOOM_MAX * mobileZoom));
         this.drone.setScale(SCALE);
       } else {
         const t =
           (ds.altitude - DRONE_ZOOM_ALT_THRESHOLD) /
           (ds.maxAlt - DRONE_ZOOM_ALT_THRESHOLD);
         const worldZoom = Phaser.Math.Linear(DRONE_ZOOM_MAX, DRONE_ZOOM_MIN, t);
-        this.cameras.main.setZoom(worldZoom * mobileZoom);
+        this.cameras.main.setZoom(snapMobileZoom(this, worldZoom * mobileZoom));
         // Drone compensates for altitude zoom only (mobile zoom intentionally shrinks it)
         this.drone.setScale(SCALE / worldZoom);
       }
@@ -790,7 +791,18 @@ function computeIntroZoom(scene) {
   const gameplayZoom = scene.isMobile ? MOBILE_ZOOM_FACTOR : 1.0;
   const halfScreen = scene.scale.width / 2;
   const desired = halfScreen / INTRO_TARGET_RIGHT_PX;
-  return Phaser.Math.Clamp(desired, gameplayZoom, INTRO_ZOOM_MAX);
+  return snapMobileZoom(scene, Phaser.Math.Clamp(desired, gameplayZoom, INTRO_ZOOM_MAX));
+}
+
+// On mobile, snap the camera zoom to the nearest MOBILE_ZOOM_QUANTIZE step
+// so pixel art renders on a consistent texel-to-screen-pixel mapping each
+// frame. Fractional zooms cause visible jitter because nearest-neighbor
+// sampling drops different texel rows between frames as the camera moves.
+// Desktop is left alone (zooms there stay in [0.65, 1.0] around 1.0, which
+// is already a clean integer-ish range).
+function snapMobileZoom(scene, z) {
+  if (!scene.isMobile || !MOBILE_ZOOM_QUANTIZE) return z;
+  return Math.max(MOBILE_ZOOM_QUANTIZE, Math.round(z / MOBILE_ZOOM_QUANTIZE) * MOBILE_ZOOM_QUANTIZE);
 }
 
 // Deferred world initialization — runs once person-skin textures have
