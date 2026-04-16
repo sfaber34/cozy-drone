@@ -64,12 +64,16 @@ export function createMinimap(scene) {
     cornerX: 0,
     cornerY: 0,
     accumMs: MINIMAP_UPDATE_INTERVAL_MS, // force immediate first heatmap draw
+    // Desktop: minimap always visible in upper-right.
+    // Mobile:  hidden by default, toggled by the on-screen "M" button.
+    visible: !scene.isMobile,
   };
 
   layoutMinimap(scene);
   drawBackground(scene);
   drawHeatmap(scene);
   drawMarkers(scene);
+  applyVisibility(scene);
 
   // Re-layout on window/canvas resize (orientation change, viewport toggle).
   scene.scale.on("resize", () => {
@@ -82,6 +86,27 @@ export function createMinimap(scene) {
 }
 
 /**
+ * Show or hide the minimap. On mobile the map button in MobileControlsScene
+ * calls `toggleMinimap`; desktop leaves it permanently visible.
+ */
+export function setMinimapVisible(scene, visible) {
+  const m = scene._minimap;
+  if (!m) return;
+  m.visible = !!visible;
+  applyVisibility(scene);
+}
+
+export function toggleMinimap(scene) {
+  const m = scene._minimap;
+  if (!m) return;
+  setMinimapVisible(scene, !m.visible);
+}
+
+export function isMinimapVisible(scene) {
+  return !!(scene._minimap && scene._minimap.visible);
+}
+
+/**
  * Per-frame update. Drone marker redraws every frame (smooth rotation);
  * heatmap recomputes at most every MINIMAP_UPDATE_INTERVAL_MS so counting
  * 400 people doesn't bog down every tick.
@@ -89,6 +114,9 @@ export function createMinimap(scene) {
 export function updateMinimap(scene, deltaMs) {
   const m = scene._minimap;
   if (!m) return;
+  // Hidden minimap skips all work — no counting, no redrawing, no
+  // per-frame rotation update.
+  if (!m.visible) return;
 
   m.accumMs += deltaMs;
   if (m.accumMs >= MINIMAP_UPDATE_INTERVAL_MS) {
@@ -112,8 +140,25 @@ export function destroyMinimap(scene) {
 
 function layoutMinimap(scene) {
   const m = scene._minimap;
-  m.cornerX = scene.scale.width - m.size - m.margin;
   m.cornerY = m.margin;
+  // Desktop: always upper-right.
+  // Mobile portrait: upper-right (lots of vertical room, minimap doesn't
+  //   compete with anything at the top).
+  // Mobile landscape: upper-center — in landscape the top-right corner
+  //   overlaps the HUD kill-counter / altitude readout and feels cramped.
+  const isLandscape = scene.scale.width > scene.scale.height;
+  if (scene.isMobile && isLandscape) {
+    m.cornerX = (scene.scale.width - m.size) / 2;
+  } else {
+    m.cornerX = scene.scale.width - m.size - m.margin;
+  }
+}
+
+function applyVisibility(scene) {
+  const m = scene._minimap;
+  m.bg.setVisible(m.visible);
+  m.heat.setVisible(m.visible);
+  m.markers.setVisible(m.visible);
 }
 
 function drawBackground(scene) {

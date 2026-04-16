@@ -416,6 +416,12 @@ export class GameScene extends Phaser.Scene {
     if (z.altRocker && inRect(z.altRocker)) return true;
     if (z.rocker && inRect(z.rocker)) return true;
     if (z.weaponRocker && inRect(z.weaponRocker)) return true;
+    if (
+      z.mapButton &&
+      Phaser.Math.Distance.Between(px, py, z.mapButton.x, z.mapButton.y) <
+        z.mapButton.r
+    )
+      return true;
     return false;
   }
 

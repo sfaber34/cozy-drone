@@ -4,6 +4,7 @@ import {
   getMobileControlsYOffset,
   getSafeAreaInsets,
 } from "../systems/viewportUtils.js";
+import { toggleMinimap, isMinimapVisible } from "../systems/minimapSystem.js";
 import {
   MOBILE_JOYSTICK_RADIUS,
   MOBILE_BUTTON_RADIUS,
@@ -190,6 +191,24 @@ export class MobileControlsScene extends Phaser.Scene {
     const wrCY = safeH - m - wrH / 2;
     this.weaponRocker = { cx: wrCX, cy: wrCY, w: wrW, h: wrH };
 
+    // Map-toggle button — circular. Position depends on orientation so it
+    // doesn't crowd the weapon rocker in landscape (where horizontal space
+    // is plentiful) but still has a sensible spot in portrait.
+    //   Portrait:  centered above the weapon rocker (vertical layout).
+    //   Landscape: to the right of the alt rocker (uses the empty band
+    //              between the bottom-left control column and the turn
+    //              slider/speed rocker on the right).
+    const mbR = br * 0.6;
+    let mbCX, mbCY;
+    if (isLandscape) {
+      mbCX = altCX + arW / 2 + m + mbR;
+      mbCY = altCY;
+    } else {
+      mbCX = wrCX;
+      mbCY = wrCY - wrH / 2 - m - mbR;
+    }
+    this.mapButton = { cx: mbCX, cy: mbCY, r: mbR };
+
     // Publish hit zones so GameScene can skip target-setting when tapping a control
     this.gameScene.mobileControlZones = {
       turnSlider: { x: turnCX, y: turnCY, w: tsW, h: tsH },
@@ -197,6 +216,7 @@ export class MobileControlsScene extends Phaser.Scene {
       rocker: { x: speedCX, y: speedCY, w: srW, h: srH },
       fireR: { x: fireX, y: fireY, r: br * 1.2 },
       weaponRocker: { x: wrCX, y: wrCY, w: wrW, h: wrH },
+      mapButton: { x: mbCX, y: mbCY, r: mbR * 1.2 },
     };
 
     const labelSize = Math.round(br * 0.44) + "px";
@@ -221,9 +241,17 @@ export class MobileControlsScene extends Phaser.Scene {
     addLabel(turnCX, turnCY, "◄  TURN  ►");
     addLabel(wrCX - wrW * 0.25, wrCY, "MSL");
     addLabel(wrCX + wrW * 0.25, wrCY, "GUN");
+    addLabel(mbCX, mbCY, "M");
   }
 
   onDown(pointer) {
+    // Every mobile control is disabled during the opening cutscene — the
+    // drone is on-rails during the intro tween, so any tap beyond the
+    // briefing modal would just be dead input. Swallowing all pointer-
+    // downs here also tells the user visually (via the dimmed render below)
+    // that the game isn't interactive yet.
+    if (this.gameScene.introPlaying) return;
+
     const ts = this.turnSlider;
     const ar = this.altRocker;
     const sr = this.speedRocker;
@@ -265,6 +293,18 @@ export class MobileControlsScene extends Phaser.Scene {
     const wr = this.weaponRocker;
     if (wr && this.inRect(pointer.x, pointer.y, wr)) {
       this.gameScene.selectedWeapon = pointer.x < wr.cx ? 1 : 2;
+      return;
+    }
+
+    // Map toggle — tapping the "M" button shows/hides the minimap panel.
+    // (Disabled-during-intro is already handled by the early return above.)
+    const mb = this.mapButton;
+    if (
+      mb &&
+      Phaser.Math.Distance.Between(pointer.x, pointer.y, mb.cx, mb.cy) <
+        mb.r * 1.2
+    ) {
+      toggleMinimap(this.gameScene);
       return;
     }
   }
@@ -363,6 +403,15 @@ export class MobileControlsScene extends Phaser.Scene {
   renderControls() {
     const g = this.gfx;
     g.clear();
+
+    // Dim the entire control layer while the opening cutscene is playing
+    // so the player has an obvious "not yet" signal — pairs with the
+    // onDown() early-return that swallows all taps during intro.
+    const disabled = !!this.gameScene.introPlaying;
+    const dimAlpha = 0.35;
+    g.setAlpha(disabled ? dimAlpha : 1);
+    const labelAlpha = disabled ? 0.3 : 0.75;
+    for (const t of this.allTextObjs) t.setAlpha(labelAlpha);
 
     // Turn slider — horizontal pill with thumb
     const ts = this.turnSlider;
@@ -465,6 +514,18 @@ export class MobileControlsScene extends Phaser.Scene {
       g.moveTo(wr.cx, ty + 4);
       g.lineTo(wr.cx, ty + wr.h - 4);
       g.strokePath();
+    }
+
+    // Map toggle button — filled circle that brightens when the minimap
+    // is open. (Intro-disabled dimming is handled by the layer-wide alpha
+    // set at the top of renderControls.)
+    const mb = this.mapButton;
+    if (mb) {
+      const on = isMinimapVisible(this.gameScene);
+      g.fillStyle(0xffcc33, on ? 0.65 : 0.18);
+      g.fillCircle(mb.cx, mb.cy, mb.r);
+      g.lineStyle(2, 0xffcc33, on ? 0.95 : 0.55);
+      g.strokeCircle(mb.cx, mb.cy, mb.r);
     }
   }
 }
