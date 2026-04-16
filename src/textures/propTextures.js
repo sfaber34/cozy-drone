@@ -210,23 +210,54 @@ export function generatePropTextures(scene) {
   }
   grassCanvas.refresh();
 
-  // --- Crop rows (16x16, 4 variants) ---
+  // --- Crop rows (16x16, 4 variants, vertical rows of little plants) ---
+  //
+  // Each 16×16 tile is designed to tile seamlessly in BOTH dimensions, so
+  // when rendered via a TileSprite the seams between tiles are invisible:
+  //
+  //   - 4 vertical plant rows per tile at x = 1, 5, 9, 13 → repeats every
+  //     4 px, which wraps cleanly across the tile boundary (13 → next 1).
+  //   - 4 leaf clusters per row vertically at y = 1, 5, 9, 13 → same deal.
+  //
+  // Each plant is a 3×2 leaf-cluster with a 1-pixel stem running the full
+  // height of the row, giving the "rows of little plants" look.
   const cropCanvas = scene.textures.createCanvas('crop-tiles', 64, 16);
   const crc = cropCanvas.context;
-  const cropColors = [
-    ['#8a7a2a', '#9a8a3a'], // wheat
-    ['#3a8a2a', '#2a7a1a'], // green crop
-    ['#7a9a3a', '#6a8a2a'], // light crop
-    ['#6a5a1a', '#7a6a2a'], // harvested/dirt
+  const variants = [
+    // dirt       , stem/body  , leaf light , leaf shadow
+    ['#8a6a3a', '#7a8a2a', '#b8c844', '#5a6a18'], // wheat (golden-green)
+    ['#8a6a3a', '#2a7a2a', '#6ac84a', '#1a4a1a'], // vibrant green
+    ['#8a6a3a', '#4a7a1a', '#8aaa3a', '#2a4a0a'], // mature dark green
+    ['#9a7a4a', '#6a7a2a', '#8a9a3a', '#3a4a12'], // sparser / light crop
   ];
+  const plantCols = [1, 5, 9, 13];
+  const plantRows = [1, 5, 9, 13];
   for (let t = 0; t < 4; t++) {
-    crc.fillStyle = '#8a6a3a';
+    const [dirt, stem, leafL, leafD] = variants[t];
+    // Dirt base
+    crc.fillStyle = dirt;
     crc.fillRect(t * 16, 0, 16, 16);
-    for (let row = 0; row < 16; row += 4) {
-      crc.fillStyle = cropColors[t][0];
-      crc.fillRect(t * 16, row, 16, 2);
-      crc.fillStyle = cropColors[t][1];
-      crc.fillRect(t * 16 + 2, row, 12, 1);
+    // Subtle dirt speckle (between rows)
+    crc.fillStyle = t === 3 ? '#8a6a3a' : '#7a5a2a';
+    crc.fillRect(t * 16 + 3, 3, 1, 1);
+    crc.fillRect(t * 16 + 11, 7, 1, 1);
+    crc.fillRect(t * 16 + 7, 11, 1, 1);
+    crc.fillRect(t * 16 + 3, 14, 1, 1);
+
+    for (const cx of plantCols) {
+      // Continuous stem down the center of each plant row
+      crc.fillStyle = stem;
+      crc.fillRect(t * 16 + cx, 0, 1, 16);
+      // Leaf clusters at intervals down the row (3 wide × 2 tall)
+      for (const cy of plantRows) {
+        // Dark shadow underneath (gives depth)
+        crc.fillStyle = leafD;
+        crc.fillRect(t * 16 + cx - 1, cy + 1, 3, 1);
+        // Bright leaves
+        crc.fillStyle = leafL;
+        crc.fillRect(t * 16 + cx - 1, cy, 3, 1);
+        crc.fillRect(t * 16 + cx,     cy, 1, 1);
+      }
     }
   }
   cropCanvas.refresh();

@@ -90,16 +90,12 @@ export function createFarmField(scene, rng, opts) {
 }
 
 function drawFieldTiles(scene, rng, f) {
-  // Was a grid of ~800 individual 16×16 image quads each picking a random
-  // frame. Each quad rounded independently at fractional camera positions,
-  // flickering along every internal seam. A single TileSprite is one quad
-  // with the texture tiled in GPU — no internal seams. We lose the per-tile
-  // random frame variation (all tiles now share one frame), which is fine:
-  // crop variation reads as texture noise anyway, and tractors/pickers
-  // provide the real visual interest on top.
+  // Reuses the town "park" texture — green base with a vertical path
+  // stripe and dark-green speckles. Rendered as a single TileSprite so the
+  // GPU handles the repetition and there are no seams between tiles.
   void rng;
   const field = scene.add.tileSprite(
-    f.left, f.top, f.right - f.left, f.bottom - f.top, "crop-tiles", 0,
+    f.left, f.top, f.right - f.left, f.bottom - f.top, "park",
   );
   field.setOrigin(0, 0);
   field.tileScaleX = SCALE;
