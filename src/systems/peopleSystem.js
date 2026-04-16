@@ -29,21 +29,29 @@ export function skinTex(p, type) {
 
 export function createPeople(scene, rng) {
   // --- People (random wanderers) ---
-  const rwX = (WORLD_W * TILE * SCALE) / 2;
-  const rwTiles = 6;
-  const rwTileH = 128 * SCALE;
-  const rwTotalH = rwTiles * rwTileH;
-  const rwBottom = (WORLD_H * TILE * SCALE) / 2 + rwTotalH / 2;
-  const droneStartX = rwX;
-  const droneStartY = rwBottom - 80;
+  // Use the real drone position (was hardcoded to map center, which became
+  // wrong when WORLD_W shrank from 200→160; the airfield stayed at tile 100).
+  const droneStartX = scene.drone ? scene.drone.x : (WORLD_W * TILE * SCALE) / 2;
+  const droneStartY = scene.drone ? scene.drone.y : (WORLD_H * TILE * SCALE) / 2;
+
+  // Airfield footprint — wanderers must never spawn inside the runway/hangar
+  // area (they'd block the drone on takeoff / look out of place).
+  const airfield = scene.setPieces && scene.setPieces.find((sp) => sp.type === "airfield");
+  const ab = airfield && airfield.bounds;
+  const insideAirfield = (px, py) =>
+    !!ab && Math.abs(px - ab.cx) < ab.hw && Math.abs(py - ab.cy) < ab.hh;
 
   for (let i = 0; i < PEOPLE_SPAWN_COUNT; i++) {
     let px, py;
+    let tries = 0;
     do {
       px = rng.between(300, WORLD_W * TILE * SCALE - 300);
       py = rng.between(300, WORLD_H * TILE * SCALE - 300);
+      tries++;
+      if (tries > 200) break; // paranoid cap — should never hit
     } while (
-      Phaser.Math.Distance.Between(px, py, droneStartX, droneStartY) < PEOPLE_SPAWN_AVOID_DIST
+      Phaser.Math.Distance.Between(px, py, droneStartX, droneStartY) < PEOPLE_SPAWN_AVOID_DIST ||
+      insideAirfield(px, py)
     );
     const skinId = rng.between(0, 199);
     const sprite = scene.add

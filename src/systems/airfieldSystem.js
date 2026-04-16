@@ -39,6 +39,25 @@ export function createAirfield(scene, rng, opts) {
   const rwTop = rwCenterY - rwTotalH / 2;
   const rwBottom = rwCenterY + rwTotalH / 2;
   const rwHalfW = (32 * SCALE * rwWidthMult) / 2;
+
+  // --- Flat desert ground beneath everything ---
+  // Mirrors rcCar / chickenFight / camelRace: paints a plain sand-colored
+  // rectangle at depth 1.1 so random desert props (rocks, brush, grass)
+  // don't poke through the runway and hangar textures.
+  const hangarOffsetPre = (48 * SCALE) / 2 + rwHalfW + 16 * SCALE * 3;
+  const hangarXPre = rwX + hangarOffsetPre;
+  const hangarHalfPre = (48 * SCALE) / 2;
+  const groundPad = 20;
+  const groundLeft   = rwX - rwHalfW - groundPad;
+  const groundRight  = hangarXPre + hangarHalfPre + groundPad;
+  const groundTop    = rwTop - groundPad;
+  const groundBottom = rwBottom + groundPad;
+  const ground = scene.add.graphics();
+  ground.fillStyle(0xd2b48c, 1);
+  ground.fillRect(groundLeft, groundTop, groundRight - groundLeft, groundBottom - groundTop);
+  ground.setDepth(1.1);
+  sprites.push(ground);
+
   for (let i = 0; i < rwTiles; i++) {
     sprites.push(
       scene.add
