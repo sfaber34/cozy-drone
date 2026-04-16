@@ -2,12 +2,37 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- viewport-fit=cover: render into iOS safe areas (notch / home indicator)
+       instead of letterboxing the canvas away from the screen edges. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Cozy Drone</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; }
     body { background: #000; overflow: hidden; }
-    canvas { display: block; image-rendering: pixelated; }
+    /* Expose the OS-reported safe-area insets as CSS custom properties so
+       JS can read them via getComputedStyle(document.documentElement).
+       Values come from the browser which gets them from the OS — they
+       account for every device's notch, dynamic island, and home indicator
+       without us hard-coding per-model. Requires viewport-fit=cover above. */
+    :root {
+      --sai-top:    env(safe-area-inset-top, 0px);
+      --sai-right:  env(safe-area-inset-right, 0px);
+      --sai-bottom: env(safe-area-inset-bottom, 0px);
+      --sai-left:   env(safe-area-inset-left, 0px);
+    }
+    /* Canvas is force-sized to 100% viewport via CSS so it edge-bleeds into
+       iOS safe areas. main.js still manages the INTERNAL canvas resolution
+       (canvas.width / canvas.height attrs) for the pixel-perfect zoom. */
+    canvas {
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100% !important;
+      height: 100% !important;
+      image-rendering: pixelated;
+    }
 
     /* Blank black overlay while the game boots — no spinner/text needed
        now that load is fast. briefingModal hides it once the modal mounts. */

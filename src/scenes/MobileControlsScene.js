@@ -1,5 +1,9 @@
 import Phaser from "phaser";
-import { getBrowserBottomInset, getMobileControlsYOffset } from "../systems/viewportUtils.js";
+import {
+  getBrowserBottomInset,
+  getMobileControlsYOffset,
+  getSafeAreaInsets,
+} from "../systems/viewportUtils.js";
 import {
   MOBILE_JOYSTICK_RADIUS,
   MOBILE_BUTTON_RADIUS,
@@ -45,6 +49,13 @@ export class MobileControlsScene extends Phaser.Scene {
     if (window.visualViewport) {
       window.visualViewport.addEventListener("resize", () => this.buildControls());
     }
+    // Note: no rotation polling here. iOS Safari has a well-documented
+    // WebKit bug where direct landscape-L ↔ landscape-R flips don't fire
+    // orientation events, don't update screen.orientation, don't trigger
+    // reflow, and don't refresh env(safe-area-inset-*) values. Since we
+    // can't detect the flip reliably, `buildControls` pads BOTH left and
+    // right equally in landscape — always clears the notch regardless of
+    // which side it's actually on.
   }
 
   buildControls() {
@@ -98,16 +109,27 @@ export class MobileControlsScene extends Phaser.Scene {
     // edge, then re-apply the per-browser downward offset.
     const safeH = h - extraBottomPad - 15 * boost + yOffset;
 
+    // Safe-area insets — pad BOTH sides equally. iOS reports equal
+    // left+right insets in landscape (Apple's stated "symmetry" design),
+    // and WebKit doesn't reliably update orientation state on direct
+    // landscape-L ↔ landscape-R flips, so we can't tell which side the
+    // notch is actually on. Padding both sides always clears the notch
+    // regardless of orientation; the non-notch side loses ~47 CSS px but
+    // that's barely noticeable on a phone.
+    const sai = getSafeAreaInsets();
+    const safeLeft  = sai.left  * boost;
+    const safeRight = sai.right * boost;
+
     // Bottom-right: speed rocker + right fire button above
-    const speedCX = w - m - srW / 2;
+    const speedCX = w - safeRight - m - srW / 2;
     const speedCY = safeH - m - srH / 2;
     const fireX = speedCX;
     const fireY = speedCY - srH / 2 - m - br;
 
     // Bottom-left column: alt rocker at bottom, turn slider above it
-    const altCX = m + arW / 2;
+    const altCX = safeLeft + m + arW / 2;
     const altCY = safeH - m - arH / 2;
-    const turnCX = m + tsW / 2;
+    const turnCX = safeLeft + m + tsW / 2;
     const turnCY = altCY - arH / 2 - m - tsH / 2;
 
     this.turnSlider = {

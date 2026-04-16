@@ -73,15 +73,65 @@ function isSafariIOS() {
   );
 }
 
+// OS-reported safe-area insets (in CSS pixels). iOS puts non-zero
+// `safe-area-inset-left/right` on landscape phones for the notch + home
+// indicator; Android puts a top inset under display cutouts. Values come
+// from the device via the `env(safe-area-inset-*)` CSS variables we expose
+// in index.html — no per-model hard-coding. Returns zeros on browsers /
+// setups that don't publish insets.
+// Reusable probe element used to read env(safe-area-inset-*) values DIRECTLY
+// instead of going through CSS custom properties. iOS Safari sometimes
+// keeps the :root custom properties at stale values on direct landscape-
+// to-landscape rotations; forcing a fresh layout on a probe element and
+// reading its computed size surfaces the post-rotation env() value.
+let _saiProbe = null;
+function ensureSaiProbe() {
+  if (_saiProbe || typeof document === "undefined") return _saiProbe;
+  _saiProbe = document.createElement("div");
+  // Use env() for all four sides on a single element. The element itself
+  // has zero visible size; we only read its .style via getComputedStyle.
+  _saiProbe.style.cssText = [
+    "position:fixed",
+    "top:env(safe-area-inset-top,0px)",
+    "right:env(safe-area-inset-right,0px)",
+    "bottom:env(safe-area-inset-bottom,0px)",
+    "left:env(safe-area-inset-left,0px)",
+    "width:0",
+    "height:0",
+    "pointer-events:none",
+    "visibility:hidden",
+  ].join(";");
+  document.body.appendChild(_saiProbe);
+  return _saiProbe;
+}
+
+export function getSafeAreaInsets() {
+  if (typeof window === "undefined") return { top: 0, right: 0, bottom: 0, left: 0 };
+  const probe = ensureSaiProbe();
+  if (!probe) return { top: 0, right: 0, bottom: 0, left: 0 };
+  // Force a reflow on the probe so iOS Safari re-evaluates its env() values.
+  // Without this, iOS may keep serving stale values after a direct
+  // landscape-left ↔ landscape-right flip since the page never reflows.
+  void probe.offsetWidth;
+  const cs = window.getComputedStyle(probe);
+  const parse = (name) => {
+    const raw = cs.getPropertyValue(name).trim();
+    if (!raw) return 0;
+    const n = parseFloat(raw);
+    return Number.isFinite(n) ? n : 0;
+  };
+  return {
+    top:    parse("top"),
+    right:  parse("right"),
+    bottom: parse("bottom"),
+    left:   parse("left"),
+  };
+}
+
 // Per-browser Y offset applied to the mobile on-screen controls so they
 // aren't hidden by browser chrome that `getBrowserBottomInset()` can't see.
 // Returned in CSS pixels; MobileControlsScene multiplies by its boost factor
 // to land in internal-canvas coords.
-//
-//   iOS Safari  landscape  → +20  (bottom "home indicator" bar)
-//   iOS Chrome  landscape  → +40  (Chrome's landscape chrome eats extra space)
-//   iOS Chrome  portrait   → +40  (on top of the 80-px bottom-bar inset)
-//
 // Positive values push controls DOWN toward the bottom edge of the screen.
 export function getMobileControlsYOffset() {
   if (isChromeIOS() && isPortrait()) return 90;
