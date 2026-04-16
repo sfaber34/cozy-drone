@@ -769,7 +769,9 @@ export class GameScene extends Phaser.Scene {
     // Mobile hides the weapon readout — the on-screen weapon toggle already
     // shows which is selected, so repeating it in the HUD is redundant.
     const weaponNames = { 1: "MSL", 2: "GUN", 3: "CBU" };
-    const weaponTag = this.isMobile ? "" : `  [${weaponNames[this.selectedWeapon]}]`;
+    const weaponTag = this.isMobile
+      ? ""
+      : `  [${weaponNames[this.selectedWeapon]}]`;
     this.hudText.setText(
       `ALT: ${Math.round(ds.altitude)} ft  SPD: ${spdDisplay} kts${weaponTag}\n` +
         `FREEDOMS: ${this.kills}/${this.totalPeople}\n` +
@@ -841,7 +843,7 @@ function tryDeferredWorldInit(scene) {
       { type: "wedding" },
       { type: "soccer" },
       { type: "chickenFight" },
-      { type: "camelRace", tileX: 108, tileY: 100 }, // TEMP: near airfield for testing
+      { type: "camelRace" },
       { type: "rockFight" },
       { type: "farmField" },
       { type: "concert" },
