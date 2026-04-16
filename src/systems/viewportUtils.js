@@ -59,3 +59,34 @@ function isChromeIOS() {
   // with Safari/WebKit which they're forced to use on iOS).
   return /iPad|iPhone|iPod/.test(ua) && /CriOS/.test(ua);
 }
+
+function isSafariIOS() {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  // iOS Safari: iOS device + WebKit "Safari" token + none of the rebrand
+  // tokens (CriOS=Chrome, FxiOS=Firefox, EdgiOS=Edge). Native apps (Phaser
+  // in a WKWebView) show WebKit without "Safari" and are not counted.
+  return (
+    /iPad|iPhone|iPod/.test(ua) &&
+    /Safari/.test(ua) &&
+    !/CriOS|FxiOS|EdgiOS/.test(ua)
+  );
+}
+
+// Per-browser Y offset applied to the mobile on-screen controls so they
+// aren't hidden by browser chrome that `getBrowserBottomInset()` can't see.
+// Returned in CSS pixels; MobileControlsScene multiplies by its boost factor
+// to land in internal-canvas coords.
+//
+//   iOS Safari  landscape  → +20  (bottom "home indicator" bar)
+//   iOS Chrome  landscape  → +40  (Chrome's landscape chrome eats extra space)
+//   iOS Chrome  portrait   → +40  (on top of the 80-px bottom-bar inset)
+//
+// Positive values push controls DOWN toward the bottom edge of the screen.
+export function getMobileControlsYOffset() {
+  if (isChromeIOS() && isPortrait()) return 90;
+  if (isChromeIOS() && !isPortrait()) return 50;
+  if (isSafariIOS() && isPortrait()) return 15;
+  if (isSafariIOS() && !isPortrait()) return 50;
+  return 0;
+}

@@ -1,9 +1,10 @@
 import Phaser from "phaser";
-import { getBrowserBottomInset } from "../systems/viewportUtils.js";
+import { getBrowserBottomInset, getMobileControlsYOffset } from "../systems/viewportUtils.js";
 import {
   MOBILE_JOYSTICK_RADIUS,
   MOBILE_BUTTON_RADIUS,
   MOBILE_BUTTON_MARGIN,
+  MOBILE_ZOOM_FACTOR,
 } from "../constants.js";
 
 // Layout:
@@ -54,10 +55,18 @@ export class MobileControlsScene extends Phaser.Scene {
     const h = this.scale.height;
     const isLandscape = w > h;
 
+    // main.js renders the game at internal size = viewport / MOBILE_ZOOM_FACTOR
+    // and CSS-scales the whole canvas down to the real viewport. Control pixel
+    // constants (MOBILE_JOYSTICK_RADIUS etc.) were tuned for CSS pixels, so
+    // when placed in internal-canvas space they'd appear MOBILE_ZOOM_FACTOR×
+    // smaller on screen. Boost them by 1/MOBILE_ZOOM_FACTOR so the CSS
+    // downscale lands them back at their intended physical size.
+    const boost = MOBILE_ZOOM_FACTOR > 0 ? 1 / MOBILE_ZOOM_FACTOR : 1;
+
     const ref = Math.min(w, h);
-    const jr = Math.min(MOBILE_JOYSTICK_RADIUS, ref * 0.17);
-    const br = Math.min(MOBILE_BUTTON_RADIUS, ref * 0.115);
-    const m = Math.min(MOBILE_BUTTON_MARGIN, ref * 0.05);
+    const jr = Math.min(MOBILE_JOYSTICK_RADIUS * boost, ref * 0.17);
+    const br = Math.min(MOBILE_BUTTON_RADIUS * boost, ref * 0.115);
+    const m = Math.min(MOBILE_BUTTON_MARGIN * boost, ref * 0.05);
 
     // Speed rocker dims (bottom right)
     const srW = br * 2;
@@ -73,13 +82,21 @@ export class MobileControlsScene extends Phaser.Scene {
 
     // Chrome on iOS keeps a persistent bottom nav bar that covers the canvas;
     // reserve that height so controls aren't hidden underneath it.
-    const browserInset = getBrowserBottomInset();
+    // getBrowserBottomInset() reports CSS pixels; everything here lives in
+    // internal-canvas pixels, so boost to match. The "30" and "15" literals
+    // are CSS-tuned too and get the same treatment.
+    const browserInset = getBrowserBottomInset() * boost;
     const extraBottomPad = Math.max(
-      isLandscape ? Math.max(Math.round(h * 0.1), 30) : 0,
+      isLandscape ? Math.max(Math.round(h * 0.1), 30 * boost) : 0,
       browserInset,
     );
-    // Lift everything up 5 px for visual breathing room from the bottom edge
-    const safeH = h - extraBottomPad - 15;
+    // Per-browser Y offset — positive values push controls DOWN (closer to
+    // the screen bottom). Used to compensate for browser chrome that
+    // `getBrowserBottomInset()` can't detect on certain iOS combinations.
+    const yOffset = getMobileControlsYOffset() * boost;
+    // Lift everything up a bit for visual breathing room from the bottom
+    // edge, then re-apply the per-browser downward offset.
+    const safeH = h - extraBottomPad - 15 * boost + yOffset;
 
     // Bottom-right: speed rocker + right fire button above
     const speedCX = w - m - srW / 2;
