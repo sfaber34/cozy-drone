@@ -60,16 +60,20 @@ export function createTown(scene, rng, opts) {
     }
   }
 
-  // Helper: fill a block with a ground texture
+  // Helper: fill a block with a ground texture.
+  // Was a grid of 36 individual 16×16 image quads per block — each quad
+  // rounded its screen rect independently at fractional camera positions,
+  // producing a 1-px flicker along every internal seam. A single TileSprite
+  // is one quad that tiles the texture in the GPU, so no internal seams
+  // exist and nothing can flicker between them.
   const fillBlockGround = (blkX, blkY, tex, frame) => {
-    for (let py2 = 0; py2 < blockSize; py2++) {
-      for (let px2 = 0; px2 < blockSize; px2++) {
-        const img = frame !== undefined
-          ? scene.add.image(blkX + px2 * roadTile, blkY + py2 * roadTile, tex, frame)
-          : scene.add.image(blkX + px2 * roadTile, blkY + py2 * roadTile, tex);
-        img.setOrigin(0, 0).setScale(SCALE).setDepth(0.5);
-      }
-    }
+    const blkW = blockSize * roadTile;
+    const blkH = blockSize * roadTile;
+    const ts = scene.add.tileSprite(blkX, blkY, blkW, blkH, tex, frame);
+    ts.setOrigin(0, 0);
+    ts.tileScaleX = SCALE;
+    ts.tileScaleY = SCALE;
+    ts.setDepth(0.5);
   };
 
   // Fill each block with buildings

@@ -90,15 +90,21 @@ export function createFarmField(scene, rng, opts) {
 }
 
 function drawFieldTiles(scene, rng, f) {
-  const tileSize = 16 * SCALE;
-  for (let ty = f.top; ty < f.bottom; ty += tileSize) {
-    for (let tx = f.left; tx < f.right; tx += tileSize) {
-      const frame = rng.between(0, 3);
-      scene.add
-        .image(tx + tileSize / 2, ty + tileSize / 2, "crop-tiles", frame)
-        .setScale(SCALE).setDepth(1.2);
-    }
-  }
+  // Was a grid of ~800 individual 16×16 image quads each picking a random
+  // frame. Each quad rounded independently at fractional camera positions,
+  // flickering along every internal seam. A single TileSprite is one quad
+  // with the texture tiled in GPU — no internal seams. We lose the per-tile
+  // random frame variation (all tiles now share one frame), which is fine:
+  // crop variation reads as texture noise anyway, and tractors/pickers
+  // provide the real visual interest on top.
+  void rng;
+  const field = scene.add.tileSprite(
+    f.left, f.top, f.right - f.left, f.bottom - f.top, "crop-tiles", 0,
+  );
+  field.setOrigin(0, 0);
+  field.tileScaleX = SCALE;
+  field.tileScaleY = SCALE;
+  field.setDepth(1.2);
 }
 
 function spawnTractors(scene, rng, f, tractors) {
