@@ -20,6 +20,10 @@ import {
   RC_CAR_WHEEL_WOBBLE_HZ, RC_CAR_WHEEL_WOBBLE_AMP,
   RC_CAR_DRIVER_JUMP_INTERVAL_MIN, RC_CAR_DRIVER_JUMP_INTERVAL_RANGE,
   RC_CAR_DRIVER_JUMP_HEIGHT, RC_CAR_DRIVER_JUMP_DURATION,
+  RC_CAR_DUST_INTERVAL, RC_CAR_DUST_DURATION,
+  RC_CAR_DUST_OPACITY, RC_CAR_DUST_OPACITY_JITTER,
+  RC_CAR_DUST_SCALE, RC_CAR_DUST_SCALE_GROW,
+  RC_CAR_DUST_DRIFT, RC_CAR_DUST_REAR_OFFSET,
 } from "../constants.js";
 import { createManagedPerson } from "./managedPersonUtils.js";
 
@@ -131,6 +135,7 @@ export function createRcCar(scene, rng, opts) {
       jumpTimer:
         Math.random() *
         (RC_CAR_DRIVER_JUMP_INTERVAL_MIN + RC_CAR_DRIVER_JUMP_INTERVAL_RANGE),
+      dustTimer: Math.random() * RC_CAR_DUST_INTERVAL,
     });
   }
 
@@ -223,6 +228,35 @@ function updateDriver(scene, arena, d, dt) {
 
   d.car.setPosition(d.carX, d.carY + wobble);
   d.car.setRotation(d.heading);
+
+  // Dust puff trail behind the car
+  d.dustTimer -= dt * 1000;
+  if (d.dustTimer <= 0) {
+    d.dustTimer = RC_CAR_DUST_INTERVAL * (0.7 + Math.random() * 0.6);
+    spawnCarDust(scene, d);
+  }
+}
+
+function spawnCarDust(scene, d) {
+  // Spawn behind the car (opposite of heading)
+  const rx = d.carX - Math.cos(d.heading) * RC_CAR_DUST_REAR_OFFSET;
+  const ry = d.carY - Math.sin(d.heading) * RC_CAR_DUST_REAR_OFFSET;
+  const puff = scene.add.image(rx, ry, "smoke")
+    .setScale(SCALE * RC_CAR_DUST_SCALE)
+    .setDepth(2.6)
+    .setAlpha(RC_CAR_DUST_OPACITY + Math.random() * RC_CAR_DUST_OPACITY_JITTER)
+    .setTint(0xc9a872);
+  scene.hudCam.ignore(puff);
+  const driftAngle = d.heading + Math.PI + (Math.random() - 0.5) * 0.6;
+  scene.tweens.add({
+    targets: puff,
+    x: rx + Math.cos(driftAngle) * RC_CAR_DUST_DRIFT,
+    y: ry + Math.sin(driftAngle) * RC_CAR_DUST_DRIFT,
+    scale: SCALE * (RC_CAR_DUST_SCALE + RC_CAR_DUST_SCALE_GROW),
+    alpha: 0,
+    duration: RC_CAR_DUST_DURATION * (0.8 + Math.random() * 0.4),
+    onComplete: () => puff.destroy(),
+  });
 }
 
 function pickArenaX(a) {

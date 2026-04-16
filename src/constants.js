@@ -159,6 +159,15 @@ export const RC_CAR_DRIVER_JUMP_INTERVAL_MIN = 4000; // ms between jumps per dri
 export const RC_CAR_DRIVER_JUMP_INTERVAL_RANGE = 6000; // random extra ms
 export const RC_CAR_DRIVER_JUMP_HEIGHT = 6; // px peak jump height
 export const RC_CAR_DRIVER_JUMP_DURATION = 450; // ms full up-down jump
+// Dust clouds behind moving RC cars
+export const RC_CAR_DUST_INTERVAL = 120; // avg ms between dust-puff spawns behind each car
+export const RC_CAR_DUST_DURATION = 900; // ms each dust puff lives
+export const RC_CAR_DUST_OPACITY = 0.55; // starting alpha of each dust puff
+export const RC_CAR_DUST_OPACITY_JITTER = 0.2; // random alpha added per puff
+export const RC_CAR_DUST_SCALE = 0.25; // starting sprite scale (× SCALE)
+export const RC_CAR_DUST_SCALE_GROW = 0.25; // extra scale the puff grows into while fading
+export const RC_CAR_DUST_DRIFT = 4; // px drift away from the car over lifetime
+export const RC_CAR_DUST_REAR_OFFSET = 5; // px behind car center where the puff spawns
 
 // --- Paper planes set piece ---
 // A group of people each throwing their own paper airplane, cheering
