@@ -94,6 +94,19 @@ export class GameScene extends Phaser.Scene {
       `desert-${Date.now()}-${Math.floor(Math.random() * 1e9)}`,
     ]);
 
+    // Patch the scene's text factory so every Text object auto-applies
+    // bilinear (LINEAR) filtering on its canvas texture. With pixelArt:true
+    // the global default is nearest-neighbor, which is perfect for sprites
+    // but causes visible shimmer on scaled dialog text as the camera moves.
+    // This one-liner fixes ALL text created in this scene without touching
+    // individual creation sites.
+    const _origText = this.add.text.bind(this.add);
+    this.add.text = (...args) => {
+      const t = _origText(...args);
+      t.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
+      return t;
+    };
+
     // --- Water moat (drawn at depth 0, below all map content) ---
     createWater(this);
 
