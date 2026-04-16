@@ -465,12 +465,12 @@ export const CLUSTER_DROP_FACTOR = 0.25; // multiplier on physics drop distance 
 export const CLUSTER_BOMBLET_FALL_TIME = 0.3; // seconds for bomblets to travel from opening point to ground
 
 // --- Mobile Controls ---
-export const MOBILE_ZOOM_FACTOR = 0.7; // base zoom multiplier on mobile (25% zoom out)
-// Quantize the final camera zoom on mobile to eliminate pixel-rasterization
-// jitter at fractional zooms. 0.5 snaps to {0.5, 1.0, 1.5, ...}. Smaller
-// values (0.25, 0.1) give more altitude-zoom granularity at the cost of
-// more residual jitter. Set 0 to disable (no quantization).
-export const MOBILE_ZOOM_QUANTIZE = 0.5;
+// Mobile "zoom out" ratio. Applied as an internal-canvas-size multiplier in
+// main.js (the canvas renders at viewport / MOBILE_ZOOM_FACTOR internal
+// pixels, then CSS is scaled down to the real viewport). This gives a
+// wider FOV on phones WITHOUT the nearest-neighbor texel flicker that a
+// fractional camera.setZoom() produces in pixelArt mode. 1.0 = no zoom-out.
+export const MOBILE_ZOOM_FACTOR = 0.7;
 // Intro zoom: camera starts zoomed-in during the cutscene so off-screen
 // texture pop-in is hidden and the hangar is framed next to the drone.
 // Zoom is computed from viewport width so wide desktop screens get a

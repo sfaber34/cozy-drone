@@ -18,8 +18,6 @@ import {
   DRONE_SHADOW_OPACITY,
   VICTORY_KILL_THRESHOLD,
   CAMERA_FOLLOW_LERP,
-  MOBILE_ZOOM_FACTOR,
-  MOBILE_ZOOM_QUANTIZE,
   INTRO_TARGET_RIGHT_PX,
   INTRO_ZOOM_MAX,
   INTRO_ZOOM_OUT_DURATION_MS,
@@ -231,10 +229,9 @@ export class GameScene extends Phaser.Scene {
       CAMERA_FOLLOW_LERP,
       CAMERA_FOLLOW_LERP,
     );
-    // Detect mobile up-front so computeIntroZoom picks the right gameplay-
-    // zoom floor (portrait phones should stay at MOBILE_ZOOM_FACTOR, not
-    // desktop's 1.0). The actual mobile-controls launch is still deferred
-    // to after the briefing dismisses.
+    // Detect mobile up-front (still used by briefing modal layout, victory
+    // cutscene, dialog scaling, etc. — the camera zoom no longer depends on
+    // it, but other systems still branch on isMobile).
     this.isMobile = this.sys.game.device.input.touch;
 
     // Start zoomed in during intro — hides off-screen texture pop-in while
@@ -378,10 +375,7 @@ export class GameScene extends Phaser.Scene {
     this.mobileControlZones = null; // populated by MobileControlsScene.buildControls()
     if (this.isMobile) {
       this.controlsText.setVisible(false);
-      // Intro zoom was set above via computeIntroZoom (already viewport-aware
-      // and clamped to at least MOBILE_ZOOM_FACTOR), so no mobile override
-      // is needed. The tween in update() lands at MOBILE_ZOOM_FACTOR.
-      // MobileControls is launched after the briefing modal is dismissed
+      // MobileControls is launched after the briefing modal is dismissed.
     }
 
     // Kill counter — totalPeople is re-counted once the deferred world init
@@ -438,8 +432,10 @@ export class GameScene extends Phaser.Scene {
       this._introZoomTweenStarted = true;
       // Mission clock starts the instant the intro cutscene ends.
       this.missionStartTime = Date.now();
-      const mobileZoom = this.isMobile ? MOBILE_ZOOM_FACTOR : 1.0;
-      const targetZoom = snapMobileZoom(this, DRONE_ZOOM_MAX * mobileZoom);
+      // Mobile "zoom out" is now handled by main.js via a larger internal
+      // canvas + CSS downscale, so camera zoom stays at DRONE_ZOOM_MAX
+      // regardless of device.
+      const targetZoom = DRONE_ZOOM_MAX;
       this.tweens.add({
         targets: this.cameras.main,
         zoom: targetZoom,
@@ -636,20 +632,22 @@ export class GameScene extends Phaser.Scene {
       this.dronePropShadow.setVisible(false);
     }
 
-    // --- Camera zoom (zoom out above threshold; mobile adds a constant 25% zoom-out) ---
+    // --- Camera zoom (zoom out above threshold) ---
     // While the intro zoom-out tween is still running, leave the camera alone.
+    // Mobile "zoom out" is applied via a larger internal canvas in main.js,
+    // NOT via camera.setZoom, so the camera zoom path is the same on every
+    // device — avoids the nearest-neighbor flicker that fractional camera
+    // zooms cause with pixelArt mode.
     if (!this.introZoomActive) {
-      const mobileZoom = this.isMobile ? MOBILE_ZOOM_FACTOR : 1.0;
       if (ds.altitude <= DRONE_ZOOM_ALT_THRESHOLD) {
-        this.cameras.main.setZoom(snapMobileZoom(this, DRONE_ZOOM_MAX * mobileZoom));
+        this.cameras.main.setZoom(DRONE_ZOOM_MAX);
         this.drone.setScale(SCALE);
       } else {
         const t =
           (ds.altitude - DRONE_ZOOM_ALT_THRESHOLD) /
           (ds.maxAlt - DRONE_ZOOM_ALT_THRESHOLD);
         const worldZoom = Phaser.Math.Linear(DRONE_ZOOM_MAX, DRONE_ZOOM_MIN, t);
-        this.cameras.main.setZoom(snapMobileZoom(this, worldZoom * mobileZoom));
-        // Drone compensates for altitude zoom only (mobile zoom intentionally shrinks it)
+        this.cameras.main.setZoom(worldZoom);
         this.drone.setScale(SCALE / worldZoom);
       }
     }
@@ -785,24 +783,14 @@ export class GameScene extends Phaser.Scene {
 // Compute a viewport-aware intro zoom. Goal: the camera (centered on the
 // drone at the runway) sees at least INTRO_TARGET_RIGHT_PX world-px to the
 // right so the hangar frames the right edge of the screen. Clamps to the
-// gameplay zoom as a minimum (never zoom OUT during intro) and
+// gameplay zoom (1.0) as a minimum (never zoom OUT during intro) and
 // INTRO_ZOOM_MAX as a maximum (don't over-zoom on ultrawide monitors).
+// No mobile-specific path — the wider mobile FOV comes from the larger
+// internal canvas (see main.js), not from camera.zoom.
 function computeIntroZoom(scene) {
-  const gameplayZoom = scene.isMobile ? MOBILE_ZOOM_FACTOR : 1.0;
   const halfScreen = scene.scale.width / 2;
   const desired = halfScreen / INTRO_TARGET_RIGHT_PX;
-  return snapMobileZoom(scene, Phaser.Math.Clamp(desired, gameplayZoom, INTRO_ZOOM_MAX));
-}
-
-// On mobile, snap the camera zoom to the nearest MOBILE_ZOOM_QUANTIZE step
-// so pixel art renders on a consistent texel-to-screen-pixel mapping each
-// frame. Fractional zooms cause visible jitter because nearest-neighbor
-// sampling drops different texel rows between frames as the camera moves.
-// Desktop is left alone (zooms there stay in [0.65, 1.0] around 1.0, which
-// is already a clean integer-ish range).
-function snapMobileZoom(scene, z) {
-  if (!scene.isMobile || !MOBILE_ZOOM_QUANTIZE) return z;
-  return Math.max(MOBILE_ZOOM_QUANTIZE, Math.round(z / MOBILE_ZOOM_QUANTIZE) * MOBILE_ZOOM_QUANTIZE);
+  return Phaser.Math.Clamp(desired, 1.0, INTRO_ZOOM_MAX);
 }
 
 // Deferred world initialization — runs once person-skin textures have
