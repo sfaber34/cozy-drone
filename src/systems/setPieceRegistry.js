@@ -54,7 +54,10 @@ export const SET_PIECE_META = {
   //   hw/hh = widthPx/2 = 1368. anchorOffset = widthPx/2 (bounds center is
   //   townStartX+widthPx/2; anchor is townStartX).
   town:         { factory: createTown,         hw: 1368, hh: 1368, anchorOffsetX: 1368, anchorOffsetY: 1368 },
-  farmCompound: { factory: createFarmCompound, hw: 346,  hh: 304,  anchorOffsetX: 48,   anchorOffsetY: 10  },
+  // farmCompound: fence spans farmX-288..+394, livestock corrals extend to
+  //   farmX-448 (pig/chicken) and farmX+598 (camel/goat). Full bounding box
+  //   is [-448, +598] × [-288, +320]; center offset = (+75, +16).
+  farmCompound: { factory: createFarmCompound, hw: 523,  hh: 304,  anchorOffsetX: 75,   anchorOffsetY: 16  },
   sheepFlock:   { factory: createSheepFlock,   hw: 540,  hh: 540,  anchorOffsetX: 0,    anchorOffsetY: 0   },
   oilfield:     { factory: createOilfield,     hw: 700,  hh: 475,  anchorOffsetX: 0,    anchorOffsetY: 125 },
   wedding:      { factory: createWedding,      hw: 250,  hh: 175,  anchorOffsetX: 0,    anchorOffsetY: 0   },

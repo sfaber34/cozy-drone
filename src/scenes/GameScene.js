@@ -51,7 +51,10 @@ import { startVictory } from "../systems/victoryCutscene.js";
 // Airfield is special-cased (runs at intro, fixed position). Everything else
 // goes through the placer in setPieceRegistry so random spawns don't overlap.
 import { createAirfield } from "../systems/airfieldSystem.js";
-import { placeSetPieces, reservedRectFromBounds } from "../systems/setPieceRegistry.js";
+import {
+  placeSetPieces,
+  reservedRectFromBounds,
+} from "../systems/setPieceRegistry.js";
 import { generatePersonSkinsAsync } from "../textures/personTextures.js";
 import {
   CANNON_FIRE_RATE,
@@ -84,7 +87,12 @@ export class GameScene extends Phaser.Scene {
     //   Desert: bottom half (0 - WORLD_W, WORLD_H/2 - WORLD_H) — runway area
     // Desert ground is the flat background color (#d2b48c) set in main.js
     // No ground tiles needed — props/buildings sit directly on it
-    const rng = new Phaser.Math.RandomDataGenerator(["desert"]);
+    // Per-run seed so building/set-piece placement varies each refresh.
+    // Texture RNGs (personSkins, props, etc.) have their own fixed seeds
+    // so sprite appearance stays consistent — only world layout varies.
+    const rng = new Phaser.Math.RandomDataGenerator([
+      `desert-${Date.now()}-${Math.floor(Math.random() * 1e9)}`,
+    ]);
 
     // --- Water moat (drawn at depth 0, below all map content) ---
     createWater(this);
@@ -123,7 +131,7 @@ export class GameScene extends Phaser.Scene {
 
     // --- Airfield renders immediately so the drone can spawn on the runway
     //     during the intro cutscene. It doesn't use any person-skin textures. ---
-    const airfield = createAirfield(this, rng, { tileX: 100, tileY: 100 });
+    const airfield = createAirfield(this, rng, { tileX: 80, tileY: 150 });
     this.setPieces.push(airfield);
     const rwBottom = this.runway.bottom;
     const rwX = this.runway.x;
@@ -612,7 +620,10 @@ export class GameScene extends Phaser.Scene {
         SCALE * Phaser.Math.Clamp(1.2 - ds.altitude * 0.0003, 0.6, 1.2);
       this.droneShadow.setScale(shadowScale);
       this.dronePropShadow.setVisible(true);
-      this.dronePropShadow.setPosition(ds.x + shadowOffset, ds.y + shadowOffset);
+      this.dronePropShadow.setPosition(
+        ds.x + shadowOffset,
+        ds.y + shadowOffset,
+      );
       this.dronePropShadow.setAngle(ds.angle);
       this.dronePropShadow.setAlpha(this.droneShadow.alpha);
       this.dronePropShadow.setScale(shadowScale);
@@ -807,24 +818,29 @@ function tryDeferredWorldInit(scene) {
   const reserved = airfieldPiece?.bounds
     ? [reservedRectFromBounds(airfieldPiece.bounds)]
     : [];
-  const placed = placeSetPieces(scene, rng, [
-    { type: "town", tileX: 2, tileY: 2 },
-    { type: "farmCompound" },
-    { type: "sheepFlock" },
-    { type: "oilfield" },
-    { type: "wedding" },
-    { type: "soccer" },
-    { type: "chickenFight" },
-    { type: "camelRace" },
-    { type: "rockFight" },
-    { type: "farmField" },
-    { type: "concert" },
-    { type: "tireFire" },
-    { type: "rockTarget" },
-    { type: "hookah" },
-    { type: "rcCar" },
-    { type: "paperPlane" },
-  ], reserved);
+  const placed = placeSetPieces(
+    scene,
+    rng,
+    [
+      { type: "town" },
+      { type: "farmCompound" },
+      { type: "sheepFlock" },
+      { type: "oilfield" },
+      { type: "wedding" },
+      { type: "soccer" },
+      { type: "chickenFight" },
+      { type: "camelRace" },
+      { type: "rockFight" },
+      { type: "farmField" },
+      { type: "concert" },
+      { type: "tireFire" },
+      { type: "rockTarget" },
+      { type: "hookah" },
+      { type: "rcCar" },
+      { type: "paperPlane" },
+    ],
+    reserved,
+  );
   scene.setPieces.push(...placed);
 
   createPeople(scene, rng);

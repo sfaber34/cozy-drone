@@ -177,12 +177,19 @@ export function createFarmCompound(scene, rng, opts) {
     sprites,
   );
 
-  // Bounds widened vertically for the taller fence
-  const halfW = 7 * fenceLen + 10;
-  const halfH = Math.round(190 * hf);
+  // Footprint covers the full compound including the FOUR livestock corrals
+  // that sit OUTSIDE the fence at farmX-400 (pig/chicken) and farmX+550
+  // (camel/goat). The earlier bounds only covered the fence — random
+  // placement consequently dropped the outer pens into water/buildings.
+  //
+  //  X extent: [farmX - 448, farmX + 598]  → center farmX + 75,  hw 523
+  //  Y extent: [farmY - 288, farmY + 320]  → center farmY + 16,  hh 304
+  //  (corral half-size = 32*SCALE/2 = 48; farmY corral row spans ±156)
+  const halfW = 523;
+  const halfH = 304;
   return {
     type: "farmCompound",
-    bounds: { cx: farmX + fenceLen, cy: farmY + 10, hw: halfW, hh: halfH },
+    bounds: { cx: farmX + 75, cy: farmY + 16, hw: halfW, hh: halfH },
     update(dt) {
       updateLaundry(scene, laundry, dt);
       updateMice(scene, mice, dt);

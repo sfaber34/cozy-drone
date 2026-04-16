@@ -1,6 +1,6 @@
 // --- World ---
-export const WORLD_W = 200; // world width in tiles
-export const WORLD_H = 200; // world height in tiles
+export const WORLD_W = 160; // world width in tiles
+export const WORLD_H = 160; // world height in tiles
 export const TILE = 16; // tile size in pixels
 export const SCALE = 3; // pixel art scale multiplier
 export const MOAT_TILES = 30; // water tiles surrounding the map on every side
@@ -480,4 +480,3 @@ export const MOBILE_JOYSTICK_RADIUS = 65; // virtual joystick radius (px)
 export const MOBILE_BUTTON_RADIUS = 42; // fire/alt button radius (px)
 export const MOBILE_BUTTON_MARGIN = 18; // gap from screen edge and between buttons (px)
 export const MOBILE_DIALOG_SCALE = 1.6; // speech bubble / dialog scale multiplier on mobile
-
