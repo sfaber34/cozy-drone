@@ -50,6 +50,7 @@ import { startVictory } from "../systems/victoryCutscene.js";
 // Airfield is special-cased (runs at intro, fixed position). Everything else
 // goes through the placer in setPieceRegistry so random spawns don't overlap.
 import { createAirfield } from "../systems/airfieldSystem.js";
+import { createMinimap, updateMinimap } from "../systems/minimapSystem.js";
 import {
   placeSetPieces,
   reservedRectFromBounds,
@@ -770,6 +771,9 @@ export class GameScene extends Phaser.Scene {
         `a: ${lastAnimalSfx}`,
     );
 
+    // --- Mini-map (heatmap + drone marker, top-right) ---
+    updateMinimap(this, delta);
+
     // Mission-complete HUD alert (shown once threshold met, hidden during cutscene)
     const missionReady =
       this.kills >= VICTORY_KILL_THRESHOLD && !this.victoryActive;
@@ -867,4 +871,9 @@ function tryDeferredWorldInit(scene) {
 
   // Kill counter caps on total people (built-out now)
   scene.totalPeople = countTotalPeople(scene);
+
+  // Minimap overlay — created AFTER the bulk hudCam.ignore above so its
+  // graphics aren't swept into the ignore list. The module registers its
+  // own cameras.main.ignore() so the overlay only appears on the HUD.
+  createMinimap(scene);
 }

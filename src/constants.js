@@ -235,6 +235,39 @@ export const SET_PIECE_PLACE_BEST_OF_K = 5;
 // the "respect the gap" pass and tries a tighter no-gap fallback.
 export const SET_PIECE_PLACE_MAX_TRIES = 2000;
 
+// --- Mini-map (top-right HUD heatmap) ---
+// Live overview of target density. Renders a semi-transparent panel in the
+// upper-right corner showing heat-blobs for people concentration, an
+// airfield marker, and a rotating drone icon. Heatmap instead of per-person
+// dots because the map contains ~400 people — individual dots at minimap
+// scale would be an unreadable pixel soup.
+//
+// Sizes below are CSS pixels; minimapSystem.js multiplies by 1/MOBILE_ZOOM_FACTOR
+// on mobile so the panel renders at the same physical size on every device.
+export const MINIMAP_SIZE_PX = 180;          // square panel edge length
+export const MINIMAP_MARGIN_PX = 16;         // distance from top + right edges
+export const MINIMAP_BG_COLOR = 0x000000;
+export const MINIMAP_BG_ALPHA = 0.55;
+export const MINIMAP_BORDER_COLOR = 0xffffff;
+export const MINIMAP_BORDER_ALPHA = 0.4;
+export const MINIMAP_BORDER_THICKNESS_PX = 1;
+// Heatmap grid resolution across the WHOLE world (per-axis cell count).
+// Higher = finer detail but more rects to draw. 24×24 = 576 cells is fine.
+export const MINIMAP_GRID_CELLS = 24;
+export const MINIMAP_HEAT_COLOR = 0xff3344;  // red for targets
+export const MINIMAP_HEAT_MIN_ALPHA = 0.18;  // alpha for a 1-person cell
+export const MINIMAP_HEAT_MAX_ALPHA = 0.85;  // alpha for the peak-density cell
+// How often to recount people + redraw the heatmap. Lower = more responsive
+// but more CPU each tick. 250ms is ~4 Hz which feels plenty snappy.
+export const MINIMAP_UPDATE_INTERVAL_MS = 250;
+// Airfield (static) marker — drawn as a plus sign.
+export const MINIMAP_AIRFIELD_COLOR = 0x88ccff;
+export const MINIMAP_AIRFIELD_SIZE_PX = 7;
+// Drone (rotating) marker — drawn as a filled triangle pointing in the
+// current heading.
+export const MINIMAP_DRONE_COLOR = 0xffffff;
+export const MINIMAP_DRONE_SIZE_PX = 7;
+
 // --- Audio ---
 // Master multiplier applied to every sound (music + sfx + engine + gun loop).
 // Set 0 to mute the entire game.
