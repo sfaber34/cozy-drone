@@ -168,8 +168,11 @@ export function createCamelRace(scene, rng, opts) {
   createBettingSpectators(scene, rng, cx, cy, {
     count: CAMEL_RACE_SPECTATORS,
     rings: [
-      { distX: rx + 50, distY: ry + 50, fraction: 0.5 },
-      { distX: rx + 90, distY: ry + 90, fraction: 0.5, angleOffset: Math.PI / Math.round(CAMEL_RACE_SPECTATORS * 0.5) },
+      // Rectangular rings that match the track shape so spectators never
+      // land on the track corners. rectHw/rectHh = track half-size (rx/ry),
+      // rectPad = uniform gap outside the track tiles.
+      { rectHw: rx, rectHh: ry, rectPad: 50, fraction: 0.5 },
+      { rectHw: rx, rectHh: ry, rectPad: 90, fraction: 0.5, angleOffset: Math.PI / Math.round(CAMEL_RACE_SPECTATORS * 0.5) },
     ],
     greetings: [
       "Yalla! Yalla!", "FASTER!", "Go camel go!",

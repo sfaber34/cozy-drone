@@ -841,7 +841,7 @@ function tryDeferredWorldInit(scene) {
       { type: "wedding" },
       { type: "soccer" },
       { type: "chickenFight" },
-      { type: "camelRace" },
+      { type: "camelRace", tileX: 108, tileY: 100 }, // TEMP: near airfield for testing
       { type: "rockFight" },
       { type: "farmField" },
       { type: "concert" },

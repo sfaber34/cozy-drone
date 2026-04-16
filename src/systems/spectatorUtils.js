@@ -29,11 +29,30 @@ export function createBettingSpectators(scene, rng, cx, cy, opts) {
       const ringOffset = ring.angleOffset || 0;
       const angle = (i / ringCount) * Math.PI * 2 + ringOffset;
       const jitter = rng.between(-10, 10);
-      // Support elliptical placement with distX/distY, or circular with dist
-      const rdx = (ring.distX || ring.dist) + jitter;
-      const rdy = (ring.distY || ring.dist) + jitter;
-      const sx = cx + Math.cos(angle) * rdx;
-      const sy = cy + Math.sin(angle) * rdy;
+
+      let sx, sy;
+      if (ring.rectHw != null) {
+        // Rectangular ring — project each angle to the perimeter of a
+        // padded rectangle. Used by the camel-race track where an
+        // elliptical ring would cut through the rectangular track corners
+        // at diagonal angles.
+        const pad = (ring.rectPad || 0) + jitter;
+        const phw = ring.rectHw + pad;
+        const phh = ring.rectHh + pad;
+        const absCos = Math.abs(Math.cos(angle));
+        const absSin = Math.abs(Math.sin(angle));
+        const scaleX = absCos > 0.001 ? phw / absCos : Infinity;
+        const scaleY = absSin > 0.001 ? phh / absSin : Infinity;
+        const t = Math.min(scaleX, scaleY);
+        sx = cx + Math.cos(angle) * t;
+        sy = cy + Math.sin(angle) * t;
+      } else {
+        // Elliptical / circular ring (default)
+        const rdx = (ring.distX || ring.dist) + jitter;
+        const rdy = (ring.distY || ring.dist) + jitter;
+        sx = cx + Math.cos(angle) * rdx;
+        sy = cy + Math.sin(angle) * rdy;
+      }
       const skinId = rng.between(0, 199);
 
       const holdsMoney = Math.random() > 0.5;

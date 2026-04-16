@@ -34,12 +34,17 @@ export function createPeople(scene, rng) {
   const droneStartX = scene.drone ? scene.drone.x : (WORLD_W * TILE * SCALE) / 2;
   const droneStartY = scene.drone ? scene.drone.y : (WORLD_H * TILE * SCALE) / 2;
 
-  // Airfield footprint — wanderers must never spawn inside the runway/hangar
-  // area (they'd block the drone on takeoff / look out of place).
-  const airfield = scene.setPieces && scene.setPieces.find((sp) => sp.type === "airfield");
-  const ab = airfield && airfield.bounds;
-  const insideAirfield = (px, py) =>
-    !!ab && Math.abs(px - ab.cx) < ab.hw && Math.abs(py - ab.cy) < ab.hh;
+  // Wanderers must never spawn inside any set-piece's bounds — they'd
+  // stand on tracks, in the middle of concerts, on runways, etc. Check
+  // every set piece (airfield, camelRace, concert, …) via its .bounds.
+  const setPieces = scene.setPieces || [];
+  const insideAnySetPiece = (px, py) => {
+    for (let s = 0; s < setPieces.length; s++) {
+      const b = setPieces[s].bounds;
+      if (b && Math.abs(px - b.cx) < b.hw && Math.abs(py - b.cy) < b.hh) return true;
+    }
+    return false;
+  };
 
   for (let i = 0; i < PEOPLE_SPAWN_COUNT; i++) {
     let px, py;
@@ -48,10 +53,10 @@ export function createPeople(scene, rng) {
       px = rng.between(300, WORLD_W * TILE * SCALE - 300);
       py = rng.between(300, WORLD_H * TILE * SCALE - 300);
       tries++;
-      if (tries > 200) break; // paranoid cap — should never hit
+      if (tries > 200) break;
     } while (
       Phaser.Math.Distance.Between(px, py, droneStartX, droneStartY) < PEOPLE_SPAWN_AVOID_DIST ||
-      insideAirfield(px, py)
+      insideAnySetPiece(px, py)
     );
     const skinId = rng.between(0, 199);
     const sprite = scene.add
