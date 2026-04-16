@@ -96,6 +96,19 @@ export function generateDroneTextures(scene) {
   sc.fillRect(18, 24, 4, 2);
   shadowCanvas.refresh();
 
+  // --- Propeller shadows (horizontal + vertical blade silhouettes) ---
+  const propShadow1 = scene.textures.createCanvas("drone-prop-shadow1", 32, 32);
+  const ps1 = propShadow1.context;
+  ps1.fillStyle = "#000";
+  ps1.fillRect(12, 28, 8, 1);
+  propShadow1.refresh();
+
+  const propShadow2 = scene.textures.createCanvas("drone-prop-shadow2", 32, 32);
+  const ps2 = propShadow2.context;
+  ps2.fillStyle = "#000";
+  ps2.fillRect(15, 26, 2, 5);
+  propShadow2.refresh();
+
   // --- Tank (top-down, 12x16) ---
   const tankCanvas = scene.textures.createCanvas("tank", 12, 16);
   const tc = tankCanvas.context;

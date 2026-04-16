@@ -163,6 +163,11 @@ export class GameScene extends Phaser.Scene {
       .setScale(SCALE)
       .setDepth(3)
       .setAlpha(DRONE_SHADOW_OPACITY);
+    this.dronePropShadow = this.add
+      .image(0, 0, "drone-prop-shadow1")
+      .setScale(SCALE)
+      .setDepth(3)
+      .setAlpha(DRONE_SHADOW_OPACITY);
 
     // --- Drone (starts at bottom of runway) ---
     this.drone = this.add
@@ -471,6 +476,7 @@ export class GameScene extends Phaser.Scene {
       ds.altitude = 0;
       this.drone.setPosition(ds.x, ds.y);
       this.droneShadow.setVisible(false);
+      this.dronePropShadow.setVisible(false);
       // Keep world + set pieces animating so the celebration runs
       updateMissiles(this, dt);
       updatePeople(this, dt, delta);
@@ -618,8 +624,17 @@ export class GameScene extends Phaser.Scene {
       const shadowScale =
         SCALE * Phaser.Math.Clamp(1.2 - ds.altitude * 0.0003, 0.6, 1.2);
       this.droneShadow.setScale(shadowScale);
+      this.dronePropShadow.setVisible(true);
+      this.dronePropShadow.setPosition(ds.x + shadowOffset, ds.y + shadowOffset);
+      this.dronePropShadow.setAngle(ds.angle);
+      this.dronePropShadow.setAlpha(this.droneShadow.alpha);
+      this.dronePropShadow.setScale(shadowScale);
+      this.dronePropShadow.setTexture(
+        this.propFrame === 0 ? "drone-prop-shadow1" : "drone-prop-shadow2",
+      );
     } else {
       this.droneShadow.setVisible(false);
+      this.dronePropShadow.setVisible(false);
     }
 
     // --- Camera zoom (zoom out above threshold; mobile adds a constant 25% zoom-out) ---

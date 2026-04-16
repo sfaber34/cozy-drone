@@ -13,6 +13,7 @@ export function crashDrone(scene) {
   scene.droneState.altitude = 0;
   scene.drone.setVisible(false);
   scene.droneShadow.setVisible(false);
+  if (scene.dronePropShadow) scene.dronePropShadow.setVisible(false);
 
   // Stop engine sound
   if (scene.engineA && scene.engineA.isPlaying) scene.engineA.stop();
