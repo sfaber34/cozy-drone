@@ -148,7 +148,7 @@ export function generateBuildingTextures(scene) {
   blc.fillRect(26, 4, 2, 2);
   blc.fillStyle = '#acd';
   for (let wy = 10; wy < 22; wy += 4) {
-    for (let wx = 3; wx < 30; wx += 5) {
+    for (let wx = 3; wx < 26; wx += 5) {
       blc.fillRect(wx, wy, 3, 2);
     }
   }
@@ -222,12 +222,10 @@ export function generateBuildingTextures(scene) {
   apc.fillRect(23, 0, 1, 32);
   apc.fillStyle = '#aaccdd';
   for (let wy = 3; wy < 30; wy += 5) {
-    for (let wx = 3; wx < 22; wx += 6) {
+    for (let wx = 3; wx < 21; wx += 5) {
       apc.fillRect(wx, wy, 3, 3);
     }
   }
-  apc.fillStyle = '#555';
-  apc.fillRect(10, 2, 4, 3);
   aptCanvas.refresh();
 
   // --- Church (top-down, 16x24) ---

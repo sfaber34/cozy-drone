@@ -244,8 +244,8 @@ export const SET_PIECE_PLACE_MAX_TRIES = 2000;
 //
 // Sizes below are CSS pixels; minimapSystem.js multiplies by 1/MOBILE_ZOOM_FACTOR
 // on mobile so the panel renders at the same physical size on every device.
-export const MINIMAP_SIZE_PX = 180;          // square panel edge length
-export const MINIMAP_MARGIN_PX = 16;         // distance from top + right edges
+export const MINIMAP_SIZE_PX = 180; // square panel edge length
+export const MINIMAP_MARGIN_PX = 16; // distance from top + right edges
 export const MINIMAP_BG_COLOR = 0x000000;
 export const MINIMAP_BG_ALPHA = 0.55;
 export const MINIMAP_BORDER_COLOR = 0xffffff;
@@ -254,9 +254,9 @@ export const MINIMAP_BORDER_THICKNESS_PX = 1;
 // Heatmap grid resolution across the WHOLE world (per-axis cell count).
 // Higher = finer detail but more rects to draw. 24×24 = 576 cells is fine.
 export const MINIMAP_GRID_CELLS = 24;
-export const MINIMAP_HEAT_COLOR = 0xff3344;  // red for targets
-export const MINIMAP_HEAT_MIN_ALPHA = 0.18;  // alpha for a 1-person cell
-export const MINIMAP_HEAT_MAX_ALPHA = 0.85;  // alpha for the peak-density cell
+export const MINIMAP_HEAT_COLOR = 0xff3344; // red for targets
+export const MINIMAP_HEAT_MIN_ALPHA = 0.18; // alpha for a 1-person cell
+export const MINIMAP_HEAT_MAX_ALPHA = 0.85; // alpha for the peak-density cell
 // How often to recount people + redraw the heatmap. Lower = more responsive
 // but more CPU each tick. 250ms is ~4 Hz which feels plenty snappy.
 export const MINIMAP_UPDATE_INTERVAL_MS = 250;
@@ -373,7 +373,7 @@ export const CANNON_FIRE_RATE = 0.075; // seconds between shots (hold to auto-fi
 export const CANNON_BULLET_SPEED = 1000; // bullet travel speed (px/s)
 export const CANNON_RANGE_FACTOR = 0.05; // impact distance = altitude * this factor
 export const CANNON_SPREAD = 0.1; // random spread in radians
-export const CANNON_KILL_RADIUS = 30; // explosion radius per bullet
+export const CANNON_KILL_RADIUS = 36; // explosion radius per bullet
 export const CANNON_PANIC_RADIUS = 250; // radius within which people/animals panic from a cannon impact
 export const CANNON_SHAKE_DURATION = 50; // screen shake per shot (ms)
 export const CANNON_SHAKE_INTENSITY = 0.001; // screen shake intensity
