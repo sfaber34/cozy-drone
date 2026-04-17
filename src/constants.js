@@ -29,9 +29,9 @@ export const FARM_FIELD_PICKER_PICK_DURATION_RANGE = 1.4; // random added
 export const FARM_FIELD_PICKER_HOP_DIST_MIN = 30; // px min distance to next pick spot
 export const FARM_FIELD_PICKER_HOP_DIST_RANGE = 80; // px random added
 export const FARM_FIELD_ANIMAL_PIGS = 10;
-// export const FARM_FIELD_ANIMAL_CHICKENS = 10;
-export const FARM_FIELD_ANIMAL_CHICKENS = 30;
-export const FARM_FIELD_ANIMAL_CAMELS = 8;
+export const FARM_FIELD_ANIMAL_CHICKENS = 10;
+// export const FARM_FIELD_ANIMAL_CAMELS = 8;
+export const FARM_FIELD_ANIMAL_CAMELS = 30;
 export const FARM_FIELD_ANIMAL_SHEEP = 10; // uses goat texture as a sheep stand-in
 export const FARM_FIELD_TRACTOR_HP = 2; // HP per tractor. Missiles deal 1, cannon deals 0.5 → 2 missile hits / 4 cannon hits
 export const FARM_FIELD_TRACTOR_HIT_RADIUS = 40; // px explosion radius that counts as a hit on a tractor
@@ -287,7 +287,7 @@ export const EXPLOSION_VOLUME = 0.7; // max volume at point blank
 export const DEATH_SFX_VOLUME = 0.45; // max volume at point blank
 export const DEATH_SFX_MIN_VOLUME_FRAC = 0.45; // floor volume fraction at max distance (prevents silent deaths)
 export const DEATH_SFX_MAX_CONCURRENT = 5; // max death sounds playing at once (extras dropped)
-export const DEATH_SFX_STAGGER_MS = 120; // ms delay between staggered death sounds in a mass kill
+export const DEATH_SFX_STAGGER_MS = 100; // ms delay between staggered death sounds in a mass kill
 export const DEATH_SFX_COOLDOWN = 3; // how many other death sounds must play before one can repeat
 
 // --- Engine SFX (looping, pitch/volume shift with drone speed) ---
@@ -298,8 +298,9 @@ export const ENGINE_RATE_RANGE = 0.8; // additional rate at max speed (total max
 export const ENGINE_CROSSFADE_SEC = 0.5; // seconds of overlap when crossfading the engine loop
 
 // --- Spatial audio (shared by explosion + death SFX) ---
-export const SFX_MAX_DISTANCE = 1000; // distance in px at which spatial SFX reaches minimum volume
-export const SFX_MIN_VOLUME_FRAC = 0.05; // volume fraction at SFX_MAX_DISTANCE (0.05 = 5% of max)
+export const SFX_MAX_DISTANCE = 2000; // distance in px at which spatial SFX reaches minimum volume
+// export const SFX_MIN_VOLUME_FRAC = 0.40; // volume fraction at SFX_MAX_DISTANCE (0.05 = 5% of max)
+export const SFX_MIN_VOLUME_FRAC = 1.0; // volume fraction at SFX_MAX_DISTANCE (0.05 = 5% of max)
 export const SFX_PAN_AMOUNT = 0.25; // max stereo pan amount (0 = center, 1 = hard left/right)
 
 // --- Drone physics ---

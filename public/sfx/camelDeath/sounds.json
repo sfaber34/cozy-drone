@@ -1,6 +1,11 @@
 [
-  { "file": "camelDeath1.mp3",   "volume": 1.2 },
-  { "file": "camelDeath2.mp3",   "volume": 1.2 },
-  { "file": "camelDeath3.mp3",   "volume": 1.8 },
-  { "file": "camelDeath4.mp3",   "volume": 1.4 }
+  { "file": "camelDeath5_dan.mp3",   "volume": 1.1 },
+  { "file": "camelDeath6_dan.mp3",   "volume": 0.8 },
+  { "file": "camelDeath7_dan.mp3",   "volume": 0.8 },
+  { "file": "camelDeath8_dan.mp3",   "volume": 0.8 },
+  { "file": "camelDeath9_dan.mp3",   "volume": 0.8 },
+  { "file": "camelDeath10_dan.mp3",   "volume": 0.8 },
+  { "file": "camelDeath11_dan.mp3",   "volume": 0.8 },
+  { "file": "camelDeath12_dan.mp3",   "volume": 0.8 },
+  { "file": "camelDeath13_dan.mp3",   "volume": 0.9 }
 ]
