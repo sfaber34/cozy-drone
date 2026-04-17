@@ -30,9 +30,9 @@ export const FARM_FIELD_PICKER_HOP_DIST_MIN = 30; // px min distance to next pic
 export const FARM_FIELD_PICKER_HOP_DIST_RANGE = 80; // px random added
 export const FARM_FIELD_ANIMAL_PIGS = 10;
 export const FARM_FIELD_ANIMAL_CHICKENS = 10;
-// export const FARM_FIELD_ANIMAL_CAMELS = 8;
-export const FARM_FIELD_ANIMAL_CAMELS = 30;
-export const FARM_FIELD_ANIMAL_SHEEP = 10; // uses goat texture as a sheep stand-in
+export const FARM_FIELD_ANIMAL_CAMELS = 8;
+// export const FARM_FIELD_ANIMAL_SHEEP = 10; // uses goat texture as a sheep stand-in
+export const FARM_FIELD_ANIMAL_SHEEP = 40;
 export const FARM_FIELD_TRACTOR_HP = 2; // HP per tractor. Missiles deal 1, cannon deals 0.5 → 2 missile hits / 4 cannon hits
 export const FARM_FIELD_TRACTOR_HIT_RADIUS = 40; // px explosion radius that counts as a hit on a tractor
 
