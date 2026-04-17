@@ -850,7 +850,7 @@ function tryDeferredWorldInit(scene) {
     rng,
     [
       { type: "town" },
-      { type: "farmCompound" },
+      { type: "farmCompound", tileX: 50, tileY: 90 },
       { type: "sheepFlock" },
       { type: "oilfield" },
       { type: "wedding" },
@@ -858,7 +858,7 @@ function tryDeferredWorldInit(scene) {
       { type: "chickenFight" },
       { type: "camelRace" },
       { type: "rockFight" },
-      { type: "farmField" },
+      { type: "farmField", tileX: 50, tileY: 120 },
       { type: "concert" },
       { type: "tireFire" },
       { type: "rockTarget" },
