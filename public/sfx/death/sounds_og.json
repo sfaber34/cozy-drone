@@ -1,0 +1,21 @@
+[
+  // { "file": "death1.mp3",   "volume": 1.1 },
+  // { "file": "death2_a.mp3", "volume": 2.1 },
+  // { "file": "death3_a.mp3", "volume": 1 },
+  // { "file": "death4_a.mp3", "volume": 1 },
+  // { "file": "death5.mp3",   "volume": 1 },
+  // { "file": "death6.mp3",   "volume": 0.7 },
+  // { "file": "death10_a.mp3","volume": 1.2 },
+  // { "file": "death11.mp3",  "volume": 1.3 },
+  // { "file": "death15_a.mp3","volume": 1 },
+  // { "file": "death16.mp3",  "volume": 1.5 },
+  // { "file": "death17.mp3",  "volume": 0.8 },
+  // { "file": "death18_a.mp3","volume": 2 },
+  // { "file": "death19.mp3",  "volume": 1 },
+  { "file": "death20.mp3",  "volume": 1.3 },
+  { "file": "death21.mp3",  "volume": 1.3 },
+  { "file": "death22.mp3",  "volume": 1 },
+  { "file": "death23.mp3",  "volume": 1 },
+  { "file": "death25_dan.mp3",  "volume": 1 },  
+  { "file": "death26_dan.mp3",  "volume": 1 }
+]
