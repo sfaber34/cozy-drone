@@ -290,7 +290,7 @@ export const EXPLOSION_VOLUME = 0.7; // max volume at point blank
 export const DEATH_SFX_VOLUME = 0.45; // max volume at point blank
 export const DEATH_SFX_MIN_VOLUME_FRAC = 0.45; // floor volume fraction at max distance (prevents silent deaths)
 export const DEATH_SFX_MAX_CONCURRENT = 5; // max death sounds playing at once (extras dropped)
-export const DEATH_SFX_STAGGER_MS = 100; // ms delay between staggered death sounds in a mass kill
+export const DEATH_SFX_STAGGER_MS = 150; // ms delay between staggered death sounds in a mass kill
 export const DEATH_SFX_COOLDOWN = 3; // how many other death sounds must play before one can repeat
 
 // --- Engine SFX (looping, pitch/volume shift with drone speed) ---

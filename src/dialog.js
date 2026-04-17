@@ -121,6 +121,8 @@ export const ghostLines = [
   "Ah so relaxing!",
   "I was asking for it.",
   "I deserved that.",
+  "✌️",
+  "👋",
 ];
 
 export const buildingGhostLines = [
