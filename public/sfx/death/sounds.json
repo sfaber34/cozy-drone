@@ -1,6 +1,5 @@
 [
   { "file": "death1.mp3",   "volume": 1.1 },
-  { "file": "death2_a.mp3", "volume": 2.1 },
   { "file": "death3_a.mp3", "volume": 1 },
   { "file": "death4_a.mp3", "volume": 1 },
   { "file": "death5.mp3",   "volume": 1 },
