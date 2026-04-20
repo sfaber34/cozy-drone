@@ -354,11 +354,13 @@ export const VICTORY_DRONE_AVOID_RADIUS = 120; // guys steer around this radius 
 
 // --- Missile ---
 export const MISSILE_SPEED = 280;
-export const MISSILE_TURN_RATE = 5.0;
-export const MISSILE_BOOST_TIME = 0.3;
+export const MISSILE_TURN_RATE = 3.0;
+export const MISSILE_BOOST_TIME = 0.6;
 export const MISSILE_MAX_SPEED = 400;
 export const MISSILE_ACCEL = 240;
-export const MISSILE_DESCENT_RATE = 600;
+// MISSILE_DESCENT_RATE removed — descent is now computed dynamically each
+// frame so the missile always reaches ground level at the target, regardless
+// of launch altitude or distance. See missileSystem.js updateMissiles().
 export const MISSILE_HIT_RADIUS = 15;
 export const MISSILE_SMOKE_INTERVAL = 40;
 export const MISSILE_SMOKE_OPACITY = 0.8; // starting alpha of each smoke puff

@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import {
   SCALE, MOBILE_DIALOG_SCALE, MISSILE_LAUNCH_VOLUME, EXPLOSION_VOLUME,
   MISSILE_SPEED, MISSILE_TURN_RATE, MISSILE_BOOST_TIME,
-  MISSILE_MAX_SPEED, MISSILE_ACCEL, MISSILE_DESCENT_RATE,
+  MISSILE_MAX_SPEED, MISSILE_ACCEL,
   MISSILE_HIT_RADIUS, MISSILE_SMOKE_INTERVAL, MISSILE_SMOKE_OPACITY,
   SCREEN_SHAKE_DURATION, SCREEN_SHAKE_INTENSITY,
 } from "../constants.js";
@@ -45,17 +45,38 @@ export function fireMissile(scene) {
   missileShadow.setRotation(heading + Math.PI / 2);
   playSfx(scene, "missileLaunch", MISSILE_LAUNCH_VOLUME);
 
+  // Adapt boost time + turn rate for close / off-angle shots. The default
+  // values look great for medium-to-long range, but a close flanking target
+  // (off the wing or almost below the drone) requires the missile to make
+  // a very tight turn in very little space. If we kept the defaults, the
+  // missile's minimum turning radius (speed / turnRate = 70 px) would be
+  // larger than the distance to the target and the missile would orbit
+  // forever. Scale both parameters by a "difficulty" factor derived from
+  // how much angle change is needed AND how close the target is:
+  //   difficulty 0 → straight-ahead or far → use defaults (looks nice)
+  //   difficulty 1 → 180° behind and point-blank → nearly instant turn
+  const tx = scene.targetPos.x, ty = scene.targetPos.y;
+  const angleToTarget = Math.atan2(ty - startY, tx - startX);
+  const angleDiff = Math.abs(Phaser.Math.Angle.Wrap(angleToTarget - heading));
+  const launchDist = Phaser.Math.Distance.Between(startX, startY, tx, ty);
+  const defaultRadius = MISSILE_SPEED / MISSILE_TURN_RATE;
+  const turnNeed = angleDiff / Math.PI;
+  const closeness = Math.max(0, 1 - launchDist / (defaultRadius * 4));
+  const difficulty = turnNeed * closeness;
+  const boostTime = MISSILE_BOOST_TIME * (1 - difficulty * 0.9);
+  const turnRate = MISSILE_TURN_RATE * (1 + difficulty * 3);
+
   scene.missiles.push({
     sprite: missile,
     shadow: missileShadow,
-    target: { x: scene.targetPos.x, y: scene.targetPos.y },
+    target: { x: tx, y: ty },
     speed: MISSILE_SPEED,
-    heading, // current direction of travel (radians)
-    turnRate: MISSILE_TURN_RATE, // radians/sec max turn
-    boostTime: MISSILE_BOOST_TIME, // seconds of straight flight before turning
+    heading,
+    turnRate,
+    boostTime,
     elapsed: 0,
     altitude: ds.altitude,
-    launchAlt: ds.altitude, // remember starting altitude for scale calc
+    launchAlt: ds.altitude,
   });
 }
 
@@ -85,8 +106,19 @@ export function updateMissiles(scene, dt) {
 
     // After initial boost, steer toward target
     if (m.elapsed > m.boostTime && dist > 5) {
+      // Dynamic turn-rate boost when close to the target. The missile's
+      // minimum turning radius is speed/turnRate. If the target is inside
+      // that radius the missile physically can't reach it and orbits
+      // forever. When within 2.5× the turning radius, ramp up the turn
+      // rate so the radius shrinks below the distance — the missile
+      // spirals inward naturally instead of circling.
+      let effectiveTurnRate = m.turnRate;
+      const turningRadius = m.speed / m.turnRate;
+      if (dist < turningRadius * 2.5) {
+        effectiveTurnRate = m.speed / (dist * 0.4);
+      }
       let diff = Phaser.Math.Angle.Wrap(targetAngle - m.heading);
-      const maxTurn = m.turnRate * dt;
+      const maxTurn = effectiveTurnRate * dt;
       m.heading += Phaser.Math.Clamp(diff, -maxTurn, maxTurn);
     }
 
@@ -135,8 +167,13 @@ export function updateMissiles(scene, dt) {
       });
     }
 
-    // Missile descends
-    m.altitude = Math.max(0, m.altitude - MISSILE_DESCENT_RATE * dt);
+    // Dynamic descent — compute the rate each frame so the missile arrives
+    // at ground level exactly when it reaches the target. Close shots dive
+    // steeply; long shots glide in shallow. No more circling-then-crashing
+    // or slamming into the ground short of the target.
+    const timeToTarget = dist / Math.max(m.speed, 1);
+    const descentRate = m.altitude / Math.max(timeToTarget, 0.05);
+    m.altitude = Math.max(0, m.altitude - descentRate * dt);
 
     // Scale missile: full size at launch altitude, shrinks as it descends to ground
     const altFrac = m.launchAlt > 0 ? m.altitude / m.launchAlt : 0;
