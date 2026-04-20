@@ -1,8 +1,11 @@
 import Phaser from 'phaser';
+import { inject } from '@vercel/analytics';
 import { BootScene } from './scenes/BootScene.js';
 import { GameScene } from './scenes/GameScene.js';
 import { MobileControlsScene } from './scenes/MobileControlsScene.js';
 import { MOBILE_ZOOM_FACTOR } from './constants.js';
+
+inject();
 
 // --- Pixel-perfect mobile zoom via larger internal canvas -----------------
 //
