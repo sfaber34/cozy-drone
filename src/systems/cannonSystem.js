@@ -22,7 +22,7 @@ export function initCannon(scene) {
   scene.cannonBullets = [];
   scene.cannonFireTimer = 0;
   scene.cannonReticle = scene.add.image(0, 0, "cannon-reticle")
-    .setScale(SCALE).setDepth(8).setVisible(false);
+    .setScale(SCALE).setDepth(15).setVisible(false);
 }
 
 export function getCannonImpactPoint(ds) {
