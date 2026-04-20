@@ -15,12 +15,13 @@ export const introLines = [
   "Spread those wings!",
   "I packed your\nfavorite missiles!",
   "Knock 'em dead!\n...with love!",
-  "You're the best\nthing on this\nrunway!",
+  "You're the best thing\n on this runway!",
   "Smooch! Okay\nnow go!",
   "Watch out for\nbirds!",
   "Lunch is at noon!\nDon't be late!",
   "Tell the clouds\nI said hi!",
   "Time to hand out\nsome freedom!",
+  "Fly high\nbig bird!",
 ];
 
 export const greetings = [
