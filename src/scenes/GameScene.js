@@ -447,6 +447,11 @@ export class GameScene extends Phaser.Scene {
   }
 
   update(time, delta) {
+    // Cap delta so the game never tries to simulate more than ~50 ms in a
+    // single tick. Prevents stuttering from tab-switch catchup, GC pauses,
+    // GPU warmup, or any other source of frame spikes. The game just slows
+    // down gracefully instead of lurching forward.
+    delta = Math.min(delta, 50);
     const dt = delta / 1000;
     const ds = this.droneState;
 

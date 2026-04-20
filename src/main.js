@@ -90,3 +90,22 @@ if (window.visualViewport) {
 if (game.sound && game.sound.context) {
   game.sound.context.resume();
 }
+
+// Chrome throttles backgrounded tabs to ~1 fps. When the tab regains focus,
+// Phaser's internal delta-smoothing history is full of ~1000 ms deltas from
+// the throttled period. Even though Phaser calls wake() internally, the
+// smoothed fps average stays low for many frames until enough normal 16 ms
+// frames "wash out" the history — that's the persistent sluggishness.
+//
+// Fix: use Phaser's own VISIBLE event (fires after Phaser's internal wake),
+// then resetDelta on the NEXT frame so the history is cleared after the
+// loop has fully restarted. Also resume the AudioContext (Chrome suspends
+// it on background).
+game.events.on(Phaser.Core.Events.VISIBLE, () => {
+  requestAnimationFrame(() => {
+    if (game.loop) game.loop.resetDelta();
+    if (game.sound && game.sound.context && game.sound.context.state === 'suspended') {
+      game.sound.context.resume();
+    }
+  });
+});
