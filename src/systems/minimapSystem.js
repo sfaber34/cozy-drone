@@ -64,9 +64,11 @@ export function createMinimap(scene) {
     cornerX: 0,
     cornerY: 0,
     accumMs: MINIMAP_UPDATE_INTERVAL_MS, // force immediate first heatmap draw
-    // Desktop: minimap always visible in upper-right.
-    // Mobile:  hidden by default, toggled by the on-screen "M" button.
-    visible: !scene.isMobile,
+    // Starts hidden on all platforms. Desktop auto-shows on the first
+    // updateMinimap() call (which only runs after the intro cutscene ends,
+    // same timing as the HUD). Mobile stays hidden until the "M" button
+    // is tapped.
+    visible: false,
   };
 
   layoutMinimap(scene);
@@ -114,6 +116,14 @@ export function isMinimapVisible(scene) {
 export function updateMinimap(scene, deltaMs) {
   const m = scene._minimap;
   if (!m) return;
+  // On desktop, auto-show the minimap the first time updateMinimap is
+  // called. This naturally aligns with the intro-cutscene end because
+  // GameScene.update() early-returns during introPlaying — so the first
+  // call here means the cutscene has finished and the HUD is live.
+  if (!m.visible && !scene.isMobile && !m._autoShown) {
+    m._autoShown = true;
+    setMinimapVisible(scene, true);
+  }
   // Hidden minimap skips all work — no counting, no redrawing, no
   // per-frame rotation update.
   if (!m.visible) return;
