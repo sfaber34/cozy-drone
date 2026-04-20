@@ -52,13 +52,13 @@ export function generateWeaponTextures(scene) {
   crCanvas.refresh();
 
   // --- Cannon bullet (3x3, bright tracer round) ---
-  const bulletCanvas = scene.textures.createCanvas('cannon-bullet', 3, 3);
+  // Tracer line (1×5, rotated at runtime to match heading)
+  const bulletCanvas = scene.textures.createCanvas('cannon-bullet', 1, 5);
   const bc = bulletCanvas.context;
   bc.fillStyle = '#ff0';
-  bc.fillRect(0, 1, 3, 1);
-  bc.fillRect(1, 0, 1, 3);
+  bc.fillRect(0, 0, 1, 5);
   bc.fillStyle = '#fff';
-  bc.fillRect(1, 1, 1, 1);
+  bc.fillRect(0, 0, 1, 2);
   bulletCanvas.refresh();
 
   // --- Cannon impact (small flash, 6x6) ---

@@ -78,7 +78,7 @@ export function fireCannon(scene) {
   scene.hudCam.ignore(bullet);
 
   const angle = Phaser.Math.Angle.Between(startX, startY, targetX, targetY);
-  bullet.setRotation(angle);
+  bullet.setRotation(angle + Math.PI / 2); // tracer texture points along Y; offset 90° to align with heading
 
   // Calculate travel time and pre-offset target for drone motion
   const travelDist = Phaser.Math.Distance.Between(startX, startY, targetX, targetY);

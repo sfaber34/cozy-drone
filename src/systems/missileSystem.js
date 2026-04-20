@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import {
   SCALE, MOBILE_DIALOG_SCALE, MISSILE_LAUNCH_VOLUME, EXPLOSION_VOLUME,
   MISSILE_SPEED, MISSILE_TURN_RATE, MISSILE_BOOST_TIME,
-  MISSILE_MAX_SPEED, MISSILE_ACCEL,
+  MISSILE_MAX_SPEED, MISSILE_ACCEL, MISSILE_MIN_SCALE,
   MISSILE_HIT_RADIUS, MISSILE_SMOKE_INTERVAL, MISSILE_SMOKE_OPACITY,
   SCREEN_SHAKE_DURATION, SCREEN_SHAKE_INTENSITY,
 } from "../constants.js";
@@ -175,9 +175,9 @@ export function updateMissiles(scene, dt) {
     const descentRate = m.altitude / Math.max(timeToTarget, 0.05);
     m.altitude = Math.max(0, m.altitude - descentRate * dt);
 
-    // Scale missile: full size at launch altitude, shrinks as it descends to ground
+    // Scale missile: full size at launch altitude, shrinks toward MISSILE_MIN_SCALE as it descends
     const altFrac = m.launchAlt > 0 ? m.altitude / m.launchAlt : 0;
-    const mScale = SCALE * (0.3 + altFrac * 0.7);
+    const mScale = SCALE * (MISSILE_MIN_SCALE + altFrac * (1 - MISSILE_MIN_SCALE));
     m.sprite.setScale(mScale);
 
     if (dist < MISSILE_HIT_RADIUS) {

@@ -362,6 +362,7 @@ export const MISSILE_ACCEL = 240;
 // frame so the missile always reaches ground level at the target, regardless
 // of launch altitude or distance. See missileSystem.js updateMissiles().
 export const MISSILE_HIT_RADIUS = 15;
+export const MISSILE_MIN_SCALE = 0.5; // minimum visual scale (× SCALE) when the missile is at ground level
 export const MISSILE_SMOKE_INTERVAL = 40;
 export const MISSILE_SMOKE_OPACITY = 0.8; // starting alpha of each smoke puff
 export const MISSILE_FIRE_RATE = 0.3; // seconds between missile launches
