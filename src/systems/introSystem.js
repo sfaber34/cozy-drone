@@ -39,28 +39,33 @@ export function playIntroCutscene(scene) {
       walkAnim.remove();
       guy.setTexture("guy1");
 
-      // Spawn kiss hearts
-      for (let i = 0; i < 5; i++) {
-        const heart = scene.add
-          .image(guyTargetX, guyTargetY - 10, "heart")
-          .setScale(SCALE)
-          .setDepth(12);
-        scene.hudCam.ignore(heart);
-        const angle =
-          -Math.PI * 0.2 +
-          (i / 4) * -Math.PI * 0.6 +
-          (Math.random() - 0.5) * 0.5;
-        const dist = 80 + Math.random() * 60;
-        scene.tweens.add({
-          targets: heart,
-          x: guyTargetX + Math.cos(angle) * dist,
-          y: guyTargetY + Math.sin(angle) * dist - 40,
-          scale: SCALE * (0.6 + Math.random() * 0.6),
-          alpha: 0,
-          duration: 1000 + Math.random() * 500,
-          delay: i * 200,
-          ease: "Quad.easeOut",
-          onComplete: () => heart.destroy(),
+      // Spawn kiss hearts one at a time to the LEFT of the guy (between
+      // guy and drone). Each heart pops into existence at its spawn time
+      // rather than all appearing at once.
+      const heartCount = 5;
+      for (let i = 0; i < heartCount; i++) {
+        scene.time.delayedCall(i * 300, () => {
+          // Spawn slightly left of the guy's face (toward the drone)
+          const spawnX = guyTargetX - 12;
+          const spawnY = guyTargetY - 6;
+          const heart = scene.add
+            .image(spawnX, spawnY, "heart")
+            .setScale(SCALE * 0.3)
+            .setDepth(12);
+          scene.hudCam.ignore(heart);
+          // Drift left and upward (between guy and drone)
+          const angle = Math.PI * (0.65 + Math.random() * 0.5);
+          const dist = 60 + Math.random() * 50;
+          scene.tweens.add({
+            targets: heart,
+            x: spawnX + Math.cos(angle) * dist,
+            y: spawnY + Math.sin(angle) * dist - 30,
+            scale: SCALE * (0.5 + Math.random() * 0.5),
+            alpha: 0,
+            duration: 1000 + Math.random() * 500,
+            ease: "Quad.easeOut",
+            onComplete: () => heart.destroy(),
+          });
         });
       }
 
