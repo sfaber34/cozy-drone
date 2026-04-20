@@ -289,8 +289,12 @@ export class GameScene extends Phaser.Scene {
         }
         return;
       }
-      // Normal: set missile target (skip if tap landed on a mobile control)
+      // Normal: set missile target (skip if tap landed on a mobile control).
+      // When the gun is selected, the missile targeting system is locked at
+      // its last position — taps/clicks don't move the designator. This
+      // prevents accidental retargeting while strafing with the cannon.
       if (this.isMobile && this.isOnMobileControl(pointer.x, pointer.y)) return;
+      if (this.selectedWeapon === 2) return; // gun selected — lock designator
       const worldX = pointer.worldX;
       const worldY = pointer.worldY;
       this.targetPos = { x: worldX, y: worldY };
