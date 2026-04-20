@@ -148,7 +148,7 @@ export class GameScene extends Phaser.Scene {
 
     // --- Airfield renders immediately so the drone can spawn on the runway
     //     during the intro cutscene. It doesn't use any person-skin textures. ---
-    const airfield = createAirfield(this, rng, { tileX: 80, tileY: 150 });
+    const airfield = createAirfield(this, rng, { tileX: 80, tileY: 140 });
     this.setPieces.push(airfield);
     const rwBottom = this.runway.bottom;
     const rwX = this.runway.x;
@@ -587,7 +587,7 @@ export class GameScene extends Phaser.Scene {
     // too finicky; players would overshoot and have to reverse back.
     if (
       !this.victoryActive &&
-      this.kills >= VICTORY_KILL_THRESHOLD &&
+      this.kills >= this.totalPeople &&
       this.flightState === "grounded" &&
       ds.speed === 0 &&
       this._touchedRunway
@@ -816,8 +816,7 @@ export class GameScene extends Phaser.Scene {
     updateMinimap(this, delta);
 
     // Mission-complete HUD alert (shown once threshold met, hidden during cutscene)
-    const missionReady =
-      this.kills >= VICTORY_KILL_THRESHOLD && !this.victoryActive;
+    const missionReady = this.kills >= this.totalPeople && !this.victoryActive;
     if (this.missionCompleteText) {
       this.missionCompleteText.setVisible(missionReady);
       // Anchor directly under the main HUD block
@@ -890,8 +889,11 @@ function tryDeferredWorldInit(scene) {
   );
   scene.setPieces.push(...placed);
 
-  createPeople(scene, rng);
+  // Vehicles first — createPeople needs scene.townCars / scene.dirtBikers
+  // to exist so it can count car passengers + bikers and compute the
+  // wanderer budget that hits TOTAL_PEOPLE_TARGET.
   createVehicles(scene, rng);
+  createPeople(scene, rng);
 
   // These sprites were added after the HUD camera's initial `ignore`
   // snapshot, so they'd be seen by both cameras. Re-apply the HUD

@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import {
   SCALE, MOBILE_DIALOG_SCALE, MISSILE_LAUNCH_VOLUME, EXPLOSION_VOLUME,
-  MISSILE_SPEED, MISSILE_TURN_RATE, MISSILE_BOOST_TIME,
+  MISSILE_SPEED, MISSILE_TURN_RATE, MISSILE_BOOST_DIST,
   MISSILE_MAX_SPEED, MISSILE_ACCEL, MISSILE_MIN_SCALE,
   MISSILE_HIT_RADIUS, MISSILE_SMOKE_INTERVAL, MISSILE_SMOKE_OPACITY,
   SCREEN_SHAKE_DURATION, SCREEN_SHAKE_INTENSITY,
@@ -61,9 +61,13 @@ export function fireMissile(scene) {
   const launchDist = Phaser.Math.Distance.Between(startX, startY, tx, ty);
   const defaultRadius = MISSILE_SPEED / MISSILE_TURN_RATE;
   const turnNeed = angleDiff / Math.PI;
-  const closeness = Math.max(0, 1 - launchDist / (defaultRadius * 4));
+  // Only kick in for truly point-blank shots (within 1.5× turning radius).
+  // The old 4× threshold was too generous — it shortened the boost on
+  // normal-range shots, killing the visible straight-line launch phase.
+  const closeness = Math.max(0, 1 - launchDist / (defaultRadius * 1.5));
   const difficulty = turnNeed * closeness;
-  const boostTime = MISSILE_BOOST_TIME * (1 - difficulty * 0.9);
+  // Cap boost reduction at 60% so there's always a visible straight run.
+  const boostDist = MISSILE_BOOST_DIST * (1 - difficulty * 0.6);
   const turnRate = MISSILE_TURN_RATE * (1 + difficulty * 3);
 
   scene.missiles.push({
@@ -73,7 +77,8 @@ export function fireMissile(scene) {
     speed: MISSILE_SPEED,
     heading,
     turnRate,
-    boostTime,
+    boostDist,
+    boostTravelled: 0,
     elapsed: 0,
     altitude: ds.altitude,
     launchAlt: ds.altitude,
@@ -104,8 +109,9 @@ export function updateMissiles(scene, dt) {
       m.target.y,
     );
 
-    // After initial boost, steer toward target
-    if (m.elapsed > m.boostTime && dist > 5) {
+    // After initial boost (fixed distance, not time), steer toward target
+    const boostDone = m.boostTravelled >= m.boostDist;
+    if (boostDone && dist > 5) {
       // Dynamic turn-rate boost when close to the target. The missile's
       // minimum turning radius is speed/turnRate. If the target is inside
       // that radius the missile physically can't reach it and orbits
@@ -123,12 +129,14 @@ export function updateMissiles(scene, dt) {
     }
 
     // Accelerate after boost phase
-    if (m.elapsed > m.boostTime) {
+    if (boostDone) {
       m.speed = Math.min(MISSILE_MAX_SPEED, m.speed + MISSILE_ACCEL * dt);
     }
 
-    m.sprite.x += Math.cos(m.heading) * m.speed * dt;
-    m.sprite.y += Math.sin(m.heading) * m.speed * dt;
+    const stepDist = m.speed * dt;
+    m.sprite.x += Math.cos(m.heading) * stepDist;
+    m.sprite.y += Math.sin(m.heading) * stepDist;
+    m.boostTravelled += stepDist;
     m.sprite.setRotation(m.heading + Math.PI / 2);
 
     // Update shadow — lerps from under missile toward target as altitude drops

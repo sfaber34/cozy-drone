@@ -355,7 +355,7 @@ export const VICTORY_DRONE_AVOID_RADIUS = 120; // guys steer around this radius 
 // --- Missile ---
 export const MISSILE_SPEED = 280;
 export const MISSILE_TURN_RATE = 3.0;
-export const MISSILE_BOOST_TIME = 0.6;
+export const MISSILE_BOOST_DIST = 150; // px of straight flight before turning (speed-independent)
 export const MISSILE_MAX_SPEED = 400;
 export const MISSILE_ACCEL = 240;
 // MISSILE_DESCENT_RATE removed — descent is now computed dynamically each
@@ -420,6 +420,11 @@ export const PEOPLE_HIDE_TIMEOUT = 10;
 export const PEOPLE_RETURN_WAIT_MIN = 3; // min seconds event people stand idle before walking back
 export const PEOPLE_RETURN_WAIT_RANGE = 12; // random range added to min (total max = MIN + RANGE)
 export const PEOPLE_GREETING_MIN_DIST = 150;
+// PEOPLE_SPAWN_COUNT is computed at runtime in createPeople() so the grand
+// total always lands on TOTAL_PEOPLE_TARGET. It compensates for the variable
+// car-passenger count (CAR_PASSENGERS_MIN–MAX randomness). The constant
+// below is kept as a fallback / reference.
+export const TOTAL_PEOPLE_TARGET = 600;
 export const PEOPLE_SPAWN_COUNT = 60;
 export const PEOPLE_TOWN_SPAWN_COUNT = 80;
 export const PEOPLE_SPAWN_AVOID_DIST = 2000;

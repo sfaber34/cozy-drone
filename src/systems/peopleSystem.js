@@ -6,6 +6,7 @@ import {
   PEOPLE_CALM_TIME, PEOPLE_HIDE_TIMEOUT, PEOPLE_RETURN_WAIT_MIN, PEOPLE_RETURN_WAIT_RANGE,
   PANIC_DIR_INTERVAL_MIN, PANIC_DIR_INTERVAL_MAX, PANIC_DIR_CHANGE_ARC,
   PEOPLE_GREETING_MIN_DIST,
+  TOTAL_PEOPLE_TARGET,
   PEOPLE_SPAWN_COUNT, PEOPLE_TOWN_SPAWN_COUNT, PEOPLE_SPAWN_AVOID_DIST,
   PEOPLE_DEPTH_BASE, PEOPLE_DEPTH_BAND,
   MOBILE_DIALOG_SCALE,
@@ -46,7 +47,18 @@ export function createPeople(scene, rng) {
     return false;
   };
 
-  for (let i = 0; i < PEOPLE_SPAWN_COUNT; i++) {
+  // Compute how many wanderers to spawn so the grand total (scene.people
+  // + dirtBikers + car passengers) hits TOTAL_PEOPLE_TARGET exactly. The
+  // set-piece people and town people are already in scene.people by this
+  // point; bikers and cars are already in scene.dirtBikers / scene.townCars.
+  // Town-spawn people below also add PEOPLE_TOWN_SPAWN_COUNT, so subtract
+  // that from the budget too.
+  let carPassengers = 0;
+  for (const c of scene.townCars) carPassengers += c.passengers || 0;
+  const alreadyCounted = scene.people.length + scene.dirtBikers.length + carPassengers;
+  const wandererBudget = Math.max(0, TOTAL_PEOPLE_TARGET - alreadyCounted - PEOPLE_TOWN_SPAWN_COUNT);
+
+  for (let i = 0; i < wandererBudget; i++) {
     let px, py;
     let tries = 0;
     do {
