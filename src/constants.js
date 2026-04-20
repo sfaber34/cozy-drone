@@ -299,7 +299,7 @@ export const ENGINE_CROSSFADE_SEC = 0.5; // seconds of overlap when crossfading 
 // --- Spatial audio (shared by explosion + death SFX) ---
 export const SFX_MAX_DISTANCE = 2000; // distance in px at which spatial SFX reaches minimum volume
 export const SFX_MIN_VOLUME_FRAC = 0.7; // volume fraction at SFX_MAX_DISTANCE (0.05 = 5% of max)
-export const SFX_PAN_AMOUNT = 0.35; // max stereo pan amount (0 = center, 1 = hard left/right)
+export const SFX_PAN_AMOUNT = 0.8; // max stereo pan amount (0 = center, 1 = hard left/right)
 
 // --- Drone physics ---
 export const DRONE_TURN_RATE = 90; // degrees/sec

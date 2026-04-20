@@ -245,10 +245,12 @@ function computeSpatialAudio(scene, x, y, maxVolume) {
   const ds = scene.droneState;
   const dist = Phaser.Math.Distance.Between(ds.x, ds.y, x, y);
   const volume = maxVolume * Phaser.Math.Clamp(1 - dist / SFX_MAX_DISTANCE, SFX_MIN_VOLUME_FRAC, 1);
-  const angleToSound = Phaser.Math.Angle.Between(ds.x, ds.y, x, y);
-  const droneRad = Phaser.Math.DegToRad(ds.angle - 90);
-  const relAngle = angleToSound - droneRad;
-  const pan = Phaser.Math.Clamp(Math.sin(relAngle) * SFX_PAN_AMOUNT, -SFX_PAN_AMOUNT, SFX_PAN_AMOUNT);
+  // Pan based on screen-space X offset: left of drone = pan left, right =
+  // pan right. Does NOT factor in drone orientation — the player's speakers
+  // are fixed relative to the screen, not the drone's heading.
+  const dx = x - ds.x;
+  const maxDist = SFX_MAX_DISTANCE || 1;
+  const pan = Phaser.Math.Clamp((dx / maxDist) * SFX_PAN_AMOUNT, -SFX_PAN_AMOUNT, SFX_PAN_AMOUNT);
   return { volume, pan };
 }
 
