@@ -51,7 +51,7 @@ export function playIntroCutscene(scene) {
           const heart = scene.add
             .image(spawnX, spawnY, "heart")
             .setScale(SCALE * 0.3)
-            .setDepth(12);
+            .setDepth(21);
           scene.hudCam.ignore(heart);
           // Drift left and upward (between guy and drone)
           const angle = Math.PI * (0.65 + Math.random() * 0.5);
