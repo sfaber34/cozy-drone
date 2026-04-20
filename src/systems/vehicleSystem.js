@@ -5,6 +5,8 @@ import {
   CAR_PASSENGERS_MIN, CAR_PASSENGERS_MAX,
   BIKER_COUNT, BIKER_SPEED_MIN, BIKER_SPEED_RANGE, BIKER_TURN_RATE,
   BIKER_NO_GO_ZONES,
+  CAR_WRECK_SMOKE_INTERVAL, CAR_WRECK_SMOKE_DURATION,
+  CAR_WRECK_SMOKE_SCALE, CAR_WRECK_SMOKE_ALPHA, CAR_WRECK_SMOKE_DRIFT_Y,
 } from "../constants.js";
 import { steerAroundBuildings } from "./buildingSystem.js";
 
@@ -100,7 +102,31 @@ export function getAdjacentRoadNodes(scene, node) {
 
 export function updateTownCars(scene, dt) {
   for (const car of scene.townCars) {
-    if (!car.alive) continue;
+    // Dead cars emit smoke from the wreck
+    if (!car.alive) {
+      car.smokeTimer = (car.smokeTimer || 0) - dt * 1000;
+      if (car.smokeTimer <= 0) {
+        car.smokeTimer = CAR_WRECK_SMOKE_INTERVAL * (0.7 + Math.random() * 0.6);
+        const px = car.sprite.x + Phaser.Math.Between(-6, 6);
+        const py = car.sprite.y + Phaser.Math.Between(-4, 4);
+        const puff = scene.add.image(px, py, "smoke")
+          .setScale(SCALE * CAR_WRECK_SMOKE_SCALE)
+          .setDepth(11)
+          .setAlpha(CAR_WRECK_SMOKE_ALPHA)
+          .setTint(0x333333);
+        scene.hudCam.ignore(puff);
+        scene.tweens.add({
+          targets: puff,
+          y: py - CAR_WRECK_SMOKE_DRIFT_Y,
+          x: px + Phaser.Math.Between(-8, 8),
+          scale: SCALE * (CAR_WRECK_SMOKE_SCALE + 0.3),
+          alpha: 0,
+          duration: CAR_WRECK_SMOKE_DURATION * (0.8 + Math.random() * 0.4),
+          onComplete: () => puff.destroy(),
+        });
+      }
+      continue;
+    }
 
     // Pick next intersection to drive to
     if (!car.targetNode) {

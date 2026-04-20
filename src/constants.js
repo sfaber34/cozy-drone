@@ -355,7 +355,7 @@ export const VICTORY_DRONE_AVOID_RADIUS = 120; // guys steer around this radius 
 // --- Missile ---
 export const MISSILE_SPEED = 280;
 export const MISSILE_TURN_RATE = 3.0;
-export const MISSILE_BOOST_DIST = 150; // px of straight flight before turning (speed-independent)
+export const MISSILE_BOOST_DIST = 90; // px of straight flight before turning (speed-independent)
 export const MISSILE_MAX_SPEED = 400;
 export const MISSILE_ACCEL = 240;
 // MISSILE_DESCENT_RATE removed — descent is now computed dynamically each
@@ -446,6 +446,13 @@ export const CAR_SPEED_MIN = 40;
 export const CAR_SPEED_RANGE = 30;
 export const CAR_PASSENGERS_MIN = 1;
 export const CAR_PASSENGERS_MAX = 4;
+// Destroyed-car wreck smoke
+export const CAR_WRECK_SMOKE_INTERVAL = 200; // ms between smoke puffs
+export const CAR_WRECK_SMOKE_DURATION = 1200; // ms each puff lives
+export const CAR_WRECK_SMOKE_SCALE = 0.8; // starting scale (× SCALE)
+export const CAR_WRECK_SMOKE_ALPHA = 0.5; // starting alpha
+export const CAR_WRECK_SMOKE_DRIFT_Y = 90; // px upward drift per puff
+
 export const BIKER_COUNT = 8;
 export const BIKER_SPEED_MIN = 100;
 export const BIKER_SPEED_RANGE = 60;

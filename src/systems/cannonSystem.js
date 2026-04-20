@@ -351,8 +351,8 @@ export function cannonImpact(scene, x, y) {
           });
         }
       } else {
-        // First hit — flash the car darker
-        car.sprite.setTint(0xaa6633);
+        // Damaged but not destroyed — swap to cracked/dented texture
+        car.sprite.setTexture(car.tex + '-damaged');
       }
     }
   }

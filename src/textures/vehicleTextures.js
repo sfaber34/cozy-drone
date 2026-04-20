@@ -145,6 +145,44 @@ export function generateVehicleTextures(scene) {
     ctx.fillRect(2, 5, 8, 1);
     ctx.fillRect(5, 6, 1, 6);
     carCanvas.refresh();
+
+    // --- Damaged variant: same car with cracked glass + body damage ---
+    const dmgCanvas = scene.textures.createCanvas(cc.name + '-damaged', 12, 18);
+    const dc = dmgCanvas.context;
+    // Copy the base car by redrawing it
+    dc.drawImage(carCanvas.canvas, 0, 0);
+    // Crack the windshield (front glass at y=4..5, replace blue with shattered)
+    dc.fillStyle = '#556677';
+    dc.fillRect(2, 4, 8, 2);
+    dc.fillStyle = '#334455';
+    dc.fillRect(3, 4, 1, 1);
+    dc.fillRect(6, 5, 1, 1);
+    dc.fillRect(8, 4, 1, 1);
+    // Crack the rear window
+    dc.fillStyle = '#556677';
+    dc.fillRect(3, 12, 6, 1);
+    dc.fillStyle = '#334455';
+    dc.fillRect(4, 12, 1, 1);
+    dc.fillRect(7, 12, 1, 1);
+    // Shatter side windows
+    dc.fillStyle = '#556677';
+    dc.fillRect(1, 6, 1, 4);
+    dc.fillRect(10, 6, 1, 4);
+    dc.fillStyle = '#334455';
+    dc.fillRect(1, 7, 1, 1);
+    dc.fillRect(10, 8, 1, 1);
+    // Body cracks (dark scratches across the panels)
+    dc.fillStyle = '#222';
+    dc.fillRect(3, 2, 3, 1);
+    dc.fillRect(5, 3, 1, 1);
+    dc.fillRect(7, 14, 3, 1);
+    dc.fillRect(2, 9, 1, 1);
+    dc.fillRect(9, 7, 1, 1);
+    // Dent shadow
+    dc.fillStyle = '#00000033';
+    dc.fillRect(3, 8, 2, 2);
+    dc.fillRect(8, 13, 2, 2);
+    dmgCanvas.refresh();
   }
 
   // --- Car destroyed (12x18) ---
