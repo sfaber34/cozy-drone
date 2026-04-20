@@ -11,15 +11,26 @@
 // Rendered exclusively on the HUD camera (main camera ignores the graphics
 // objects) so it overlays the viewport regardless of world scroll/zoom.
 import {
-  WORLD_W, WORLD_H, TILE, SCALE,
-  MINIMAP_SIZE_PX, MINIMAP_MARGIN_PX,
-  MINIMAP_BG_COLOR, MINIMAP_BG_ALPHA,
-  MINIMAP_BORDER_COLOR, MINIMAP_BORDER_ALPHA, MINIMAP_BORDER_THICKNESS_PX,
+  WORLD_W,
+  WORLD_H,
+  TILE,
+  SCALE,
+  MINIMAP_SIZE_PX,
+  MINIMAP_MARGIN_PX,
+  MINIMAP_BG_COLOR,
+  MINIMAP_BG_ALPHA,
+  MINIMAP_BORDER_COLOR,
+  MINIMAP_BORDER_ALPHA,
+  MINIMAP_BORDER_THICKNESS_PX,
   MINIMAP_GRID_CELLS,
-  MINIMAP_HEAT_COLOR, MINIMAP_HEAT_MIN_ALPHA, MINIMAP_HEAT_MAX_ALPHA,
+  MINIMAP_HEAT_COLOR,
+  MINIMAP_HEAT_MIN_ALPHA,
+  MINIMAP_HEAT_MAX_ALPHA,
   MINIMAP_UPDATE_INTERVAL_MS,
-  MINIMAP_AIRFIELD_COLOR, MINIMAP_AIRFIELD_SIZE_PX,
-  MINIMAP_DRONE_COLOR, MINIMAP_DRONE_SIZE_PX,
+  MINIMAP_AIRFIELD_COLOR,
+  MINIMAP_AIRFIELD_SIZE_PX,
+  MINIMAP_DRONE_COLOR,
+  MINIMAP_DRONE_SIZE_PX,
   MOBILE_ZOOM_FACTOR,
 } from "../constants.js";
 
@@ -43,7 +54,8 @@ export function createMinimap(scene) {
   // then CSS-shrinks to the viewport. To appear at its intended CSS size
   // on every device, boost every pixel value by 1/MOBILE_ZOOM_FACTOR on
   // mobile so the CSS downscale lands it at the target physical size.
-  const boost = scene.isMobile && MOBILE_ZOOM_FACTOR > 0 ? 1 / MOBILE_ZOOM_FACTOR : 1;
+  const boost =
+    scene.isMobile && MOBILE_ZOOM_FACTOR > 0 ? 1 / MOBILE_ZOOM_FACTOR : 1;
   const size = MINIMAP_SIZE_PX * boost;
   const margin = MINIMAP_MARGIN_PX * boost;
 
@@ -56,7 +68,9 @@ export function createMinimap(scene) {
   scene.cameras.main.ignore([bg, heat, markers]);
 
   scene._minimap = {
-    bg, heat, markers,
+    bg,
+    heat,
+    markers,
     boost,
     size,
     margin,
@@ -150,17 +164,21 @@ export function destroyMinimap(scene) {
 
 function layoutMinimap(scene) {
   const m = scene._minimap;
-  m.cornerY = m.margin;
-  // Desktop: always upper-right.
-  // Mobile portrait: upper-right (lots of vertical room, minimap doesn't
-  //   compete with anything at the top).
-  // Mobile landscape: upper-center — in landscape the top-right corner
-  //   overlaps the HUD kill-counter / altitude readout and feels cramped.
   const isLandscape = scene.scale.width > scene.scale.height;
+  // Desktop: always upper-right.
+  // Mobile landscape: upper-center.
+  // Mobile portrait: upper-right, pushed down so the vibej.am widget
+  //   (fixed to the top-right corner) doesn't cover the minimap.
   if (scene.isMobile && isLandscape) {
     m.cornerX = (scene.scale.width - m.size) / 2;
-  } else {
+    m.cornerY = m.margin;
+  } else if (scene.isMobile && !isLandscape) {
     m.cornerX = scene.scale.width - m.size - m.margin;
+    m.cornerY = m.margin + 30 * m.boost;
+  } else {
+    // Desktop: widget is bottom-right, no conflict with minimap at top-right
+    m.cornerX = scene.scale.width - m.size - m.margin;
+    m.cornerY = m.margin;
   }
 }
 
