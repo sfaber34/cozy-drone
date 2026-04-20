@@ -114,8 +114,8 @@ function spawnTractors(scene, rng, f, tractors) {
     const stripLeft = f.left + stripW * i;
     const startRow = rng.between(0, rowsPerStrip - 1);
     const rowX = stripLeft + rowMargin + startRow * rowStep;
-    const startY = rng.pick([f.top + 30, f.bottom - 30]);
-    const direction = startY > f.cy ? -1 : 1;
+    const startY = rng.between(f.top + 30, f.bottom - 30);
+    const direction = rng.pick([-1, 1]);
 
     const sprite = scene.add.image(rowX, startY, "tractor")
       .setScale(SCALE).setDepth(2);
@@ -282,8 +282,16 @@ function updateTractor(scene, t, dt) {
     const arc = Math.sin(Math.PI * tt) * FARM_FIELD_TRACTOR_TURN_ARC;
     const outward = t.turnEdgeY === t.fieldBottom ? 1 : -1;
     t.sprite.y = t.turnEdgeY + outward * arc;
-    const fromAngle = t.turnExitDir === 1 ? 0   : 180;
-    const sweep = t.turnExitDir === 1 ? 180 : -180;
+    // Sweep direction must match the lateral movement so the tractor's
+    // FRONT leads the turn (like a real vehicle). If the front sweeps the
+    // wrong way the back end leads — looks like the tractor is reversing
+    // through the U-turn. Rule: at the bottom edge, moving right → front
+    // swings right (CCW, -180); moving left → front swings left (CW, +180).
+    // Top edge is the opposite.
+    const movingRight = t.turnToX > t.turnFromX;
+    const atBottom = t.turnEdgeY === t.fieldBottom;
+    const fromAngle = t.turnExitDir === 1 ? 0 : 180;
+    const sweep = (movingRight !== atBottom) ? 180 : -180;
     t.sprite.setAngle(fromAngle + sweep * tt);
 
     if (tt >= 1) {
