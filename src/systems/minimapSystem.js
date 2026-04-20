@@ -173,16 +173,10 @@ function applyVisibility(scene) {
 
 function drawBackground(scene) {
   const m = scene._minimap;
-  const { bg, cornerX, cornerY, size, boost } = m;
+  const { bg, cornerX, cornerY, size } = m;
   bg.clear();
   bg.fillStyle(MINIMAP_BG_COLOR, MINIMAP_BG_ALPHA);
   bg.fillRect(cornerX, cornerY, size, size);
-  bg.lineStyle(
-    MINIMAP_BORDER_THICKNESS_PX * boost,
-    MINIMAP_BORDER_COLOR,
-    MINIMAP_BORDER_ALPHA,
-  );
-  bg.strokeRect(cornerX, cornerY, size, size);
 }
 
 function drawHeatmap(scene) {
@@ -250,8 +244,8 @@ function drawHeatmap(scene) {
       heat.fillRect(
         cornerX + gx * cellSize,
         cornerY + gy * cellSize,
-        cellSize + 0.5, // tiny overlap so adjacent cells blend without gaps
-        cellSize + 0.5,
+        Math.min(cellSize + 0.5, size - gx * cellSize),
+        Math.min(cellSize + 0.5, size - gy * cellSize),
       );
     }
   }

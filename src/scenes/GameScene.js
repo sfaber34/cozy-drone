@@ -50,7 +50,11 @@ import { startVictory } from "../systems/victoryCutscene.js";
 // Airfield is special-cased (runs at intro, fixed position). Everything else
 // goes through the placer in setPieceRegistry so random spawns don't overlap.
 import { createAirfield } from "../systems/airfieldSystem.js";
-import { createMinimap, updateMinimap, setMinimapVisible } from "../systems/minimapSystem.js";
+import {
+  createMinimap,
+  updateMinimap,
+  setMinimapVisible,
+} from "../systems/minimapSystem.js";
 import {
   placeSetPieces,
   reservedRectFromBounds,
@@ -860,7 +864,7 @@ function tryDeferredWorldInit(scene) {
     rng,
     [
       { type: "town" },
-      { type: "farmCompound", tileX: 50, tileY: 90 },
+      { type: "farmCompound" },
       { type: "sheepFlock" },
       { type: "oilfield" },
       { type: "wedding" },
@@ -868,7 +872,7 @@ function tryDeferredWorldInit(scene) {
       { type: "chickenFight" },
       { type: "camelRace" },
       { type: "rockFight" },
-      { type: "farmField", tileX: 50, tileY: 120 },
+      { type: "farmField" },
       { type: "concert" },
       { type: "tireFire" },
       { type: "rockTarget" },
