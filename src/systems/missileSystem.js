@@ -74,7 +74,7 @@ export function fireMissile(scene) {
     sprite: missile,
     shadow: missileShadow,
     target: { x: tx, y: ty },
-    speed: MISSILE_SPEED,
+    speed: MISSILE_SPEED + ds.speed,
     heading,
     turnRate,
     boostDist,
