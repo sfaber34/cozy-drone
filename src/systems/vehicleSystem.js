@@ -46,13 +46,18 @@ export function createVehicles(scene, rng) {
   }
 
   // --- Dirt bikers ---
+  const droneX = scene.drone ? scene.drone.x : (WORLD_W * TILE * SCALE) / 2;
+  const droneY = scene.drone ? scene.drone.y : (WORLD_H * TILE * SCALE) / 2;
   scene.dirtBikers = [];
   for (let bi = 0; bi < BIKER_COUNT; bi++) {
     let bx, by;
     do {
       bx = Phaser.Math.Between(500, WORLD_W * TILE * SCALE - 500);
       by = Phaser.Math.Between(500, WORLD_H * TILE * SCALE - 500);
-    } while (isInNoGoZone(bx, by, scene));
+    } while (
+      isInNoGoZone(bx, by, scene) ||
+      Phaser.Math.Distance.Between(bx, by, droneX, droneY) < 2000
+    );
     const bikeVariant = Phaser.Math.Between(0, 9);
     const sprite = scene.add
       .image(bx, by, `dirtbike-${bikeVariant}`)
