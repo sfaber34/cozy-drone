@@ -3,8 +3,10 @@
 // of the hangar, surround the drone, jump + cheer, and emojis rain down.
 // After VICTORY_CELEBRATION_DURATION a modal announces victory.
 import { getBrowserBottomInset } from "./viewportUtils.js";
+import Phaser from "phaser";
 import {
-  SCALE,
+  SCALE, WORLD_W, WORLD_H, TILE,
+  PEOPLE_DEPTH_BASE, PEOPLE_DEPTH_BAND,
   VICTORY_CROWD_COUNT,
   VICTORY_SURROUND_RADIUS,
   VICTORY_WALK_SPEED,
@@ -178,6 +180,15 @@ function createVictoryCutscene(scene) {
           g.walkFrame = 1 - g.walkFrame;
           g.sprite.setTexture(g.walkFrame === 0 ? "guy-cheer1" : "guy-cheer2");
         }
+      }
+
+      // Y-sort victory guys into the same depth band as all other people so
+      // front guys (larger y) render in front of back guys (smaller y).
+      const worldH = WORLD_H * TILE * SCALE;
+      for (const g of guys) {
+        if (!g.sprite.visible) continue;
+        const frac = Phaser.Math.Clamp(g.sprite.y / worldH, 0, 1);
+        g.sprite.setDepth(PEOPLE_DEPTH_BASE + frac * PEOPLE_DEPTH_BAND);
       }
 
       // Once everyone's cheering, start the celebration timer + emoji burst

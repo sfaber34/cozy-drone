@@ -254,7 +254,7 @@ export class MobileControlsScene extends Phaser.Scene {
     // briefing modal would just be dead input. Swallowing all pointer-
     // downs here also tells the user visually (via the dimmed render below)
     // that the game isn't interactive yet.
-    if (this.gameScene.introPlaying) return;
+    if (this.gameScene.introPlaying || this.gameScene.victoryActive) return;
 
     const ts = this.turnSlider;
     const ar = this.altRocker;
@@ -411,7 +411,7 @@ export class MobileControlsScene extends Phaser.Scene {
     // Dim the entire control layer while the opening cutscene is playing
     // so the player has an obvious "not yet" signal — pairs with the
     // onDown() early-return that swallows all taps during intro.
-    const disabled = !!this.gameScene.introPlaying;
+    const disabled = !!(this.gameScene.introPlaying || this.gameScene.victoryActive);
     const dimAlpha = 0.35;
     g.setAlpha(disabled ? dimAlpha : 1);
     const labelAlpha = disabled ? 0.3 : 0.75;

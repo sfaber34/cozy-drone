@@ -50,7 +50,7 @@ import { startVictory } from "../systems/victoryCutscene.js";
 // Airfield is special-cased (runs at intro, fixed position). Everything else
 // goes through the placer in setPieceRegistry so random spawns don't overlap.
 import { createAirfield } from "../systems/airfieldSystem.js";
-import { createMinimap, updateMinimap } from "../systems/minimapSystem.js";
+import { createMinimap, updateMinimap, setMinimapVisible } from "../systems/minimapSystem.js";
 import {
   placeSetPieces,
   reservedRectFromBounds,
@@ -493,6 +493,12 @@ export class GameScene extends Phaser.Scene {
       this.drone.setPosition(ds.x, ds.y);
       this.droneShadow.setVisible(false);
       this.dronePropShadow.setVisible(false);
+      // Hide HUD, tooltips, mission-complete banner, and minimap — the
+      // victory modal owns the screen now.
+      if (this.hudText) this.hudText.setVisible(false);
+      if (this.controlsText) this.controlsText.setVisible(false);
+      if (this.missionCompleteText) this.missionCompleteText.setVisible(false);
+      setMinimapVisible(this, false);
       // Keep world + set pieces animating so the celebration runs
       updateMissiles(this, dt);
       updatePeople(this, dt, delta);
