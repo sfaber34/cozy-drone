@@ -29,56 +29,41 @@ export function createSoccer(scene, rng, opts) {
   let ball = null;
   let active = true;
   let ballHolder = null;
-  let lastHolder = null;
   let passTimer = 0;
-  let tackleCooldown = 0;
   let ballVel = null;
+  // Team-level possession: alternates every SOCCER_TACKLE_COOLDOWN seconds.
+  // Only the possessing team can pick up the ball. When the timer expires,
+  // possession flips and the ball is dropped — guaranteeing back-and-forth
+  // play across the full field.
+  let possessionTeam = "team-a";
+  let possessionTimer = SOCCER_TACKLE_COOLDOWN;
 
-  // Green pitch
-  for (let fy = -fieldH / 2; fy < fieldH / 2; fy += TILE * SCALE) {
-    for (let fx = -fieldW / 2; fx < fieldW / 2; fx += TILE * SCALE) {
-      scene.add
-        .image(cx + fx, cy + fy, "grass")
-        .setOrigin(0, 0)
-        .setScale(SCALE)
-        .setDepth(1);
-    }
-  }
+  // Green pitch — single TileSprite sized exactly to fieldW × fieldH so
+  // the grass edges align precisely with the boundary lines (the old
+  // individual-tile grid overshot because tile count × tileSize > fieldW).
+  const pitch = scene.add.tileSprite(
+    cx - fieldW / 2, cy - fieldH / 2, fieldW, fieldH, "grass",
+  );
+  pitch.setOrigin(0, 0).tileScaleX = SCALE;
+  pitch.tileScaleY = SCALE;
+  pitch.setDepth(1);
 
-  // Field boundary lines — top & bottom
-  for (let fx = -fieldW / 2; fx < fieldW / 2; fx += TILE * SCALE) {
-    scene.add
-      .image(cx + fx, cy - fieldH / 2, "field-line-h")
-      .setOrigin(0, 0)
-      .setScale(SCALE)
-      .setDepth(1.5);
-    scene.add
-      .image(cx + fx, cy + fieldH / 2, "field-line-h")
-      .setOrigin(0, 0)
-      .setScale(SCALE)
-      .setDepth(1.5);
-  }
-  // Left & right
-  for (let fy = -fieldH / 2; fy < fieldH / 2; fy += TILE * SCALE) {
-    scene.add
-      .image(cx - fieldW / 2, cy + fy, "field-line-v")
-      .setOrigin(0, 0)
-      .setScale(SCALE)
-      .setDepth(1.5);
-    scene.add
-      .image(cx + fieldW / 2, cy + fy, "field-line-v")
-      .setOrigin(0, 0)
-      .setScale(SCALE)
-      .setDepth(1.5);
-  }
+  // Field boundary lines — drawn as Graphics rects to exactly match the
+  // grass dimensions (tile-based lines overshoot when fieldW/H aren't
+  // multiples of TILE*SCALE).
+  const lineW = SCALE; // 1 texel thick
+  const lines = scene.add.graphics().setDepth(1.5);
+  lines.fillStyle(0xffffff, 1);
+  // Top
+  lines.fillRect(cx - fieldW / 2, cy - fieldH / 2, fieldW, lineW);
+  // Bottom
+  lines.fillRect(cx - fieldW / 2, cy + fieldH / 2 - lineW, fieldW, lineW);
+  // Left
+  lines.fillRect(cx - fieldW / 2, cy - fieldH / 2, lineW, fieldH);
+  // Right
+  lines.fillRect(cx + fieldW / 2 - lineW, cy - fieldH / 2, lineW, fieldH);
   // Center line
-  for (let fy = -fieldH / 2; fy < fieldH / 2; fy += TILE * SCALE) {
-    scene.add
-      .image(cx, cy + fy, "field-line-v")
-      .setOrigin(0, 0)
-      .setScale(SCALE)
-      .setDepth(1.5);
-  }
+  lines.fillRect(cx - lineW / 2, cy - fieldH / 2, lineW, fieldH);
 
   // Goals
   scene.add
@@ -282,25 +267,38 @@ export function createSoccer(scene, rng, opts) {
         if (p.team === "team-b" && d < bestDistB) { bestDistB = d; chaserB = p; }
       }
 
-      // --- Ball holder & tackling ---
+      // --- Possession timer & ball pickup ---
       passTimer += dt;
-      tackleCooldown -= dt;
+      possessionTimer -= dt;
 
-      // Any player who reaches the ball can pick it up (with cooldown)
-      for (const p of players) {
-        if (!p.sprite.active || p.personEntry.state !== "idle") continue;
-        if (p === lastHolder && tackleCooldown > 0) continue;
-        const d = Phaser.Math.Distance.Between(p.sprite.x, p.sprite.y, ball.x, ball.y);
-        if (d < 15 && ballHolder !== p && tackleCooldown <= 0) {
-          lastHolder = ballHolder;
-          ballHolder = p;
-          passTimer = 0;
-          tackleCooldown = SOCCER_TACKLE_COOLDOWN;
-          break;
+      // Forced turnover: when the team's possession window expires, flip
+      // to the other team and drop the ball. This guarantees play
+      // alternates across the full field every SOCCER_TACKLE_COOLDOWN.
+      if (possessionTimer <= 0) {
+        possessionTeam = possessionTeam === "team-a" ? "team-b" : "team-a";
+        possessionTimer = SOCCER_TACKLE_COOLDOWN;
+        if (ballHolder) {
+          ballHolder = null;
+          ballVel = null;
         }
       }
 
-      // Ball follows holder
+      // Ball pickup: only the possessing team can grab it.
+      if (!ballHolder) {
+        for (const p of players) {
+          if (!p.sprite.active || p.personEntry.state !== "idle") continue;
+          if (p.team !== possessionTeam) continue;
+          const d = Phaser.Math.Distance.Between(p.sprite.x, p.sprite.y, ball.x, ball.y);
+          if (d < 15) {
+            ballHolder = p;
+            passTimer = 0;
+            break;
+          }
+        }
+      }
+
+      // Ball follows holder — they dribble toward the OPPONENT'S goal.
+      // team-a attacks RIGHT (+hw), team-b attacks LEFT (-hw).
       if (ballHolder && ballHolder.sprite.active) {
         const h = ballHolder;
         ball.x = h.sprite.x + 8;
@@ -313,21 +311,22 @@ export function createSoccer(scene, rng, opts) {
             (p) => p.team === h.team && p !== h && p.sprite.active && p.personEntry.state === "idle",
           );
 
-          const goalX = h.team === "team-a" ? fc.x + hw : fc.x - hw;
+          // Attack direction: team-a → right goal, team-b → left goal
+          const attackDir = h.team === "team-a" ? 1 : -1;
+          const goalX = fc.x + attackDir * hw;
           const distToGoal = Math.abs(h.sprite.x - goalX);
           const shootChance = distToGoal < hw * 0.4 ? 0.6 : 0.2;
 
           if (Math.random() < shootChance || teammates.length === 0) {
             ballVel = {
-              x: (goalX + 10 * (h.team === "team-a" ? 1 : -1) - ball.x) * 0.9,
+              x: (goalX + 10 * attackDir - ball.x) * 0.9,
               y: (fc.y + Phaser.Math.Between(-40, 40) - ball.y) * 0.9,
             };
           } else {
             const forwardTeammates = teammates.filter((t) => {
-              const fwd = h.team === "team-a"
+              return attackDir > 0
                 ? t.sprite.x > h.sprite.x
                 : t.sprite.x < h.sprite.x;
-              return fwd;
             });
             const target = forwardTeammates.length > 0
               ? Phaser.Utils.Array.GetRandom(forwardTeammates)
@@ -378,8 +377,9 @@ export function createSoccer(scene, rng, opts) {
         let tx, ty, spd;
 
         if (isHolder) {
-          const goalX = fc.x + teamSide * hw;
-          tx = goalX;
+          // Dribble toward the OPPONENT'S goal (opposite of teamSide)
+          const attackDir = -teamSide;
+          tx = fc.x + attackDir * hw;
           ty = fc.y + Math.sin(scene.time ? scene.time.now * 0.002 + p.sprite.y : 0) * 40;
           spd = 50;
         } else if (isChaser && !ballHolder) {
@@ -397,9 +397,11 @@ export function createSoccer(scene, rng, opts) {
           ty = Phaser.Math.Clamp(ty, fc.y - hh + 10, fc.y + hh - 10);
           spd = 45;
         } else if (ballHolder && ballHolder.team === p.team) {
+          // Teammates spread AHEAD of the ball in the attack direction
+          const attackDir = -teamSide;
           const holderX = ballHolder.sprite.x;
           if (!p.formX || Math.random() < 0.02) {
-            p.formX = holderX + teamSide * Phaser.Math.Between(30, hw - 20);
+            p.formX = holderX + attackDir * Phaser.Math.Between(30, hw - 20);
             p.formY = fc.y + Phaser.Math.Between(-hh + 20, hh - 20);
             p.formX = Phaser.Math.Clamp(p.formX, fc.x - hw + 10, fc.x + hw - 10);
           }
