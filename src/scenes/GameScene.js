@@ -551,7 +551,10 @@ export class GameScene extends Phaser.Scene {
           ds.maxAlt,
           ds.altitude + DRONE_ALT_RATE * dt * altUpFactor,
         );
-        if (isGrounded) this.flightState = "airborne";
+        if (isGrounded) {
+          this.flightState = "airborne";
+          this._touchedRunway = false;
+        }
       }
     }
     if (altDnFactor > 0 && isAirborne) {
@@ -571,21 +574,24 @@ export class GameScene extends Phaser.Scene {
         if (ds.altitude <= 0) {
           ds.altitude = 0;
           this.flightState = "grounded";
+          this._touchedRunway = true;
         }
       } else if (ds.altitude < DRONE_MIN_ALT_OFF_RUNWAY) {
         ds.altitude = DRONE_MIN_ALT_OFF_RUNWAY;
       }
     }
 
-    // --- Victory trigger: enough kills + landed + stopped on runway ---
+    // --- Victory trigger: enough kills + touched down on runway + stopped ---
+    // The drone only needs to have TOUCHED the runway this landing — it can
+    // taxi off and stop anywhere. Requiring a full stop on the runway was
+    // too finicky; players would overshoot and have to reverse back.
     if (
       !this.victoryActive &&
       this.kills >= VICTORY_KILL_THRESHOLD &&
       this.flightState === "grounded" &&
       ds.speed === 0 &&
-      isOnRunway(this, ds.x, ds.y)
+      this._touchedRunway
     ) {
-      // Stop the mission clock the moment the drone comes to rest on the runway
       this.missionEndTime = Date.now();
       startVictory(this);
     }
