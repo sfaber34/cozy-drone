@@ -92,6 +92,7 @@ export const ghostLines = [
   "GG!",
   "This rules!",
   "My back doesn't\nhurt anymore!",
+  "My migraines\nare gone!",
   "Totally worth\nthe wait!",
   "I was so bored\nanyway!",
   "Incredible!",
@@ -103,7 +104,7 @@ export const ghostLines = [
   "Zero regrets!",
   "Better than\ncoffee!",
   "I can fly now!",
-  "See you\nin heaven!",
+  "See you on\nthe other side!",
   "Cloud nine\nliterally!",
   "I'm free!",
   "Delete my\nbrowser history!",
@@ -122,12 +123,6 @@ export const ghostLines = [
   "Ah so relaxing!",
   "I was asking for it.",
   "I deserved that.",
-  "✌️",
-  "👋",
-  "🥹",
-  "🤣",
-  "👍",
-  "🫶",
 ];
 
 export const buildingGhostLines = [

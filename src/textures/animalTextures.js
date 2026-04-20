@@ -210,15 +210,37 @@ export function generateAnimalTextures(scene) {
   mtc.fillRect(4, 3, 1, 2);
   meatCanvas.refresh();
 
-  // --- Feather (4x5) — small curved white plume ---
-  const featherCanvas = scene.textures.createCanvas('feather', 4, 5);
+  // --- Bacon strip (8x3) ---
+  const baconCanvas = scene.textures.createCanvas('bacon', 8, 3);
+  const bac = baconCanvas.context;
+  // Fat stripe
+  bac.fillStyle = '#f0d0c0';
+  bac.fillRect(0, 0, 8, 1);
+  // Meat stripe
+  bac.fillStyle = '#cc3333';
+  bac.fillRect(0, 1, 8, 1);
+  // Dark meat stripe
+  bac.fillStyle = '#992222';
+  bac.fillRect(0, 2, 8, 1);
+  // Crispy edges
+  bac.fillStyle = '#aa4422';
+  bac.fillRect(0, 1, 1, 2);
+  bac.fillRect(7, 1, 1, 2);
+  baconCanvas.refresh();
+
+  // --- Feather (3x8) — elongated plume with quill ---
+  const featherCanvas = scene.textures.createCanvas('feather', 3, 8);
   const fc = featherCanvas.context;
+  // Vane (white, tapers at top and bottom)
   fc.fillStyle = '#ffffff';
-  fc.fillRect(1, 0, 2, 4);
-  fc.fillRect(0, 1, 4, 2);
-  fc.fillStyle = '#dddddd';   // soft shadow
-  fc.fillRect(2, 2, 1, 2);
-  fc.fillStyle = '#8a6a3a';   // quill at the base
-  fc.fillRect(1, 3, 2, 2);
+  fc.fillRect(0, 1, 3, 5);
+  fc.fillRect(1, 0, 1, 1);
+  fc.fillRect(1, 6, 1, 1);
+  // Soft shadow on one side
+  fc.fillStyle = '#dddddd';
+  fc.fillRect(2, 2, 1, 3);
+  // Quill shaft down the center
+  fc.fillStyle = '#8a6a3a';
+  fc.fillRect(1, 5, 1, 3);
   featherCanvas.refresh();
 }

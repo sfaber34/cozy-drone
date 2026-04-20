@@ -404,10 +404,13 @@ export function cannonImpact(scene, x, y) {
         playAnimalDeathSfxAt(scene, a.type, a.sprite.x, a.sprite.y);
         a.sprite.setVisible(false);
         const isChicken = a.type === "chicken";
-        const debrisTex = isChicken ? "feather" : "meat";
+        const isPig = a.type === "pig";
+        const debrisTex = isChicken ? "feather" : isPig ? "bacon" : "meat";
         const debrisCount = isChicken
           ? Phaser.Math.Between(6, 10)
-          : Phaser.Math.Between(3, 6);
+          : isPig
+            ? Phaser.Math.Between(5, 8)
+            : Phaser.Math.Between(3, 6);
         for (let m = 0; m < debrisCount; m++) {
           const bit = scene.add.image(a.sprite.x, a.sprite.y, debrisTex)
             .setScale(SCALE * 0.7).setDepth(12);
