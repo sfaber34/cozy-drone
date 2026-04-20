@@ -1,3 +1,4 @@
+import Phaser from "phaser";
 import { SCALE } from "../constants.js";
 import { introLines } from "../dialog.js";
 
@@ -79,6 +80,9 @@ export function playIntroCutscene(scene) {
         .setOrigin(0.5, 1.4)
         .setDepth(13)
         .setScale(SCALE * 0.6);
+      // Override the scene-wide LINEAR text filter — intro text should
+      // stay blocky/nearest-neighbor to match the pixel-art cutscene.
+      bubble.texture.setFilter(Phaser.Textures.FilterMode.NEAREST);
       scene.hudCam.ignore(bubble);
 
       // After a pause, guy walks away
