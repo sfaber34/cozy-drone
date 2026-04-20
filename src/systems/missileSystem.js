@@ -337,58 +337,57 @@ export function missileImpact(scene, x, y) {
       scene.hudCam.ignore(carExp);
       carExp.play("explode");
       carExp.once("animationcomplete", () => carExp.destroy());
-      // Spawn ghosts for each passenger
+      // Spawn all ghosts simultaneously (same as any other multi-kill).
+      // playDeathSfxAt handles its own concurrency cap so only
+      // DEATH_SFX_MAX_CONCURRENT sounds play.
       for (let gi = 0; gi < car.passengers; gi++) {
         const spawnAngle =
           (gi / car.passengers) * Math.PI * 2 + Math.random() * 0.5;
-        scene.time.delayedCall(gi * 250, () => {
-          const ghost = scene.add
-            .image(
-              car.sprite.x + Math.cos(spawnAngle) * 15,
-              car.sprite.y + Math.sin(spawnAngle) * 15,
-              "ghost",
-            )
-            .setScale(SCALE)
-            .setDepth(13)
-            .setAlpha(0.8);
-          scene.hudCam.ignore(ghost);
-          let bubble = null;
-          if (tryRegisterGhostBubble(scene, ghost.x, ghost.y)) {
-            const line = Phaser.Utils.Array.GetRandom(ghostLines);
-            bubble = scene.add
-              .text(ghost.x + 20, ghost.y - 20, line, {
-                fontFamily: "monospace",
-                fontSize: "8px",
-                color: "#aaccff",
-                backgroundColor: "#000000aa",
-                padding: { x: 4, y: 3 },
-              })
-              .setScale(SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1))
-              .setDepth(14);
-            scene.hudCam.ignore(bubble);
-          }
-          const driftX = Math.cos(spawnAngle) * (15 + Math.random() * 25);
-          const driftY = -(20 + Math.random() * 20);
-          const wobble = Math.random() * Math.PI * 2;
-          // Animate ghost manually via tween
-          scene.tweens.add({
-            targets: ghost,
-            alpha: 0,
-            y: ghost.y - 150,
-            duration: 5000,
-            onUpdate: () => {
-              ghost.x += driftX * 0.016;
-              ghost.x += Math.sin(ghost.y * 0.04 + wobble) * 0.3;
-              if (bubble) {
-                bubble.setPosition(ghost.x + 20, ghost.y - 20);
-                bubble.setAlpha(ghost.alpha);
-              }
-            },
-            onComplete: () => {
-              ghost.destroy();
-              if (bubble) bubble.destroy();
-            },
-          });
+        const ghost = scene.add
+          .image(
+            car.sprite.x + Math.cos(spawnAngle) * 15,
+            car.sprite.y + Math.sin(spawnAngle) * 15,
+            "ghost",
+          )
+          .setScale(SCALE)
+          .setDepth(13)
+          .setAlpha(0.8);
+        scene.hudCam.ignore(ghost);
+        let bubble = null;
+        if (tryRegisterGhostBubble(scene, ghost.x, ghost.y)) {
+          const line = Phaser.Utils.Array.GetRandom(ghostLines);
+          bubble = scene.add
+            .text(ghost.x + 20, ghost.y - 20, line, {
+              fontFamily: "monospace",
+              fontSize: "8px",
+              color: "#aaccff",
+              backgroundColor: "#000000aa",
+              padding: { x: 4, y: 3 },
+            })
+            .setScale(SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1))
+            .setDepth(14);
+          scene.hudCam.ignore(bubble);
+        }
+        const driftX = Math.cos(spawnAngle) * (15 + Math.random() * 25);
+        const driftY = -(20 + Math.random() * 20);
+        const wobble = Math.random() * Math.PI * 2;
+        scene.tweens.add({
+          targets: ghost,
+          alpha: 0,
+          y: ghost.y - 150,
+          duration: 5000,
+          onUpdate: () => {
+            ghost.x += driftX * 0.016;
+            ghost.x += Math.sin(ghost.y * 0.04 + wobble) * 0.3;
+            if (bubble) {
+              bubble.setPosition(ghost.x + 20, ghost.y - 20);
+              bubble.setAlpha(ghost.alpha);
+            }
+          },
+          onComplete: () => {
+            ghost.destroy();
+            if (bubble) bubble.destroy();
+          },
         });
       }
     }

@@ -57,47 +57,49 @@ export function findNearestBuilding(scene, px, py) {
 }
 
 export function killPeopleInBuilding(scene, building) {
-  let ghostIdx = 0;
+  // Collect all people hiding in this building, then kill them all at once
+  // (same as any other multi-kill). No staggered reveals — ghosts spawn
+  // simultaneously and only DEATH_SFX_MAX_CONCURRENT sounds play via the
+  // normal playDeathSfxAt throttle.
+  const victims = [];
   for (const p of scene.people) {
     if (p.state !== "hiding") continue;
     if (p.hideTarget !== building) continue;
-    const idx = ghostIdx++;
-    // Stagger each ghost's appearance
-    scene.time.delayedCall(idx * 300, () => {
-      p.state = "ghost";
-      scene.kills++;
-      playDeathSfxAt(scene, building.x, building.y);
-      // Spread starting positions around the building
-      const spawnAngle =
-        (idx / Math.max(ghostIdx, 1)) * Math.PI * 2 + Math.random() * 0.5;
-      p.sprite.setPosition(
-        building.x + Math.cos(spawnAngle) * 25,
-        building.y + Math.sin(spawnAngle) * 25,
-      );
-      p.sprite.setVisible(true);
-      p.sprite.setTexture("ghost");
-      p.sprite.setAlpha(0.8);
-      p.sprite.setDepth(13);
-      // Each ghost drifts in a unique direction
-      p.ghostDriftX = Math.cos(spawnAngle) * (15 + Math.random() * 25);
-      p.ghostDriftY = -(20 + Math.random() * 20); // always float up, but at different speeds
-      p.ghostWobbleOffset = Math.random() * Math.PI * 2;
+    victims.push(p);
+  }
+  for (let i = 0; i < victims.length; i++) {
+    const p = victims[i];
+    p.state = "ghost";
+    scene.kills++;
+    playDeathSfxAt(scene, building.x, building.y);
+    const spawnAngle =
+      (i / Math.max(victims.length, 1)) * Math.PI * 2 + Math.random() * 0.5;
+    p.sprite.setPosition(
+      building.x + Math.cos(spawnAngle) * 25,
+      building.y + Math.sin(spawnAngle) * 25,
+    );
+    p.sprite.setVisible(true);
+    p.sprite.setTexture("ghost");
+    p.sprite.setAlpha(0.8);
+    p.sprite.setDepth(13);
+    p.ghostDriftX = Math.cos(spawnAngle) * (15 + Math.random() * 25);
+    p.ghostDriftY = -(20 + Math.random() * 20);
+    p.ghostWobbleOffset = Math.random() * Math.PI * 2;
 
-      if (tryRegisterGhostBubble(scene, p.sprite.x, p.sprite.y)) {
-        const line = Phaser.Utils.Array.GetRandom(buildingGhostLines);
-        p.bubble = scene.add
-          .text(p.sprite.x + 20, p.sprite.y - 20, line, {
-            fontFamily: "monospace",
-            fontSize: "8px",
-            color: "#aaccff",
-            backgroundColor: "#000000aa",
-            padding: { x: 4, y: 3 },
-          })
-          .setScale(SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1))
-          .setDepth(14);
-        scene.hudCam.ignore(p.bubble);
-      }
-    });
+    if (tryRegisterGhostBubble(scene, p.sprite.x, p.sprite.y)) {
+      const line = Phaser.Utils.Array.GetRandom(buildingGhostLines);
+      p.bubble = scene.add
+        .text(p.sprite.x + 20, p.sprite.y - 20, line, {
+          fontFamily: "monospace",
+          fontSize: "8px",
+          color: "#aaccff",
+          backgroundColor: "#000000aa",
+          padding: { x: 4, y: 3 },
+        })
+        .setScale(SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1))
+        .setDepth(14);
+      scene.hudCam.ignore(p.bubble);
+    }
   }
 }
 

@@ -291,13 +291,26 @@ export function generateBuildingTextures(scene) {
   // --- Parking lot tile (16x16) ---
   const parkingCanvas = scene.textures.createCanvas('parking', 16, 16);
   const plc = parkingCanvas.context;
+  // Dark asphalt base
   plc.fillStyle = '#4a4a4a';
   plc.fillRect(0, 0, 16, 16);
-  plc.fillStyle = '#fff';
-  plc.fillRect(0, 0, 1, 8);
-  plc.fillRect(5, 0, 1, 8);
-  plc.fillRect(10, 0, 1, 8);
-  plc.fillRect(15, 0, 1, 8);
+  // Lighter worn patches (tire wear, faded areas)
+  plc.fillStyle = '#555555';
+  plc.fillRect(2, 3, 4, 3);
+  plc.fillRect(10, 9, 3, 4);
+  plc.fillRect(6, 12, 5, 2);
+  // Darker potholes / oil stains
+  plc.fillStyle = '#333333';
+  plc.fillRect(7, 2, 2, 2);
+  plc.fillRect(1, 10, 2, 2);
+  plc.fillRect(12, 5, 2, 1);
+  plc.fillRect(4, 7, 1, 1);
+  // Gravel specks
+  plc.fillStyle = '#5a5a5a';
+  plc.fillRect(0, 0, 1, 1);
+  plc.fillRect(9, 6, 1, 1);
+  plc.fillRect(14, 13, 1, 1);
+  plc.fillRect(3, 14, 1, 1);
   parkingCanvas.refresh();
 
   // --- Small hut (top-down, 12x12) ---
