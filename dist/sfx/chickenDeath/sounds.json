@@ -2,5 +2,16 @@
   { "file": "chickenDeath5.mp3",   "volume": 2.0 },
   { "file": "chickenDeath6.mp3",   "volume": 1.1 },
   { "file": "chickenDeath7.mp3",   "volume": 1.1 },
-  { "file": "chickenDeath8.mp3",   "volume": 1.1 }
+  { "file": "chickenDeath8.mp3",   "volume": 1.1 },
+  { "file": "chickenDeath9_dan.mp3",   "volume": 1.4 },
+  { "file": "chickenDeath10_dan.mp3",   "volume": 1.4 },
+  { "file": "chickenDeath11_dan.mp3",   "volume": 1.4 },
+  { "file": "chickenDeath12_dan.mp3",   "volume": 0.8 },
+  { "file": "chickenDeath13_dan.mp3",   "volume": 1.4 },
+  { "file": "chickenDeath14_dan.mp3",   "volume": 1.4 },
+  { "file": "chickenDeath15_dan.mp3",   "volume": 1.4 },
+  { "file": "chickenDeath16_dan.mp3",   "volume": 1.4 },
+  { "file": "chickenDeath17_dan.mp3",   "volume": 1.6 },
+  { "file": "chickenDeath18_dan.mp3",   "volume": 1.4 }
+  
 ]

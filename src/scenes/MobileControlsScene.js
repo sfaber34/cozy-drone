@@ -184,25 +184,29 @@ export class MobileControlsScene extends Phaser.Scene {
       },
     ];
 
-    // Weapon selector rocker — horizontal pill at bottom center
-    const wrW = br * 3.0; // 25% larger than the old br * 2.4
-    const wrH = br * 1.0; // 25% larger than the old br * 0.8
-    const wrCX = w / 2;
-    const wrCY = safeH - m - wrH / 2;
+    // Weapon selector rocker — horizontal pill.
+    //   Portrait:  bottom-center of screen.
+    //   Landscape: just left of the speed rocker, bottom-aligned with it.
+    const wrW = br * 3.0;
+    const wrH = br * 1.0;
+    let wrCX, wrCY;
+    if (isLandscape) {
+      wrCX = speedCX - srW / 2 - m - wrW / 2;
+      wrCY = speedCY + srH / 2 - wrH / 2; // bottom-aligned with speed rocker
+    } else {
+      wrCX = w / 2;
+      wrCY = safeH - m - wrH / 2;
+    }
     this.weaponRocker = { cx: wrCX, cy: wrCY, w: wrW, h: wrH };
 
-    // Map-toggle button — circular. Position depends on orientation so it
-    // doesn't crowd the weapon rocker in landscape (where horizontal space
-    // is plentiful) but still has a sensible spot in portrait.
-    //   Portrait:  centered above the weapon rocker (vertical layout).
-    //   Landscape: to the right of the alt rocker (uses the empty band
-    //              between the bottom-left control column and the turn
-    //              slider/speed rocker on the right).
+    // Map-toggle button — circular.
+    //   Portrait:  centered above the weapon rocker.
+    //   Landscape: to the right of the alt rocker, bottom-aligned with it.
     const mbR = br * 0.6;
     let mbCX, mbCY;
     if (isLandscape) {
       mbCX = altCX + arW / 2 + m + mbR;
-      mbCY = altCY;
+      mbCY = altCY + arH / 2 - mbR; // bottom-aligned with alt rocker
     } else {
       mbCX = wrCX;
       mbCY = wrCY - wrH / 2 - m - mbR;

@@ -1,6 +1,12 @@
 [
-  { "file": "pigDeath1.mp3",   "volume": 1.0 },
-  { "file": "pigDeath2.mp3",   "volume": 1.0 },
-  { "file": "pigDeath3.mp3",   "volume": 1.0 },
-  { "file": "pigDeath4.mp3",   "volume": 1.0 }
+  { "file": "pigDeath2.mp3",   "volume": 1.2 },
+  { "file": "pigDeath3.mp3",   "volume": 1.2 },
+  { "file": "pigDeath5_dan.mp3",   "volume": 0.65 },
+  { "file": "pigDeath6_dan.mp3",   "volume": 0.65 },
+  { "file": "pigDeath7_dan.mp3",   "volume": 0.65 },
+  { "file": "pigDeath8_dan.mp3",   "volume": 0.65 },
+  { "file": "pigDeath9_dan.mp3",   "volume": 0.65 },
+  { "file": "pigDeath10_dan.mp3",   "volume": 1.6 },
+  { "file": "pigDeath11_dan.mp3",   "volume": 1.6 },
+  { "file": "pigDeath12_dan.mp3",   "volume": 1.6 }
 ]
