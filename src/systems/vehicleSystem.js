@@ -102,8 +102,15 @@ export function getAdjacentRoadNodes(scene, node) {
 
 export function updateTownCars(scene, dt) {
   for (const car of scene.townCars) {
-    // Dead cars emit smoke from the wreck
+    // Dead cars: animate fire + emit smoke from the wreck
     if (!car.alive) {
+      // Toggle fire frame
+      car.fireTimer = (car.fireTimer || 0) + dt * 1000;
+      if (car.fireTimer >= 200) {
+        car.fireTimer = 0;
+        car.fireFrame = car.fireFrame === 1 ? 0 : 1;
+        car.sprite.setTexture(car.fireFrame === 0 ? "car-dead" : "car-dead2");
+      }
       car.smokeTimer = (car.smokeTimer || 0) - dt * 1000;
       if (car.smokeTimer <= 0) {
         car.smokeTimer = CAR_WRECK_SMOKE_INTERVAL * (0.7 + Math.random() * 0.6);

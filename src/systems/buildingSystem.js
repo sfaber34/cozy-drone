@@ -114,29 +114,54 @@ export function isInsideBuilding(scene, px, py) {
 }
 
 export function steerAroundBuildings(scene, px, py, angle, dt, excludeBuilding) {
-  // First: if the person is ALREADY inside a building's radius, push them
-  // directly away. Without this, someone who spawns or drifts inside gets
-  // stuck — the lookahead check only prevents future entry, not escape.
+  // Aggregate repulsion from ALL nearby buildings into a single combined
+  // vector. The old approach picked the FIRST building and steered directly
+  // away from it — between two buildings this caused ping-pong oscillation
+  // because each frame pushed toward the opposite building. Summing
+  // repulsion vectors from both sides cancels the lateral component and
+  // leaves a perpendicular escape direction (sideways slip).
+  //
   // The optional `excludeBuilding` is the hide target the person is
   // heading toward — they're ALLOWED to enter that one.
+  let repelX = 0;
+  let repelY = 0;
+
+  // Pass 1: repulsion from buildings the person is INSIDE (strong push out)
   for (const b of scene.buildings) {
     if (b.destroyed || b === excludeBuilding) continue;
-    const d = Phaser.Math.Distance.Between(px, py, b.x, b.y);
+    const d = Phaser.Math.Distance.Between(px, py, b.x, b.y) || 0.001;
     if (d < b.radius) {
-      return Phaser.Math.Angle.Between(b.x, b.y, px, py);
+      const strength = (b.radius - d) / b.radius + 1; // 1..2
+      repelX += ((px - b.x) / d) * strength;
+      repelY += ((py - b.y) / d) * strength;
     }
   }
-  // Second: look ahead and steer away if the next position would enter a
-  // building's avoidance zone (radius + buffer).
+
+  // Pass 2: repulsion from buildings the LOOKAHEAD would enter
   const checkDist = 60;
   const nx = px + Math.cos(angle) * checkDist;
   const ny = py + Math.sin(angle) * checkDist;
   for (const b of scene.buildings) {
     if (b.destroyed || b === excludeBuilding) continue;
-    const d = Phaser.Math.Distance.Between(nx, ny, b.x, b.y);
-    if (d < b.radius + 25) {
-      return Phaser.Math.Angle.Between(b.x, b.y, px, py);
+    const d = Phaser.Math.Distance.Between(nx, ny, b.x, b.y) || 0.001;
+    const zone = b.radius + 25;
+    if (d < zone) {
+      const strength = (zone - d) / zone; // 0..1
+      repelX += ((px - b.x) / d) * strength;
+      repelY += ((py - b.y) / d) * strength;
     }
   }
-  return angle;
+
+  if (repelX === 0 && repelY === 0) return angle;
+
+  // Blend: rotate the original angle toward the repulsion direction rather
+  // than snapping to it, which prevents jittery frame-to-frame flips.
+  const repelAngle = Math.atan2(repelY, repelX);
+  let diff = repelAngle - angle;
+  // Normalize to [-π, π]
+  while (diff > Math.PI) diff -= Math.PI * 2;
+  while (diff < -Math.PI) diff += Math.PI * 2;
+  // Blend up to 80% toward repulsion; mild enough to avoid hard snapping
+  // but strong enough to actually escape.
+  return angle + diff * 0.8;
 }

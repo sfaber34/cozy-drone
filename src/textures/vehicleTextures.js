@@ -209,4 +209,21 @@ export function generateVehicleTextures(scene) {
   cdc.fillRect(3, 12, 6, 1);
   cdc.fillRect(1, 17, 10, 1);
   carDeadCanvas.refresh();
+
+  // --- Car destroyed frame 2 (fire pixels shifted) ---
+  const carDead2Canvas = scene.textures.createCanvas('car-dead2', 12, 18);
+  const cd2 = carDead2Canvas.context;
+  // Copy base wreck
+  cd2.drawImage(carDeadCanvas.canvas, 0, 0);
+  // Erase frame-1 fire
+  cd2.fillStyle = '#222';
+  cd2.fillRect(3, 6, 6, 5);
+  // Redraw fire shifted
+  cd2.fillStyle = '#f00';
+  cd2.fillRect(4, 6, 3, 3);
+  cd2.fillStyle = '#f80';
+  cd2.fillRect(5, 8, 3, 3);
+  cd2.fillStyle = '#ff0';
+  cd2.fillRect(4, 8, 2, 2);
+  carDead2Canvas.refresh();
 }

@@ -353,11 +353,11 @@ export const VICTORY_EXIT_JITTER_MS = 120; // extra random ms per guy
 export const VICTORY_DRONE_AVOID_RADIUS = 120; // guys steer around this radius instead of cutting through the drone
 
 // --- Missile ---
-export const MISSILE_SPEED = 280;
+export const MISSILE_SPEED = 220;
 export const MISSILE_TURN_RATE = 3.0;
 export const MISSILE_BOOST_DIST = 90; // px of straight flight before turning (speed-independent)
-export const MISSILE_MAX_SPEED = 400;
-export const MISSILE_ACCEL = 240;
+export const MISSILE_MAX_SPEED = 500;
+export const MISSILE_ACCEL = 180;
 // MISSILE_DESCENT_RATE removed — descent is now computed dynamically each
 // frame so the missile always reaches ground level at the target, regardless
 // of launch altitude or distance. See missileSystem.js updateMissiles().
@@ -462,7 +462,7 @@ export const BIKER_TURN_RATE = 2.0;
 export const SOCCER_FIELD_W = 300;
 export const SOCCER_FIELD_H = 200;
 export const SOCCER_PLAYERS_PER_TEAM = 5;
-export const SOCCER_TACKLE_COOLDOWN = 2.0; // seconds before ball can be stolen after a possession change
+export const SOCCER_TACKLE_COOLDOWN = 5.0; // seconds before ball can be stolen after a possession change
 export const SOCCER_GOAL_SPECTATORS_PER_SIDE = 9; // spectators packed behind each goal (was 4)
 export const SOCCER_SPECTATOR_JUMP_INTERVAL_MIN = 2200; // ms between jumps per spectator
 export const SOCCER_SPECTATOR_JUMP_INTERVAL_RANGE = 4000; // random ms added on top

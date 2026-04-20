@@ -12,7 +12,7 @@ import {
   MOBILE_DIALOG_SCALE,
 } from "../constants.js";
 import { greetings, ghostLines } from "../dialog.js";
-import { findNearestBuilding, steerAroundBuildings } from "./buildingSystem.js";
+import { findNearestBuilding, steerAroundBuildings, isInsideBuilding } from "./buildingSystem.js";
 import { playDeathSfxAt } from "./audioSystem.js";
 import { tryRegisterGhostBubble } from "./ghostBubbleUtils.js";
 
@@ -68,7 +68,8 @@ export function createPeople(scene, rng) {
       if (tries > 200) break;
     } while (
       Phaser.Math.Distance.Between(px, py, droneStartX, droneStartY) < PEOPLE_SPAWN_AVOID_DIST ||
-      insideAnySetPiece(px, py)
+      insideAnySetPiece(px, py) ||
+      isInsideBuilding(scene, px, py)
     );
     const skinId = rng.between(0, 199);
     const sprite = scene.add
@@ -101,10 +102,14 @@ export function createPeople(scene, rng) {
   const townEndX = scene.townEndX;
   const townEndY = scene.townEndY;
   for (let i = 0; i < PEOPLE_TOWN_SPAWN_COUNT; i++) {
-    const px =
-      townStartX + 50 + Math.random() * (townEndX - townStartX - 100);
-    const py =
-      townStartY + 50 + Math.random() * (townEndY - townStartY - 100);
+    let px, py;
+    let townTries = 0;
+    do {
+      px = townStartX + 50 + Math.random() * (townEndX - townStartX - 100);
+      py = townStartY + 50 + Math.random() * (townEndY - townStartY - 100);
+      townTries++;
+      if (townTries > 100) break;
+    } while (isInsideBuilding(scene, px, py));
     const skinId = rng.between(0, 199);
     const sprite = scene.add
       .image(px, py, `person-stand-${skinId}`)
@@ -326,18 +331,43 @@ export function updatePeople(scene, dt, delta) {
           }
         }
         if (p.wanderAngle !== null && p.wanderAngle !== undefined) {
-          const steered = steerAroundBuildings(
-            scene,
-            p.sprite.x,
-            p.sprite.y,
-            p.wanderAngle,
-            dt,
-          );
-          // Commit to the steered direction so the person walks away from
-          // the building instead of re-entering it next frame
-          if (steered !== p.wanderAngle) p.wanderAngle = steered;
-          p.sprite.x += Math.cos(steered) * wanderSpeed * dt;
-          p.sprite.y += Math.sin(steered) * wanderSpeed * dt;
+          // Steering hysteresis: once steerAroundBuildings redirects a
+          // person, COMMIT to that direction for 0.6s before re-querying.
+          // Without this, a person between two buildings gets a different
+          // "away" angle every frame and visibly oscillates. The lock
+          // gives them time to actually walk through the gap. During the
+          // lock, movement is still blocked if the next step would land
+          // inside a building (prevents walking through walls).
+          if (p._steerLock === undefined) p._steerLock = 0;
+          let steered;
+          if (p._steerLock > 0) {
+            p._steerLock -= dt;
+            steered = p.wanderAngle;
+          } else {
+            steered = steerAroundBuildings(
+              scene,
+              p.sprite.x,
+              p.sprite.y,
+              p.wanderAngle,
+              dt,
+            );
+            if (steered !== p.wanderAngle) {
+              p.wanderAngle = steered;
+              p._steerLock = 0.6;
+            }
+          }
+          // Move — but if the next position is inside a building, cancel
+          // the lock and pick a perpendicular escape direction immediately
+          // so the person doesn't walk in place against a wall.
+          const nextX = p.sprite.x + Math.cos(steered) * wanderSpeed * dt;
+          const nextY = p.sprite.y + Math.sin(steered) * wanderSpeed * dt;
+          if (!isInsideBuilding(scene, nextX, nextY)) {
+            p.sprite.x = nextX;
+            p.sprite.y = nextY;
+          } else if (p._steerLock > 0) {
+            p._steerLock = 0;
+            p.wanderAngle = steered + (Math.random() < 0.5 ? 1 : -1) * (Math.PI * 0.5);
+          }
           // Dead zone: only flip when movement has a clear horizontal component,
           // preventing flicker when walking nearly north/south
           const cx = Math.cos(steered);
