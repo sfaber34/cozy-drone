@@ -352,23 +352,26 @@ export function generateBuildingTextures(scene) {
   bnc.fillRect(0, 21, 24, 1);
   barnCanvas.refresh();
 
-  // --- Silo (top-down, 10x10 circle) ---
-  const siloCanvas = scene.textures.createCanvas('silo', 10, 10);
+  // --- Silo (top-down, 20x20 circle) ---
+  const siloCanvas = scene.textures.createCanvas('silo', 20, 20);
   const slc = siloCanvas.context;
+  // Outer ring
   slc.fillStyle = '#aaa';
-  for (let y = 0; y < 10; y++) {
-    for (let x = 0; x < 10; x++) {
-      if ((x - 4.5) * (x - 4.5) + (y - 4.5) * (y - 4.5) <= 20) {
+  for (let y = 0; y < 20; y++) {
+    for (let x = 0; x < 20; x++) {
+      if ((x - 9.5) * (x - 9.5) + (y - 9.5) * (y - 9.5) <= 81) {
         slc.fillRect(x, y, 1, 1);
       }
     }
   }
+  // Highlight
   slc.fillStyle = '#ccc';
-  slc.fillRect(3, 2, 2, 2);
+  slc.fillRect(6, 4, 4, 4);
+  // Inner dome
   slc.fillStyle = '#888';
-  for (let y = 0; y < 10; y++) {
-    for (let x = 0; x < 10; x++) {
-      if ((x - 4.5) * (x - 4.5) + (y - 4.5) * (y - 4.5) <= 8) {
+  for (let y = 0; y < 20; y++) {
+    for (let x = 0; x < 20; x++) {
+      if ((x - 9.5) * (x - 9.5) + (y - 9.5) * (y - 9.5) <= 36) {
         slc.fillRect(x, y, 1, 1);
       }
     }

@@ -483,7 +483,7 @@ export const WEDDING_HEART_INTERVAL = 800;
 
 // --- Effects ---
 export const SCREEN_SHAKE_DURATION = 200;
-export const SCREEN_SHAKE_INTENSITY = 0.005;
+export const SCREEN_SHAKE_INTENSITY = 0.002;
 export const CRASH_SHAKE_DURATION = 500;
 export const CRASH_SHAKE_INTENSITY = 0.015;
 

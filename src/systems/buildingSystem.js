@@ -113,18 +113,29 @@ export function isInsideBuilding(scene, px, py) {
   return false;
 }
 
-export function steerAroundBuildings(scene, px, py, angle, dt) {
-  // Check if next position would be inside a building
-  const checkDist = 40;
+export function steerAroundBuildings(scene, px, py, angle, dt, excludeBuilding) {
+  // First: if the person is ALREADY inside a building's radius, push them
+  // directly away. Without this, someone who spawns or drifts inside gets
+  // stuck — the lookahead check only prevents future entry, not escape.
+  // The optional `excludeBuilding` is the hide target the person is
+  // heading toward — they're ALLOWED to enter that one.
+  for (const b of scene.buildings) {
+    if (b.destroyed || b === excludeBuilding) continue;
+    const d = Phaser.Math.Distance.Between(px, py, b.x, b.y);
+    if (d < b.radius) {
+      return Phaser.Math.Angle.Between(b.x, b.y, px, py);
+    }
+  }
+  // Second: look ahead and steer away if the next position would enter a
+  // building's avoidance zone (radius + buffer).
+  const checkDist = 60;
   const nx = px + Math.cos(angle) * checkDist;
   const ny = py + Math.sin(angle) * checkDist;
   for (const b of scene.buildings) {
-    if (b.destroyed) continue;
+    if (b.destroyed || b === excludeBuilding) continue;
     const d = Phaser.Math.Distance.Between(nx, ny, b.x, b.y);
-    if (d < b.radius + 20) {
-      // Steer perpendicular to the building
-      const awayAngle = Phaser.Math.Angle.Between(b.x, b.y, px, py);
-      return awayAngle;
+    if (d < b.radius + 25) {
+      return Phaser.Math.Angle.Between(b.x, b.y, px, py);
     }
   }
   return angle;

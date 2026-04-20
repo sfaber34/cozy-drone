@@ -441,6 +441,13 @@ export function updatePeople(scene, dt, delta) {
         }
       }
 
+      // Steer around buildings while panicking — without this, people
+      // at panic speed run straight through silos and other structures.
+      // Exclude the person's hide target so they can actually enter it.
+      const steeredPanic = steerAroundBuildings(
+        scene, p.sprite.x, p.sprite.y, p.runAngle, dt, p.hideTarget,
+      );
+      if (steeredPanic !== p.runAngle) p.runAngle = steeredPanic;
       p.sprite.x += Math.cos(p.runAngle) * panicSpeed * dt;
       p.sprite.y += Math.sin(p.runAngle) * panicSpeed * dt;
       p.sprite.setFlipX(Math.cos(p.runAngle) < 0);

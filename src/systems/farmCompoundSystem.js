@@ -53,12 +53,9 @@ export function createFarmCompound(scene, rng, opts) {
 
   const sprites = []; // owned scenery/props so we can tear down in destroy()
 
-  // --- Buildings (unchanged) ---
+  // --- Buildings ---
   scene._addBuilding(farmX, farmY, "house", "small", 0xddccaa);
   scene._addBuilding(farmX + 250, farmY - 20, "barn", "medium");
-  scene._addBuilding(farmX + 380, farmY - 60, "silo", "small");
-  scene._addBuilding(farmX + 420, farmY - 30, "silo", "small");
-  scene._addBuilding(farmX + 400, farmY + 20, "silo", "small");
   scene._addBuilding(farmX - 150, farmY + 100, "hut", "small");
   scene._addBuilding(farmX + 80, farmY + 140, "hut", "small");
   scene._addBuilding(farmX - 80, farmY - 120, "hut", "small");
@@ -124,6 +121,12 @@ export function createFarmCompound(scene, rng, opts) {
   // Original top/bottom Y offsets were ±180/+200; scaled by hf = 1.6.
   const topY = farmY - Math.round(180 * hf);    // ~farmY - 288
   const bottomY = farmY + Math.round(200 * hf); // ~farmY + 320
+
+  // Silos sit ABOVE the top fence in a horizontal row.
+  const siloY = topY - 70;
+  scene._addBuilding(farmX + 50,  siloY, "silo", "medium");
+  scene._addBuilding(farmX + 170, siloY, "silo", "medium");
+  scene._addBuilding(farmX + 290, siloY, "silo", "medium");
   // Horizontal fences (unchanged X range — same width)
   for (let f = -6; f <= 8; f++) {
     if (f === 1) continue; // top gate
@@ -177,19 +180,17 @@ export function createFarmCompound(scene, rng, opts) {
     sprites,
   );
 
-  // Footprint covers the full compound including the FOUR livestock corrals
-  // that sit OUTSIDE the fence at farmX-400 (pig/chicken) and farmX+550
-  // (camel/goat). The earlier bounds only covered the fence — random
-  // placement consequently dropped the outer pens into water/buildings.
+  // Footprint covers the full compound: livestock corrals at farmX-400
+  // (pig/chicken) and farmX+550 (camel/goat), plus the three silos above
+  // the top fence at siloY (farmY - 358, medium radius 50 → farmY - 408).
   //
   //  X extent: [farmX - 448, farmX + 598]  → center farmX + 75,  hw 523
-  //  Y extent: [farmY - 288, farmY + 320]  → center farmY + 16,  hh 304
-  //  (corral half-size = 32*SCALE/2 = 48; farmY corral row spans ±156)
+  //  Y extent: [farmY - 408, farmY + 320]  → center farmY - 44,  hh 364
   const halfW = 523;
-  const halfH = 304;
+  const halfH = 364;
   return {
     type: "farmCompound",
-    bounds: { cx: farmX + 75, cy: farmY + 16, hw: halfW, hh: halfH },
+    bounds: { cx: farmX + 75, cy: farmY - 44, hw: halfW, hh: halfH },
     update(dt) {
       updateLaundry(scene, laundry, dt);
       updateMice(scene, mice, dt);
