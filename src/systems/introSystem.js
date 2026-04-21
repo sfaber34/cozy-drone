@@ -45,9 +45,9 @@ export function playIntroCutscene(scene) {
       const heartCount = 5;
       for (let i = 0; i < heartCount; i++) {
         scene.time.delayedCall(i * 300, () => {
-          // Spawn slightly left of the guy's face (toward the drone)
+          // Spawn at the guy's face (top of sprite, toward the drone)
           const spawnX = guyTargetX - 12;
-          const spawnY = guyTargetY - 6;
+          const spawnY = guyTargetY - 15;
           const heart = scene.add
             .image(spawnX, spawnY, "heart")
             .setScale(SCALE * 0.3)

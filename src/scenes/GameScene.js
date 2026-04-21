@@ -797,8 +797,8 @@ export class GameScene extends Phaser.Scene {
     // --- HUD ---
     if (!this.hudText.visible) this.hudText.setVisible(true);
     const spdDisplay = Math.round(speedKnots);
-    const lastSfx = this.lastDeathSfxName ?? "--";
-    const lastAnimalSfx = this.lastAnimalDeathSfxName ?? "--";
+    // const lastSfx = this.lastDeathSfxName ?? "--";
+    // const lastAnimalSfx = this.lastAnimalDeathSfxName ?? "--";
     // Mobile hides the weapon readout — the on-screen weapon toggle already
     // shows which is selected, so repeating it in the HUD is redundant.
     const weaponNames = { 1: "MSL", 2: "GUN", 3: "CBU" };
@@ -807,9 +807,9 @@ export class GameScene extends Phaser.Scene {
       : `  [${weaponNames[this.selectedWeapon]}]`;
     this.hudText.setText(
       `ALT: ${Math.round(ds.altitude)} ft  SPD: ${spdDisplay} kts${weaponTag}\n` +
-        `FREEDOMS: ${this.kills}/${this.totalPeople}\n` +
-        `p: ${lastSfx}\n` +
-        `a: ${lastAnimalSfx}`,
+        `FREEDOMS: ${this.kills}/${this.totalPeople}`,
+      // + `\np: ${lastSfx}`
+      // + `\na: ${lastAnimalSfx}`,
     );
 
     // --- Mini-map (heatmap + drone marker, top-right) ---

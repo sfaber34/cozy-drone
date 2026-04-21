@@ -294,7 +294,7 @@ export const ENGINE_VOLUME_MIN = 0.04; // volume at minimum speed
 export const ENGINE_VOLUME_RANGE = 0.07; // additional volume added at max speed (total max = MIN + RANGE)
 export const ENGINE_RATE_MIN = 0.6; // playback rate (pitch) at minimum speed
 export const ENGINE_RATE_RANGE = 0.8; // additional rate at max speed (total max = MIN + RANGE)
-export const ENGINE_CROSSFADE_SEC = 0.5; // seconds of overlap when crossfading the engine loop
+export const ENGINE_CROSSFADE_SEC = 0.02; // seconds of overlap when crossfading the engine loop
 
 // --- Spatial audio (shared by explosion + death SFX) ---
 export const SFX_MAX_DISTANCE = 2000; // distance in px at which spatial SFX reaches minimum volume
