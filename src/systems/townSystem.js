@@ -213,12 +213,14 @@ export function createTown(scene, rng, opts) {
         const tex = rng.pick(stallTextures);
         scene.add.image(sx, sy, tex).setScale(SCALE).setDepth(2);
         // Stall visual size at SCALE=3: 48×24. Half-extents + 6 px pad.
-        const stallHW = 30, stallHH = 18;
+        // Stall 16×8 at SCALE=3 = 48×24. Half + 18 px body padding.
+        const stallHW = 42, stallHH = 30;
         blockObstacles.push({ x: sx, y: sy, hw: stallHW, hh: stallHH });
         // Register stall as a collision obstacle so people steer around it.
         scene.buildings.push({
           sprite: null, tex, size: "small",
           hp: 999, maxHp: 999, radius: 30,
+          hw: stallHW, hh: stallHH,
           x: sx, y: sy, destroyed: false,
           noHide: true, cracksSprite: null, fireSprites: [],
         });
@@ -263,12 +265,14 @@ export function createTown(scene, rng, opts) {
           scene.add.image(cageX, cageY, "market-cage")
             .setScale(SCALE).setDepth(1.8);
           // Cage visual at SCALE=3: 48×42. Half-extents + 6 px pad.
-          const cageObsHW = 30, cageObsHH = 27;
+          // Cage 16×14 at SCALE=3 = 48×42. Half + 18 px body padding.
+          const cageObsHW = 42, cageObsHH = 39;
           blockObstacles.push({ x: cageX, y: cageY, hw: cageObsHW, hh: cageObsHH });
           // Register cage as a collision obstacle
           scene.buildings.push({
             sprite: null, tex: "market-cage", size: "small",
             hp: 999, maxHp: 999, radius: 28,
+            hw: cageObsHW, hh: cageObsHH,
             x: cageX, y: cageY, destroyed: false,
             noHide: true, cracksSprite: null, fireSprites: [],
           });

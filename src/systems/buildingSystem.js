@@ -14,18 +14,45 @@ import { tryRegisterGhostBubble } from "./ghostBubbleUtils.js";
 export function createBuildings(scene, rng) {
   scene.buildings = [];
   const bldgHp = { small: BUILDING_HP_SMALL, medium: BUILDING_HP_MEDIUM, large: BUILDING_HP_LARGE };
-  const bldgRadius = { small: BUILDING_RADIUS_SMALL, medium: BUILDING_RADIUS_MEDIUM, large: BUILDING_RADIUS_LARGE };
+
+  // Rectangular half-extents per texture (pixels at SCALE, + small pad).
+  // Each texture has a known pixel size; multiply by SCALE/2 for the
+  // half-extent, then add a few px of padding so people don't graze edges.
+  // Padding accounts for the person sprite's half-width (~15 px at SCALE=3)
+  // so people's EDGES don't overlap building EDGES. Without this, a person
+  // can stand with their center just outside the building rect while their
+  // body visually covers the building corner.
+  const PAD = 18;
+  const texExtents = {
+    'house':       { hw: (16 * SCALE) / 2 + PAD, hh: (12 * SCALE) / 2 + PAD },
+    'building':    { hw: (32 * SCALE) / 2 + PAD, hh: (24 * SCALE) / 2 + PAD },
+    'apartment':   { hw: (24 * SCALE) / 2 + PAD, hh: (32 * SCALE) / 2 + PAD },
+    'hospital':    { hw: (32 * SCALE) / 2 + PAD, hh: (32 * SCALE) / 2 + PAD },
+    'church':      { hw: (16 * SCALE) / 2 + PAD, hh: (24 * SCALE) / 2 + PAD },
+    'shop':        { hw: (16 * SCALE) / 2 + PAD, hh: (10 * SCALE) / 2 + PAD },
+    'gas-station': { hw: (20 * SCALE) / 2 + PAD, hh: (16 * SCALE) / 2 + PAD },
+    'hut':         { hw: (12 * SCALE) / 2 + PAD, hh: (12 * SCALE) / 2 + PAD },
+    'silo':        { hw: (20 * SCALE) / 2 + PAD, hh: (20 * SCALE) / 2 + PAD },
+    'barn':        { hw: (24 * SCALE) / 2 + PAD, hh: (32 * SCALE) / 2 + PAD },
+  };
+  // Fallback for unknown textures
+  const defaultExtent = { hw: 30, hh: 30 };
 
   const addBuilding = (x, y, tex, size, tint) => {
     const sprite = scene.add.image(x, y, tex).setScale(SCALE).setDepth(2);
     if (tint) sprite.setTint(tint);
+    const ext = texExtents[tex] || defaultExtent;
     const b = {
       sprite,
       tex,
       size,
       hp: bldgHp[size],
       maxHp: bldgHp[size],
-      radius: bldgRadius[size],
+      // Rectangular no-go zone matching the actual texture dimensions.
+      hw: ext.hw,
+      hh: ext.hh,
+      // Keep radius as max(hw,hh) for legacy circular checks (missile/cannon hit detection)
+      radius: Math.max(ext.hw, ext.hh),
       x,
       y,
       destroyed: false,
@@ -106,7 +133,9 @@ export function killPeopleInBuilding(scene, building) {
 export function isInsideBuilding(scene, px, py) {
   for (const b of scene.buildings) {
     if (b.destroyed) continue;
-    if (Phaser.Math.Distance.Between(px, py, b.x, b.y) < b.radius) {
+    const bHW = b.hw || b.radius;
+    const bHH = b.hh || b.radius;
+    if (Math.abs(px - b.x) < bHW && Math.abs(py - b.y) < bHH) {
       return true;
     }
   }
@@ -116,7 +145,9 @@ export function isInsideBuilding(scene, px, py) {
 export function isNearBuilding(scene, px, py, pad) {
   for (const b of scene.buildings) {
     if (b.destroyed) continue;
-    if (Phaser.Math.Distance.Between(px, py, b.x, b.y) < b.radius + pad) {
+    const bHW = (b.hw || b.radius) + pad;
+    const bHH = (b.hh || b.radius) + pad;
+    if (Math.abs(px - b.x) < bHW && Math.abs(py - b.y) < bHH) {
       return true;
     }
   }
@@ -124,54 +155,52 @@ export function isNearBuilding(scene, px, py, pad) {
 }
 
 export function steerAroundBuildings(scene, px, py, angle, dt, excludeBuilding) {
-  // Aggregate repulsion from ALL nearby buildings into a single combined
-  // vector. The old approach picked the FIRST building and steered directly
-  // away from it — between two buildings this caused ping-pong oscillation
-  // because each frame pushed toward the opposite building. Summing
-  // repulsion vectors from both sides cancels the lateral component and
-  // leaves a perpendicular escape direction (sideways slip).
-  //
-  // The optional `excludeBuilding` is the hide target the person is
-  // heading toward — they're ALLOWED to enter that one.
+  // Rectangular repulsion: aggregate push vectors from all buildings whose
+  // AABB the person is inside or whose lookahead would enter. Uses hw/hh
+  // (actual texture half-extents) instead of circular radius.
   let repelX = 0;
   let repelY = 0;
 
-  // Pass 1: repulsion from buildings the person is INSIDE (strong push out)
   for (const b of scene.buildings) {
     if (b.destroyed || b === excludeBuilding) continue;
-    const d = Phaser.Math.Distance.Between(px, py, b.x, b.y) || 0.001;
-    if (d < b.radius) {
-      const strength = (b.radius - d) / b.radius + 1; // 1..2
-      repelX += ((px - b.x) / d) * strength;
-      repelY += ((py - b.y) / d) * strength;
+    const bHW = b.hw || b.radius;
+    const bHH = b.hh || b.radius;
+    const dx = px - b.x;
+    const dy = py - b.y;
+    // Inside the building rect → strong push out
+    if (Math.abs(dx) < bHW && Math.abs(dy) < bHH) {
+      const overlapX = bHW - Math.abs(dx);
+      const overlapY = bHH - Math.abs(dy);
+      if (overlapX < overlapY) {
+        repelX += (dx >= 0 ? 1 : -1) * 2;
+      } else {
+        repelY += (dy >= 0 ? 1 : -1) * 2;
+      }
     }
   }
 
-  // Pass 2: repulsion from buildings the LOOKAHEAD would enter
+  // Lookahead check
   const checkDist = 60;
   const nx = px + Math.cos(angle) * checkDist;
   const ny = py + Math.sin(angle) * checkDist;
   for (const b of scene.buildings) {
     if (b.destroyed || b === excludeBuilding) continue;
-    const d = Phaser.Math.Distance.Between(nx, ny, b.x, b.y) || 0.001;
-    const zone = b.radius + 25;
-    if (d < zone) {
-      const strength = (zone - d) / zone; // 0..1
-      repelX += ((px - b.x) / d) * strength;
-      repelY += ((py - b.y) / d) * strength;
+    const bHW = (b.hw || b.radius) + 15;
+    const bHH = (b.hh || b.radius) + 15;
+    const ldx = nx - b.x;
+    const ldy = ny - b.y;
+    if (Math.abs(ldx) < bHW && Math.abs(ldy) < bHH) {
+      const d = Math.hypot(px - b.x, py - b.y) || 0.001;
+      repelX += ((px - b.x) / d);
+      repelY += ((py - b.y) / d);
     }
   }
 
   if (repelX === 0 && repelY === 0) return angle;
 
-  // Blend: rotate the original angle toward the repulsion direction rather
-  // than snapping to it, which prevents jittery frame-to-frame flips.
   const repelAngle = Math.atan2(repelY, repelX);
   let diff = repelAngle - angle;
-  // Normalize to [-π, π]
   while (diff > Math.PI) diff -= Math.PI * 2;
   while (diff < -Math.PI) diff += Math.PI * 2;
-  // Blend up to 80% toward repulsion; mild enough to avoid hard snapping
-  // but strong enough to actually escape.
   return angle + diff * 0.8;
 }

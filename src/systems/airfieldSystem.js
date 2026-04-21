@@ -85,6 +85,15 @@ export function createAirfield(scene, rng, opts) {
   sprites.push(
     scene.add.image(hangarX, hangarY, "hangar").setScale(SCALE).setDepth(1.5),
   );
+  // Hangar no-go zone so people and bikers don't walk through it.
+  // Hangar texture is 48×48 at SCALE=3 = 144×144 on screen.
+  scene.buildings.push({
+    sprite: null, tex: "hangar", size: "large",
+    hp: 999, maxHp: 999, radius: 78,
+    hw: 90, hh: 90,
+    x: hangarX, y: hangarY, destroyed: false,
+    noHide: true, cracksSprite: null, fireSprites: [],
+  });
 
   // --- Taxiway connecting hangar door to runway ---
   const taxiStartX = rwX + rwHalfW; // right edge of runway

@@ -20,8 +20,17 @@ export function updateAnimals(scene, dt) {
 
   for (const a of scene.animals) {
     if (a.state === "dead") continue;
-    // Caged animals never move, never panic, never animate — frozen in place.
-    if (a.isCaged) continue;
+    // Caged animals stay in place — no wandering, no panic, no movement.
+    // Just animate their feet so they look alive.
+    if (a.isCaged) {
+      a.runTimer = (a.runTimer || 0) + dt;
+      if (a.runTimer > 0.3) {
+        a.runTimer = 0;
+        a.runFrame = 1 - a.runFrame;
+        a.sprite.setTexture(a.runFrame === 0 ? a.type : a.type + "2");
+      }
+      continue;
+    }
     // Chicken fighters in idle state are controlled by chickenFightSystem
     if ((a.isChickenFighter || a.isRaceCamel) && a.state === "idle") continue;
 

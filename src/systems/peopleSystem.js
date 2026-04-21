@@ -96,20 +96,46 @@ export function createPeople(scene, rng) {
     });
   }
 
-  // --- Town people (extra population in the NW town area) ---
+  // --- Town people (extra population spawned on ROADS) ---
+  // Spawning randomly across the town rectangle fails in dense residential
+  // blocks — building no-go zones cover most of the area and the retry
+  // loop can't find clear spots. Roads are always clear, so spawn people
+  // on road intersections + road segments using the town grid.
   const townStartX = scene.townStartX;
   const townStartY = scene.townStartY;
   const townEndX = scene.townEndX;
   const townEndY = scene.townEndY;
+  const townRS = scene.townRoadSpacing;
+  const townRT = scene.townRoadTile;
+  const townW = scene.townW;
+  const townH = scene.townH;
+  // Build list of road positions (intersections + mid-road points)
+  const roadPositions = [];
+  if (townRS && townRT) {
+    for (let gy = 0; gy < townH; gy++) {
+      for (let gx = 0; gx < townW; gx++) {
+        const isHRoad = gy % townRS === 0;
+        const isVRoad = gx % townRS === 0;
+        if (isHRoad || isVRoad) {
+          roadPositions.push({
+            x: townStartX + gx * townRT + townRT / 2,
+            y: townStartY + gy * townRT + townRT / 2,
+          });
+        }
+      }
+    }
+  }
   for (let i = 0; i < PEOPLE_TOWN_SPAWN_COUNT; i++) {
     let px, py;
-    let townTries = 0;
-    do {
+    if (roadPositions.length > 0) {
+      // Pick a random road tile and jitter within it
+      const rp = roadPositions[Math.floor(Math.random() * roadPositions.length)];
+      px = rp.x + (Math.random() - 0.5) * townRT * 0.6;
+      py = rp.y + (Math.random() - 0.5) * townRT * 0.6;
+    } else {
       px = townStartX + 50 + Math.random() * (townEndX - townStartX - 100);
       py = townStartY + 50 + Math.random() * (townEndY - townStartY - 100);
-      townTries++;
-      if (townTries > 100) break;
-    } while (isInsideBuilding(scene, px, py));
+    }
     const skinId = rng.between(0, 199);
     const sprite = scene.add
       .image(px, py, `person-stand-${skinId}`)
@@ -340,9 +366,11 @@ export function updatePeople(scene, dt, delta) {
           let wanderBlocked = false;
           for (const b of scene.buildings) {
             if (b.destroyed) continue;
-            const curD = Phaser.Math.Distance.Between(p.sprite.x, p.sprite.y, b.x, b.y);
-            const nxtD = Phaser.Math.Distance.Between(nextX, nextY, b.x, b.y);
-            if (nxtD < b.radius && nxtD < curD) {
+            const bHW = b.hw || b.radius;
+            const bHH = b.hh || b.radius;
+            const curIn = Math.abs(p.sprite.x - b.x) < bHW && Math.abs(p.sprite.y - b.y) < bHH;
+            const nxtIn = Math.abs(nextX - b.x) < bHW && Math.abs(nextY - b.y) < bHH;
+            if (nxtIn && !curIn) {
               wanderBlocked = true;
               break;
             }
@@ -464,11 +492,12 @@ export function updatePeople(scene, dt, delta) {
       let panicBlocked = false;
       for (const b of scene.buildings) {
         if (b.destroyed || b === p.hideTarget) continue;
-        const curDist = Phaser.Math.Distance.Between(p.sprite.x, p.sprite.y, b.x, b.y);
-        const nextDist = Phaser.Math.Distance.Between(panicNextX, panicNextY, b.x, b.y);
-        // Only block if moving INTO the building's zone, not if already
-        // inside and moving away (escaping).
-        if (nextDist < b.radius && nextDist < curDist) {
+        const bHW = b.hw || b.radius;
+        const bHH = b.hh || b.radius;
+        const curIn = Math.abs(p.sprite.x - b.x) < bHW && Math.abs(p.sprite.y - b.y) < bHH;
+        const nxtIn = Math.abs(panicNextX - b.x) < bHW && Math.abs(panicNextY - b.y) < bHH;
+        // Only block if moving INTO the rect, not if escaping
+        if (nxtIn && !curIn) {
           panicBlocked = true;
           break;
         }
@@ -495,9 +524,11 @@ export function updatePeople(scene, dt, delta) {
           let clear = true;
           for (const b of scene.buildings) {
             if (b.destroyed || b === p.hideTarget) continue;
-            const cd = Phaser.Math.Distance.Between(p.sprite.x, p.sprite.y, b.x, b.y);
-            const nd = Phaser.Math.Distance.Between(tx, ty, b.x, b.y);
-            if (nd < b.radius && nd < cd) { clear = false; break; }
+            const bHW = b.hw || b.radius;
+            const bHH = b.hh || b.radius;
+            const curIn = Math.abs(p.sprite.x - b.x) < bHW && Math.abs(p.sprite.y - b.y) < bHH;
+            const nxtIn = Math.abs(tx - b.x) < bHW && Math.abs(ty - b.y) < bHH;
+            if (nxtIn && !curIn) { clear = false; break; }
           }
           if (clear) {
             p.runAngle = a;
