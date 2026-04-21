@@ -5,7 +5,7 @@ export const NUM_SKINS = 200;
 // NOTE: avoid values too close to the desert background (#d2b48c = 210,180,140).
 // '#dbb08a' was nearly identical to sand and made arms invisible; replaced
 // with a pinker/cooler fair tone that contrasts.
-export const skinTones = ['#d4a574', '#c49a6c', '#b8885c', '#e8a898', '#c8946a', '#a07850'];
+export const skinTones = ['#c49a6c', '#b8885c', '#e8a898', '#c8946a'];
 
 // The full generation (skins + one-off characters) is expensive — 200 skin
 // variants x ~11 poses + a dozen other sprites. Call paths:
@@ -18,26 +18,86 @@ export function generatePersonTextures(scene, opts = {}) {
   const skinIndexStart = opts.skinIndexStart ?? 0;
   const skinIndexEnd = opts.skinIndexEnd ?? NUM_SKINS;
   const includeCharacters = opts.includeCharacters ?? true;
-  const headTypes = ['keffiyeh', 'keffiyeh', 'kufi', 'kufi', 'hijab', 'hijab'];
+  // More headwear types for visual variety — weighted by frequency
+  const headTypes = [
+    'keffiyeh', 'keffiyeh', 'keffiyeh',
+    'kufi', 'kufi', 'kufi',
+    'hijab', 'hijab',
+    'turban', 'turban',
+    'bare',
+  ];
   const headColors = [
-    '#fff', '#eee', '#ddd', '#cc3333', '#aa2222', '#dd8833', '#cc9944',
-    '#557744', '#882222', '#884488', '#4466aa', '#44aaaa', '#ddaa44',
-    '#e8dcc8', '#cc66aa', '#88cc88', '#aaccee', '#ffcc88', '#dd6644',
-    '#ffcc44', '#88bb88', '#cc88cc', '#eedd88',
+    '#fff', '#eee', '#ddd', '#ccc',
+    '#cc3333', '#aa2222', '#ee4444', '#ff6655',
+    '#dd8833', '#cc9944', '#ee7722', '#ffaa44',
+    '#557744', '#338855', '#66aa55',
+    '#882222', '#aa3344',
+    '#884488', '#aa55aa', '#cc77cc',
+    '#4466aa', '#3355cc', '#5588dd', '#2244aa',
+    '#44aaaa', '#33cccc', '#228888',
+    '#ddaa44', '#ccbb33', '#eedd44',
+    '#e8dcc8', '#d8c8a8', '#f0e8d0',
+    '#cc66aa', '#dd88cc',
+    '#88cc88', '#66aa66',
+    '#aaccee', '#88bbdd',
+    '#ffcc88', '#ffddaa',
+    '#dd6644', '#cc5533',
+    '#ffcc44', '#ffdd66',
+    '#88bb88', '#77aa77',
+    '#cc88cc', '#bb77bb',
+    '#eedd88', '#ddcc66',
+    '#ff8866', '#44ddaa', '#8866cc', '#cc8855',
   ];
   const robeColors = [
-    '#f0ece0', '#e8dcc8', '#4477aa', '#3a3a3a', '#5a7a4a', '#2a2a2a',
-    '#2a3a5a', '#c8b088', '#6a2a2a', '#cc8844', '#888', '#446688',
-    '#996633', '#2a4a2a', '#cc4444', '#4488cc', '#44aa44', '#ddaa33',
-    '#887766', '#665544', '#aa8866', '#7a6a5a', '#bbaa88', '#d8c8a8',
-    '#555', '#4a2a4a', '#1a3a3a', '#5a2a3a', '#224422', '#442244',
-    '#553322', '#1a2a3a', '#8844aa', '#556644', '#2a2a4a', '#3a2a1a',
+    '#f0ece0', '#e8dcc8', '#d8c8a8', '#c8b088', '#bbaa88',
+    '#4477aa', '#3366cc', '#5588bb', '#2255aa',
+    '#3a3a3a', '#555', '#444', '#666',
+    '#5a7a4a', '#447744', '#66aa55', '#338833',
+    '#2a2a2a', '#1a1a1a',
+    '#2a3a5a', '#1a2a4a', '#334466',
+    '#6a2a2a', '#882233', '#993344',
+    '#cc8844', '#dd9955', '#bb7733',
+    '#446688', '#335577',
+    '#996633', '#aa7744', '#885522',
+    '#2a4a2a', '#1a3a1a',
+    '#cc4444', '#dd5555', '#ee3333', '#bb2222',
+    '#4488cc', '#55aadd', '#3377bb',
+    '#44aa44', '#55cc55', '#33bb33',
+    '#ddaa33', '#ccbb44', '#eebb22',
+    '#887766', '#776655',
+    '#665544', '#554433',
+    '#aa8866', '#bb9977',
+    '#7a6a5a', '#8a7a6a',
+    '#4a2a4a', '#5a3a5a', '#663366',
+    '#1a3a3a', '#2a4a4a',
+    '#5a2a3a', '#6a3a4a',
+    '#224422', '#335533',
+    '#442244', '#553355',
+    '#553322', '#664433',
+    '#1a2a3a', '#2a3a4a',
+    '#8844aa', '#9955bb', '#7733aa',
+    '#556644', '#667755',
+    '#2a2a4a', '#3a3a5a',
+    '#3a2a1a', '#4a3a2a',
+    '#cc6600', '#ff7700', '#dd5500',
+    '#226688', '#117799',
+    '#88ccaa', '#77bbaa',
+    '#ccaa88', '#ddbb99',
+    '#aa4466', '#cc5577',
+    '#6688aa', '#7799bb',
   ];
-  const shoeColors = ['#8a6a3a', '#5a3a1a', '#333', '#222', '#4a3a1a', '#6a4a2a', '#3a3a2a', '#2a2a2a', '#6a5a3a'];
+  const shoeColors = [
+    '#8a6a3a', '#5a3a1a', '#333', '#222', '#4a3a1a', '#6a4a2a',
+    '#3a3a2a', '#2a2a2a', '#6a5a3a',
+    '#553322', '#443311',          // dark leather
+    '#884444', '#664422',          // reddish-brown
+  ];
   const accentColors = [
     '#aa2222', '#222', '#335588', '#111', '#3a5a2a', '#bb6622',
     '#5a1a1a', '#bbb', '#cc3333', '#aa7722', '#661111', '#333',
     '#aa6633', '#666', '#775522', '#ddd', '#eee', '#776644',
+    '#dd4444', '#4488aa', '#44aa66', '#cc8833', '#8855aa',
+    '#ffcc33', '#ff6644', '#55ccaa', '#aa4466', '#668833',
   ];
 
   // Generate unique combos with seeded randomness for consistency
@@ -66,6 +126,7 @@ export function generatePersonTextures(scene, opts = {}) {
     ctx.fillRect(6, yOff + 1, 1, 1);
 
     if (s.headType === 'keffiyeh') {
+      // Traditional headscarf — covers top + drapes down the sides
       ctx.fillStyle = s.head;
       ctx.fillRect(3, yOff, 4, 1);
       ctx.fillRect(2, yOff, 1, 3);
@@ -73,11 +134,13 @@ export function generatePersonTextures(scene, opts = {}) {
       ctx.fillStyle = s.accent;
       ctx.fillRect(3, yOff, 4, 1);
     } else if (s.headType === 'kufi') {
+      // Short round cap — sits on top of the head
       ctx.fillStyle = s.head;
       ctx.fillRect(3, yOff, 4, 1);
       ctx.fillRect(2, yOff, 1, 1);
       ctx.fillRect(7, yOff, 1, 1);
     } else if (s.headType === 'hijab') {
+      // Full head covering — wraps around and down the sides
       ctx.fillStyle = s.head;
       ctx.fillRect(2, yOff, 6, 2);
       ctx.fillRect(2, yOff + 2, 1, 2);
@@ -86,7 +149,16 @@ export function generatePersonTextures(scene, opts = {}) {
       ctx.fillStyle = '#222';
       ctx.fillRect(4, yOff + 1, 1, 1);
       ctx.fillRect(6, yOff + 1, 1, 1);
+    } else if (s.headType === 'turban') {
+      // Wrapped turban — taller than kufi, covers sides
+      ctx.fillStyle = s.head;
+      ctx.fillRect(2, yOff - 1, 6, 2); // tall wrap extends above head
+      ctx.fillRect(3, yOff, 4, 1);
+      // Accent band across the front
+      ctx.fillStyle = s.accent;
+      ctx.fillRect(3, yOff - 1, 4, 1);
     }
+    // 'bare' — no headwear drawn, just the skin + eyes from above
   };
 
   for (let si = skinIndexStart; si < skinIndexEnd && si < personSkins.length; si++) {
