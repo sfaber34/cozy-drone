@@ -487,12 +487,11 @@ function updateChasers(scene, chasers, mice, dt) {
       const isClear = (ang) => {
         const pnx = c.sprite.x + Math.cos(ang) * probeDist;
         const pny = c.sprite.y + Math.sin(ang) * probeDist;
-        if (isInsideBuilding(scene, pnx, pny)) return false;
         for (const b of scene.buildings) {
           if (b.destroyed) continue;
-          if (Phaser.Math.Distance.Between(pnx, pny, b.x, b.y) < b.radius + 12) {
-            return false;
-          }
+          const bHW = (b.hw || b.radius) + 12;
+          const bHH = (b.hh || b.radius) + 12;
+          if (Math.abs(pnx - b.x) < bHW && Math.abs(pny - b.y) < bHH) return false;
         }
         return true;
       };

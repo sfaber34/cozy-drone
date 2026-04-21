@@ -274,7 +274,7 @@ export function updatePeople(scene, dt, delta) {
         if (p.hideTarget && !p.hideTarget.destroyed) {
           p.sprite.setPosition(
             p.hideTarget.x + Phaser.Math.Between(-40, 40),
-            p.hideTarget.y + p.hideTarget.radius + 15,
+            p.hideTarget.y + (p.hideTarget.hh || p.hideTarget.radius) + 15,
           );
         }
         p.hideTarget = null;
@@ -368,9 +368,7 @@ export function updatePeople(scene, dt, delta) {
             if (b.destroyed) continue;
             const bHW = b.hw || b.radius;
             const bHH = b.hh || b.radius;
-            const curIn = Math.abs(p.sprite.x - b.x) < bHW && Math.abs(p.sprite.y - b.y) < bHH;
-            const nxtIn = Math.abs(nextX - b.x) < bHW && Math.abs(nextY - b.y) < bHH;
-            if (nxtIn && !curIn) {
+            if (Math.abs(nextX - b.x) < bHW && Math.abs(nextY - b.y) < bHH) {
               wanderBlocked = true;
               break;
             }
@@ -437,8 +435,19 @@ export function updatePeople(scene, dt, delta) {
         );
       }
 
-      // Update angle toward hide target if it exists
-      if (p.hideTarget && !p.hideTarget.destroyed) {
+      // When the 8-direction escape probe fires (person was blocked by a
+      // building), it locks runAngle for 30 frames so the hideTarget code
+      // below can't reset it back toward the stall that blocked them.
+      // Without this lock, the escape direction is overwritten every frame
+      // and the person oscillates visibly.
+      if (p._panicEscapeLock > 0) {
+        p._panicEscapeLock--;
+      }
+
+      // Update angle toward hide target if it exists (skip if escape-locked)
+      if (p._panicEscapeLock > 0) {
+        // locked — don't touch runAngle
+      } else if (p.hideTarget && !p.hideTarget.destroyed) {
         p.runAngle = Phaser.Math.Angle.Between(
           p.sprite.x,
           p.sprite.y,
@@ -468,7 +477,8 @@ export function updatePeople(scene, dt, delta) {
       }
 
       // Randomly change direction for scatter runners (no building target)
-      if (!p.hideTarget) {
+      // Skip if escape-locked (same reason as hideTarget above)
+      if (!p.hideTarget && !(p._panicEscapeLock > 0)) {
         if (p.panicDirTimer === undefined) {
           // Stagger each person's first change independently
           p.panicDirTimer    = Math.random() * PANIC_DIR_INTERVAL_MIN;
@@ -494,10 +504,7 @@ export function updatePeople(scene, dt, delta) {
         if (b.destroyed || b === p.hideTarget) continue;
         const bHW = b.hw || b.radius;
         const bHH = b.hh || b.radius;
-        const curIn = Math.abs(p.sprite.x - b.x) < bHW && Math.abs(p.sprite.y - b.y) < bHH;
-        const nxtIn = Math.abs(panicNextX - b.x) < bHW && Math.abs(panicNextY - b.y) < bHH;
-        // Only block if moving INTO the rect, not if escaping
-        if (nxtIn && !curIn) {
+        if (Math.abs(panicNextX - b.x) < bHW && Math.abs(panicNextY - b.y) < bHH) {
           panicBlocked = true;
           break;
         }
@@ -526,21 +533,23 @@ export function updatePeople(scene, dt, delta) {
             if (b.destroyed || b === p.hideTarget) continue;
             const bHW = b.hw || b.radius;
             const bHH = b.hh || b.radius;
-            const curIn = Math.abs(p.sprite.x - b.x) < bHW && Math.abs(p.sprite.y - b.y) < bHH;
-            const nxtIn = Math.abs(tx - b.x) < bHW && Math.abs(ty - b.y) < bHH;
-            if (nxtIn && !curIn) { clear = false; break; }
+            if (Math.abs(tx - b.x) < bHW && Math.abs(ty - b.y) < bHH) {
+              clear = false; break;
+            }
           }
           if (clear) {
             p.runAngle = a;
             p.sprite.x = tx;
             p.sprite.y = ty;
             p.sprite.setFlipX(Math.cos(a) < 0);
+            p._panicEscapeLock = 30;
             found = true;
             break;
           }
         }
         if (!found) {
           // Truly stuck (all 8 blocked) — nudge away from nearest building
+          p._panicEscapeLock = 30;
           let nearB = null, nearD = Infinity;
           for (const b of scene.buildings) {
             if (b.destroyed) continue;
@@ -549,8 +558,13 @@ export function updatePeople(scene, dt, delta) {
           }
           if (nearB) {
             p.runAngle = Phaser.Math.Angle.Between(nearB.x, nearB.y, p.sprite.x, p.sprite.y);
-            p.sprite.x += Math.cos(p.runAngle) * panicSpeed * dt;
-            p.sprite.y += Math.sin(p.runAngle) * panicSpeed * dt;
+            // Only nudge if the destination is clear
+            const nudgeX = p.sprite.x + Math.cos(p.runAngle) * panicSpeed * dt;
+            const nudgeY = p.sprite.y + Math.sin(p.runAngle) * panicSpeed * dt;
+            if (!isInsideBuilding(scene, nudgeX, nudgeY)) {
+              p.sprite.x = nudgeX;
+              p.sprite.y = nudgeY;
+            }
           }
         }
       }
@@ -635,14 +649,15 @@ export function updatePeople(scene, dt, delta) {
         );
         const probeDist = 40;
         const buildings = scene.buildings || [];
+        // Rectangular probe — matches the no-go zones used everywhere else
         const isClear = (ang) => {
           const nx = p.sprite.x + Math.cos(ang) * probeDist;
           const ny = p.sprite.y + Math.sin(ang) * probeDist;
           for (const b of buildings) {
             if (b.destroyed) continue;
-            if (Phaser.Math.Distance.Between(nx, ny, b.x, b.y) < b.radius + 14) {
-              return false;
-            }
+            const bHW = b.hw || b.radius;
+            const bHH = b.hh || b.radius;
+            if (Math.abs(nx - b.x) < bHW && Math.abs(ny - b.y) < bHH) return false;
           }
           return true;
         };
@@ -659,9 +674,23 @@ export function updatePeople(scene, dt, delta) {
         if (Math.abs(deltaA) <= maxTurn) p._returnHeading = chosen;
         else p._returnHeading += Math.sign(deltaA) * maxTurn;
 
+        // Move — but block if the step would enter a building rect
         const step = wanderSpeed * 1.5 * dt;
-        p.sprite.x += Math.cos(p._returnHeading) * step;
-        p.sprite.y += Math.sin(p._returnHeading) * step;
+        const rnx = p.sprite.x + Math.cos(p._returnHeading) * step;
+        const rny = p.sprite.y + Math.sin(p._returnHeading) * step;
+        let returnBlocked = false;
+        for (const b of buildings) {
+          if (b.destroyed) continue;
+          const bHW = b.hw || b.radius;
+          const bHH = b.hh || b.radius;
+          if (Math.abs(rnx - b.x) < bHW && Math.abs(rny - b.y) < bHH) {
+            returnBlocked = true; break;
+          }
+        }
+        if (!returnBlocked) {
+          p.sprite.x = rnx;
+          p.sprite.y = rny;
+        }
 
         // Flip hysteresis — avoid rapid left/right flicker near vertical headings
         const fx = Math.cos(p._returnHeading);

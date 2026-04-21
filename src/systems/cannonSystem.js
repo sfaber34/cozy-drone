@@ -225,8 +225,9 @@ export function cannonImpact(scene, x, y) {
   // --- Damage buildings (0.5 hp per hit — takes 2x as many hits as a missile) ---
   for (const b of scene.buildings) {
     if (b.destroyed) continue;
-    const dist = Phaser.Math.Distance.Between(x, y, b.x, b.y);
-    if (dist < b.radius) {
+    const bHW = b.hw || b.radius;
+    const bHH = b.hh || b.radius;
+    if (Math.abs(x - b.x) < bHW && Math.abs(y - b.y) < bHH) {
       b.hp -= 0.5;
       if (b.hp <= 0) {
         b.destroyed = true;

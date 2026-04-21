@@ -22,7 +22,7 @@ export function createBuildings(scene, rng) {
   // so people's EDGES don't overlap building EDGES. Without this, a person
   // can stand with their center just outside the building rect while their
   // body visually covers the building corner.
-  const PAD = 18;
+  const PAD = 22;
   const texExtents = {
     'house':       { hw: (16 * SCALE) / 2 + PAD, hh: (12 * SCALE) / 2 + PAD },
     'building':    { hw: (32 * SCALE) / 2 + PAD, hh: (24 * SCALE) / 2 + PAD },

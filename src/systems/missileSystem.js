@@ -227,8 +227,9 @@ export function missileImpact(scene, x, y) {
   // Check building hits
   for (const b of scene.buildings) {
     if (b.destroyed) continue;
-    const dist = Phaser.Math.Distance.Between(x, y, b.x, b.y);
-    if (dist < b.radius) {
+    const bHW = b.hw || b.radius;
+    const bHH = b.hh || b.radius;
+    if (Math.abs(x - b.x) < bHW && Math.abs(y - b.y) < bHH) {
       b.hp--;
       if (b.hp <= 0) {
         // Destroyed

@@ -205,11 +205,12 @@ export function createTown(scene, rng, opts) {
     // circular, so edges and corners are covered properly.
     const blockObstacles = [];
 
-    // Place stalls in rows with a shopkeeper behind each one
-    for (let row = 0; row < 3; row++) {
+    // Place stalls: 2 rows × 2 cols = 4 per block, wider spacing so
+    // people have room to walk between them without oscillating.
+    for (let row = 0; row < 2; row++) {
       for (let col = 0; col < 2; col++) {
         const sx = blkX + (col * 3 + 1) * roadTile;
-        const sy = blkY + (row * 2 + 0.5) * roadTile;
+        const sy = blkY + (row * 3 + 1) * roadTile;
         const tex = rng.pick(stallTextures);
         scene.add.image(sx, sy, tex).setScale(SCALE).setDepth(2);
         // Stall visual size at SCALE=3: 48×24. Half-extents + 6 px pad.
@@ -304,14 +305,8 @@ export function createTown(scene, rng, opts) {
 
 
     // Shoppers wandering the block (carrying goods).
-    // Check against the RECTANGULAR stall/cage bounds (not the circular
-    // building radius) so no shopper ever spawns on market furniture.
-    const hitsObstacle = (px, py) => {
-      for (const o of blockObstacles) {
-        if (Math.abs(px - o.x) < o.hw && Math.abs(py - o.y) < o.hh) return true;
-      }
-      return false;
-    };
+    // Check against ALL buildings (not just this block's obstacles) so
+    // shoppers near the edge don't spawn in an adjacent block's stall.
     for (let s = 0; s < 6; s++) {
       let sx, sy;
       let spawnTries = 0;
@@ -319,8 +314,8 @@ export function createTown(scene, rng, opts) {
         sx = blkX + Math.random() * blkW;
         sy = blkY + Math.random() * blkH;
         spawnTries++;
-        if (spawnTries > 50) break;
-      } while (hitsObstacle(sx, sy));
+        if (spawnTries > 200) break;
+      } while (isInsideBuilding(scene, sx, sy));
       const skinId = rng.between(0, 199);
       const sprite = scene.add
         .image(sx, sy, `person-stand-${skinId}`)
