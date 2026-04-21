@@ -868,7 +868,7 @@ function tryDeferredWorldInit(scene) {
     scene,
     rng,
     [
-      { type: "town" },
+      { type: "town", tileX: 50, tileY: 70 },
       { type: "farmCompound" },
       { type: "sheepFlock" },
       { type: "oilfield" },

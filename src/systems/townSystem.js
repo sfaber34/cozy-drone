@@ -199,49 +199,79 @@ export function createTown(scene, rng, opts) {
     const blkW = blockSize * roadTile;
     const blkH = blockSize * roadTile;
 
-    // Place stalls in rows
+    // Place stalls in rows with a shopkeeper behind each one
     for (let row = 0; row < 3; row++) {
       for (let col = 0; col < 2; col++) {
         const sx = blkX + (col * 3 + 1) * roadTile;
         const sy = blkY + (row * 2 + 0.5) * roadTile;
         const tex = rng.pick(stallTextures);
         scene.add.image(sx, sy, tex).setScale(SCALE).setDepth(2);
+
+        // Shopkeeper stands behind (north side of) the stall
+        const skinId = rng.between(0, 199);
+        const kx = sx;
+        const ky = sy - roadTile * 0.75;
+        const keeper = scene.add
+          .image(kx, ky, `person-stand-${skinId}`)
+          .setScale(SCALE)
+          .setDepth(3);
+        scene.people.push({
+          sprite: keeper,
+          skinId,
+          state: "idle",
+          greeting: rng.pick(merchantGreetings),
+          bubble: null,
+          waveTimer: 0,
+          waveFrame: 0,
+          runAngle: 0,
+          runTimer: 0,
+          runFrame: 0,
+          wanderTimer: 0,
+          wanderDuration: 999,
+          wanderAngle: null,
+          hideTarget: null,
+          homeX: kx,
+          homeY: ky,
+          scatterPanic: true,
+          returnHome: { x: kx, y: ky, event: "town" },
+          managedBySetPiece: true,
+        });
+
+        // At most 1 cage per row, placed in the gap BETWEEN the two
+        // stall columns. Only col=0 can spawn one (prevents 2 per row).
+        if (col === 0 && rng.frac() < 0.3) {
+          // Center of the gap between the two stalls in this row
+          const cageX = blkX + 2.5 * roadTile;
+          const cageY = sy + roadTile * 0.3;
+          // Base frame below chicken
+          scene.add.image(cageX, cageY, "market-cage")
+            .setScale(SCALE).setDepth(1.8);
+          const cageHW = 16;
+          const cageHH = 12;
+          const aSprite = scene.add.image(cageX, cageY, "chicken")
+            .setScale(SCALE).setDepth(1.85);
+          scene.animals.push({
+            sprite: aSprite,
+            type: "chicken",
+            state: "idle",
+            corral: { x: cageX, y: cageY, hw: cageHW, hh: cageHH },
+            wanderAngle: Math.random() * Math.PI * 2,
+            wanderTimer: 0,
+            wanderDuration: 2 + Math.random() * 3,
+            moving: false,
+            runAngle: 0,
+            runTimer: 0,
+            runFrame: 0,
+            panicTimer: 0,
+            isCaged: true,
+          });
+          // Cage bars on TOP of chicken but BELOW people (2.0+)
+          scene.add.image(cageX, cageY, "market-cage")
+            .setScale(SCALE).setDepth(1.95);
+        }
       }
     }
 
-    // Place 1-2 tents per block
-    const tentX = blkX + blkW * 0.5;
-    const tentY = blkY + blkH - roadTile;
-    scene.add.image(tentX, tentY, "tent").setScale(SCALE).setDepth(2);
-
-    // Merchants (standing behind stalls, don't wander)
-    for (let m = 0; m < 3; m++) {
-      const mx = blkX + (m * 2 + 1) * roadTile;
-      const my = blkY + roadTile * 0.5;
-      const skinId = rng.between(0, 199);
-      const sprite = scene.add
-        .image(mx, my, `person-stand-${skinId}`)
-        .setScale(SCALE)
-        .setDepth(3);
-      scene.people.push({
-        sprite,
-        skinId,
-        state: "idle",
-        greeting: rng.pick(merchantGreetings),
-        bubble: null,
-        waveTimer: 0,
-        waveFrame: 0,
-        runAngle: 0,
-        runTimer: 0,
-        runFrame: 0,
-        wanderTimer: 0,
-        wanderDuration: 999,
-        wanderAngle: null,
-        hideTarget: null,
-        homeX: mx,
-        homeY: my,
-      });
-    }
 
     // Shoppers wandering the block (carrying goods)
     for (let s = 0; s < 6; s++) {

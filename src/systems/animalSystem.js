@@ -211,7 +211,7 @@ export function affectNearbyAnimals(scene, x, y) {
           onComplete: () => bit.destroy(),
         });
       }
-    } else if (dist < panicRadius && a.state !== "panicking") {
+    } else if (dist < panicRadius && a.state !== "panicking" && !a.isCaged) {
       a.state = "panicking";
       const awayAngle = Phaser.Math.Angle.Between(
         x,

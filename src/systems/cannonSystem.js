@@ -468,7 +468,7 @@ export function cannonImpact(scene, x, y) {
     }
   }
   for (const a of scene.animals) {
-    if (a.state === "dead" || a.state === "panicking") continue;
+    if (a.state === "dead" || a.state === "panicking" || a.isCaged) continue;
     const dist = Phaser.Math.Distance.Between(x, y, a.sprite.x, a.sprite.y);
     if (dist < panicR) {
       a.state = "panicking";

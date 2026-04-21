@@ -1,68 +1,73 @@
 export function generateMarketTextures(scene) {
-  // --- Market stall (top-down, 16x12) ---
-  const stallCanvas = scene.textures.createCanvas('stall', 16, 12);
-  const stlc = stallCanvas.context;
-  stlc.fillStyle = '#8a6a3a';
-  stlc.fillRect(0, 4, 16, 6);
-  stlc.fillStyle = '#7a5a2a';
-  stlc.fillRect(0, 4, 16, 1);
-  stlc.fillStyle = '#cc4444';
-  stlc.fillRect(0, 0, 16, 5);
-  stlc.fillStyle = '#dd5555';
-  stlc.fillRect(0, 0, 4, 5);
-  stlc.fillRect(8, 0, 4, 5);
-  stlc.fillStyle = '#bb3333';
-  stlc.fillRect(0, 4, 16, 1);
-  stlc.fillStyle = '#ffcc44';
-  stlc.fillRect(2, 6, 3, 2);
-  stlc.fillStyle = '#88cc44';
-  stlc.fillRect(7, 5, 2, 3);
-  stlc.fillStyle = '#ff8844';
-  stlc.fillRect(11, 6, 3, 2);
-  stallCanvas.refresh();
+  // Helper: draw a stall with an awning color, support posts, counter +
+  // goods. Makes each stall clearly read as "table under a canopy" in the
+  // top-down view: striped awning at the top, shadow line, wooden counter
+  // with colorful goods, and dark corner posts for structure.
+  // Stall: wooden counter table with colored trim and goods displayed.
+  // No awning — just the table so shopkeepers standing behind it are
+  // clearly visible and not obscured.
+  function drawStall(name, trim, goods) {
+    const c = scene.textures.createCanvas(name, 16, 8);
+    const x = c.context;
+    // Counter body
+    x.fillStyle = '#a08050';
+    x.fillRect(0, 0, 16, 8);
+    // Top + bottom edge
+    x.fillStyle = '#8a6a3a';
+    x.fillRect(0, 0, 16, 1);
+    x.fillRect(0, 7, 16, 1);
+    // Colored trim strip along front
+    x.fillStyle = trim;
+    x.fillRect(0, 6, 16, 1);
+    // Highlight
+    x.fillStyle = '#b8976a';
+    x.fillRect(1, 1, 14, 1);
+    // Corner posts
+    x.fillStyle = '#5a3a1a';
+    x.fillRect(0, 0, 1, 8);
+    x.fillRect(15, 0, 1, 8);
+    // Goods on counter
+    for (let i = 0; i < goods.length; i++) {
+      x.fillStyle = goods[i].color;
+      x.fillRect(goods[i].x, goods[i].y, goods[i].w, goods[i].h);
+    }
+    c.refresh();
+  }
 
-  // --- Market stall variant (blue) ---
-  const stall2Canvas = scene.textures.createCanvas('stall2', 16, 12);
-  const stl2c = stall2Canvas.context;
-  stl2c.fillStyle = '#8a6a3a';
-  stl2c.fillRect(0, 4, 16, 6);
-  stl2c.fillStyle = '#7a5a2a';
-  stl2c.fillRect(0, 4, 16, 1);
-  stl2c.fillStyle = '#3366aa';
-  stl2c.fillRect(0, 0, 16, 5);
-  stl2c.fillStyle = '#4477bb';
-  stl2c.fillRect(0, 0, 4, 5);
-  stl2c.fillRect(8, 0, 4, 5);
-  stl2c.fillStyle = '#225599';
-  stl2c.fillRect(0, 4, 16, 1);
-  stl2c.fillStyle = '#cc8855';
-  stl2c.fillRect(2, 5, 2, 3);
-  stl2c.fillRect(5, 6, 2, 2);
-  stl2c.fillStyle = '#cc44aa';
-  stl2c.fillRect(9, 5, 4, 3);
-  stall2Canvas.refresh();
+  drawStall('stall', '#cc4444', [
+    { x: 2, y: 3, w: 3, h: 2, color: '#ffcc44' },
+    { x: 7, y: 2, w: 2, h: 3, color: '#88cc44' },
+    { x: 11, y: 3, w: 3, h: 2, color: '#ff8844' },
+  ]);
+  drawStall('stall2', '#3366aa', [
+    { x: 2, y: 2, w: 3, h: 3, color: '#cc8855' },
+    { x: 7, y: 3, w: 3, h: 2, color: '#cc44aa' },
+    { x: 12, y: 2, w: 2, h: 3, color: '#ddaa77' },
+  ]);
+  drawStall('stall3', '#338844', [
+    { x: 3, y: 3, w: 2, h: 2, color: '#ff6644' },
+    { x: 7, y: 2, w: 3, h: 3, color: '#ffaa33' },
+    { x: 12, y: 3, w: 2, h: 2, color: '#44cc88' },
+  ]);
 
-  // --- Market stall variant (green) ---
-  const stall3Canvas = scene.textures.createCanvas('stall3', 16, 12);
-  const stl3c = stall3Canvas.context;
-  stl3c.fillStyle = '#8a6a3a';
-  stl3c.fillRect(0, 4, 16, 6);
-  stl3c.fillStyle = '#7a5a2a';
-  stl3c.fillRect(0, 4, 16, 1);
-  stl3c.fillStyle = '#338844';
-  stl3c.fillRect(0, 0, 16, 5);
-  stl3c.fillStyle = '#449955';
-  stl3c.fillRect(0, 0, 4, 5);
-  stl3c.fillRect(8, 0, 4, 5);
-  stl3c.fillStyle = '#227733';
-  stl3c.fillRect(0, 4, 16, 1);
-  stl3c.fillStyle = '#ff6644';
-  stl3c.fillRect(3, 6, 2, 2);
-  stl3c.fillStyle = '#ffaa33';
-  stl3c.fillRect(7, 5, 3, 3);
-  stl3c.fillStyle = '#44cc88';
-  stl3c.fillRect(12, 6, 2, 2);
-  stall3Canvas.refresh();
+  // --- Animal cage (top-down, 12x10) — just the frame outline + sparse
+  // bars so the animals inside are clearly visible. The overlay copy at
+  // depth 2.95 renders the bars ON TOP of the animals.
+  const cageCanvas = scene.textures.createCanvas('market-cage', 16, 14);
+  const cg = cageCanvas.context;
+  // Wooden frame (border only, interior transparent so animals show)
+  cg.fillStyle = '#7a5a2a';
+  cg.fillRect(0, 0, 16, 1);  // top
+  cg.fillRect(0, 13, 16, 1); // bottom
+  cg.fillRect(0, 0, 1, 14);  // left
+  cg.fillRect(15, 0, 1, 14); // right
+  // Sparse bars (widely spaced so chicken is clearly visible)
+  cg.fillStyle = '#aaa';
+  cg.fillRect(5, 1, 1, 12);   // vertical bar
+  cg.fillRect(10, 1, 1, 12);  // vertical bar
+  cg.fillRect(1, 4, 14, 1);   // horizontal bar
+  cg.fillRect(1, 9, 14, 1);   // horizontal bar
+  cageCanvas.refresh();
 
   // --- Market tent (top-down, 20x16) ---
   const tentCanvas = scene.textures.createCanvas('tent', 20, 16);
