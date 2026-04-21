@@ -12,6 +12,7 @@ import {
   TOWN_GRID_COLS, TOWN_GRID_ROWS, TOWN_BLOCK_SIZE,
 } from "../constants.js";
 import { merchantGreetings, shopperGreetings } from "../dialog.js";
+import { isInsideBuilding } from "./buildingSystem.js";
 
 /**
  * @param {Phaser.Scene} scene
@@ -199,6 +200,11 @@ export function createTown(scene, rng, opts) {
     const blkW = blockSize * roadTile;
     const blkH = blockSize * roadTile;
 
+    // Track all stall + cage rects in this block so shoppers never spawn
+    // on top of them. Each rect is { x, y, hw, hh } — rectangular, not
+    // circular, so edges and corners are covered properly.
+    const blockObstacles = [];
+
     // Place stalls in rows with a shopkeeper behind each one
     for (let row = 0; row < 3; row++) {
       for (let col = 0; col < 2; col++) {
@@ -206,10 +212,13 @@ export function createTown(scene, rng, opts) {
         const sy = blkY + (row * 2 + 0.5) * roadTile;
         const tex = rng.pick(stallTextures);
         scene.add.image(sx, sy, tex).setScale(SCALE).setDepth(2);
+        // Stall visual size at SCALE=3: 48×24. Half-extents + 6 px pad.
+        const stallHW = 30, stallHH = 18;
+        blockObstacles.push({ x: sx, y: sy, hw: stallHW, hh: stallHH });
         // Register stall as a collision obstacle so people steer around it.
         scene.buildings.push({
           sprite: null, tex, size: "small",
-          hp: 999, maxHp: 999, radius: 25,
+          hp: 999, maxHp: 999, radius: 30,
           x: sx, y: sy, destroyed: false,
           noHide: true, cracksSprite: null, fireSprites: [],
         });
@@ -253,10 +262,13 @@ export function createTown(scene, rng, opts) {
           // Base frame below chicken
           scene.add.image(cageX, cageY, "market-cage")
             .setScale(SCALE).setDepth(1.8);
+          // Cage visual at SCALE=3: 48×42. Half-extents + 6 px pad.
+          const cageObsHW = 30, cageObsHH = 27;
+          blockObstacles.push({ x: cageX, y: cageY, hw: cageObsHW, hh: cageObsHH });
           // Register cage as a collision obstacle
           scene.buildings.push({
             sprite: null, tex: "market-cage", size: "small",
-            hp: 999, maxHp: 999, radius: 22,
+            hp: 999, maxHp: 999, radius: 28,
             x: cageX, y: cageY, destroyed: false,
             noHide: true, cracksSprite: null, fireSprites: [],
           });
@@ -287,10 +299,24 @@ export function createTown(scene, rng, opts) {
     }
 
 
-    // Shoppers wandering the block (carrying goods)
+    // Shoppers wandering the block (carrying goods).
+    // Check against the RECTANGULAR stall/cage bounds (not the circular
+    // building radius) so no shopper ever spawns on market furniture.
+    const hitsObstacle = (px, py) => {
+      for (const o of blockObstacles) {
+        if (Math.abs(px - o.x) < o.hw && Math.abs(py - o.y) < o.hh) return true;
+      }
+      return false;
+    };
     for (let s = 0; s < 6; s++) {
-      const sx = blkX + Math.random() * blkW;
-      const sy = blkY + Math.random() * blkH;
+      let sx, sy;
+      let spawnTries = 0;
+      do {
+        sx = blkX + Math.random() * blkW;
+        sy = blkY + Math.random() * blkH;
+        spawnTries++;
+        if (spawnTries > 50) break;
+      } while (hitsObstacle(sx, sy));
       const skinId = rng.between(0, 199);
       const sprite = scene.add
         .image(sx, sy, `person-stand-${skinId}`)

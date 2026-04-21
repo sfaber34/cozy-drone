@@ -255,7 +255,7 @@ export const MINIMAP_BORDER_THICKNESS_PX = 1;
 // Higher = finer detail but more rects to draw. 24×24 = 576 cells is fine.
 export const MINIMAP_GRID_CELLS = 24;
 export const MINIMAP_HEAT_COLOR = 0xff3344; // red for targets
-export const MINIMAP_HEAT_MIN_ALPHA = 0.25; // alpha for a 1-person cell
+export const MINIMAP_HEAT_MIN_ALPHA = 0.35; // alpha for a 1-person cell
 export const MINIMAP_HEAT_MAX_ALPHA = 0.95; // alpha for the peak-density cell
 // How often to recount people + redraw the heatmap. Lower = more responsive
 // but more CPU each tick. 250ms is ~4 Hz which feels plenty snappy.

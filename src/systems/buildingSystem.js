@@ -113,6 +113,16 @@ export function isInsideBuilding(scene, px, py) {
   return false;
 }
 
+export function isNearBuilding(scene, px, py, pad) {
+  for (const b of scene.buildings) {
+    if (b.destroyed) continue;
+    if (Phaser.Math.Distance.Between(px, py, b.x, b.y) < b.radius + pad) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function steerAroundBuildings(scene, px, py, angle, dt, excludeBuilding) {
   // Aggregate repulsion from ALL nearby buildings into a single combined
   // vector. The old approach picked the FIRST building and steered directly

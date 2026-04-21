@@ -12,7 +12,7 @@ import {
   MOBILE_DIALOG_SCALE,
 } from "../constants.js";
 import { greetings, ghostLines } from "../dialog.js";
-import { findNearestBuilding, steerAroundBuildings, isInsideBuilding } from "./buildingSystem.js";
+import { findNearestBuilding, steerAroundBuildings, isInsideBuilding, isNearBuilding } from "./buildingSystem.js";
 import { playDeathSfxAt } from "./audioSystem.js";
 import { tryRegisterGhostBubble } from "./ghostBubbleUtils.js";
 
@@ -331,46 +331,29 @@ export function updatePeople(scene, dt, delta) {
           }
         }
         if (p.wanderAngle !== null && p.wanderAngle !== undefined) {
-          // Steering hysteresis: once steerAroundBuildings redirects a
-          // person, COMMIT to that direction for 0.6s before re-querying.
-          // Without this, a person between two buildings gets a different
-          // "away" angle every frame and visibly oscillates. The lock
-          // gives them time to actually walk through the gap. During the
-          // lock, movement is still blocked if the next step would land
-          // inside a building (prevents walking through walls).
-          if (p._steerLock === undefined) p._steerLock = 0;
-          let steered;
-          if (p._steerLock > 0) {
-            p._steerLock -= dt;
-            steered = p.wanderAngle;
-          } else {
-            steered = steerAroundBuildings(
-              scene,
-              p.sprite.x,
-              p.sprite.y,
-              p.wanderAngle,
-              dt,
-            );
-            if (steered !== p.wanderAngle) {
-              p.wanderAngle = steered;
-              p._steerLock = 0.6;
+          // Blocked-stop: only block if the next step moves CLOSER to a
+          // building's radius. If already near one and moving away, allow
+          // it (escaping). If blocked, expire wander timer so a new random
+          // angle is picked next frame. No oscillation possible.
+          const nextX = p.sprite.x + Math.cos(p.wanderAngle) * wanderSpeed * dt;
+          const nextY = p.sprite.y + Math.sin(p.wanderAngle) * wanderSpeed * dt;
+          let wanderBlocked = false;
+          for (const b of scene.buildings) {
+            if (b.destroyed) continue;
+            const curD = Phaser.Math.Distance.Between(p.sprite.x, p.sprite.y, b.x, b.y);
+            const nxtD = Phaser.Math.Distance.Between(nextX, nextY, b.x, b.y);
+            if (nxtD < b.radius && nxtD < curD) {
+              wanderBlocked = true;
+              break;
             }
           }
-          // Move — but if the next position is inside a building, cancel
-          // the lock and pick a perpendicular escape direction immediately
-          // so the person doesn't walk in place against a wall.
-          const nextX = p.sprite.x + Math.cos(steered) * wanderSpeed * dt;
-          const nextY = p.sprite.y + Math.sin(steered) * wanderSpeed * dt;
-          if (!isInsideBuilding(scene, nextX, nextY)) {
+          if (!wanderBlocked) {
             p.sprite.x = nextX;
             p.sprite.y = nextY;
-          } else if (p._steerLock > 0) {
-            p._steerLock = 0;
-            p.wanderAngle = steered + (Math.random() < 0.5 ? 1 : -1) * (Math.PI * 0.5);
+          } else {
+            p.wanderTimer = p.wanderDuration;
           }
-          // Dead zone: only flip when movement has a clear horizontal component,
-          // preventing flicker when walking nearly north/south
-          const cx = Math.cos(steered);
+          const cx = Math.cos(p.wanderAngle);
           if (Math.abs(cx) > 0.15) p.sprite.setFlipX(cx < 0);
           // Walk anim
           p.runTimer = (p.runTimer || 0) + delta;
@@ -471,16 +454,75 @@ export function updatePeople(scene, dt, delta) {
         }
       }
 
-      // Steer around buildings while panicking — without this, people
-      // at panic speed run straight through silos and other structures.
-      // Exclude the person's hide target so they can actually enter it.
-      const steeredPanic = steerAroundBuildings(
-        scene, p.sprite.x, p.sprite.y, p.runAngle, dt, p.hideTarget,
-      );
-      if (steeredPanic !== p.runAngle) p.runAngle = steeredPanic;
-      p.sprite.x += Math.cos(p.runAngle) * panicSpeed * dt;
-      p.sprite.y += Math.sin(p.runAngle) * panicSpeed * dt;
-      p.sprite.setFlipX(Math.cos(p.runAngle) < 0);
+      // Blocked-stop for panicking: only block if the next step would move
+      // CLOSER to a building. If the person is already near a building and
+      // moving AWAY, let them — they're escaping. This prevents the trap
+      // where someone near a stall can't move in ANY direction because
+      // every angle stays within the buffer zone.
+      const panicNextX = p.sprite.x + Math.cos(p.runAngle) * panicSpeed * dt;
+      const panicNextY = p.sprite.y + Math.sin(p.runAngle) * panicSpeed * dt;
+      let panicBlocked = false;
+      for (const b of scene.buildings) {
+        if (b.destroyed || b === p.hideTarget) continue;
+        const curDist = Phaser.Math.Distance.Between(p.sprite.x, p.sprite.y, b.x, b.y);
+        const nextDist = Phaser.Math.Distance.Between(panicNextX, panicNextY, b.x, b.y);
+        // Only block if moving INTO the building's zone, not if already
+        // inside and moving away (escaping).
+        if (nextDist < b.radius && nextDist < curDist) {
+          panicBlocked = true;
+          break;
+        }
+      }
+      if (!panicBlocked) {
+        p.sprite.x = panicNextX;
+        p.sprite.y = panicNextY;
+        p.sprite.setFlipX(Math.cos(p.runAngle) < 0);
+      } else {
+        // Blocked — try 8 compass directions and pick the first clear one.
+        // Random ±90° can't find the escape if it's at 180°; exhaustive
+        // probing always finds the gap on the first try.
+        const probes = [0, Math.PI/4, Math.PI/2, 3*Math.PI/4,
+                        Math.PI, -3*Math.PI/4, -Math.PI/2, -Math.PI/4];
+        // Shuffle so tied directions don't all pick the same one
+        for (let i = probes.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [probes[i], probes[j]] = [probes[j], probes[i]];
+        }
+        let found = false;
+        for (const a of probes) {
+          const tx = p.sprite.x + Math.cos(a) * panicSpeed * dt;
+          const ty = p.sprite.y + Math.sin(a) * panicSpeed * dt;
+          let clear = true;
+          for (const b of scene.buildings) {
+            if (b.destroyed || b === p.hideTarget) continue;
+            const cd = Phaser.Math.Distance.Between(p.sprite.x, p.sprite.y, b.x, b.y);
+            const nd = Phaser.Math.Distance.Between(tx, ty, b.x, b.y);
+            if (nd < b.radius && nd < cd) { clear = false; break; }
+          }
+          if (clear) {
+            p.runAngle = a;
+            p.sprite.x = tx;
+            p.sprite.y = ty;
+            p.sprite.setFlipX(Math.cos(a) < 0);
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          // Truly stuck (all 8 blocked) — nudge away from nearest building
+          let nearB = null, nearD = Infinity;
+          for (const b of scene.buildings) {
+            if (b.destroyed) continue;
+            const d = Phaser.Math.Distance.Between(p.sprite.x, p.sprite.y, b.x, b.y);
+            if (d < nearD) { nearD = d; nearB = b; }
+          }
+          if (nearB) {
+            p.runAngle = Phaser.Math.Angle.Between(nearB.x, nearB.y, p.sprite.x, p.sprite.y);
+            p.sprite.x += Math.cos(p.runAngle) * panicSpeed * dt;
+            p.sprite.y += Math.sin(p.runAngle) * panicSpeed * dt;
+          }
+        }
+      }
 
       // Bounce off world boundaries
       const margin = 100;
@@ -657,4 +699,33 @@ export function updatePeople(scene, dt, delta) {
     const frac = Phaser.Math.Clamp(p.sprite.y / worldH, 0, 1);
     p.sprite.setDepth(PEOPLE_DEPTH_BASE + frac * PEOPLE_DEPTH_BAND);
   }
+}
+
+// Probe 8 compass directions from (px, py) and return the angle with the
+// most open space. For each direction, ray-march in steps and measure how
+// far the person can walk before hitting a building. The direction with
+// the longest clear path is the best escape route — this naturally finds
+// the actual lane between rows/columns of stalls instead of guessing.
+function findClearestDirection(scene, px, py) {
+  const probeAngles = [
+    0, Math.PI / 4, Math.PI / 2, (3 * Math.PI) / 4,
+    Math.PI, -(3 * Math.PI) / 4, -Math.PI / 2, -Math.PI / 4,
+  ];
+  let bestAngle = 0;
+  let bestDist = -1;
+  for (const a of probeAngles) {
+    let clearDist = 0;
+    for (let step = 10; step <= 80; step += 10) {
+      const tx = px + Math.cos(a) * step;
+      const ty = py + Math.sin(a) * step;
+      if (isInsideBuilding(scene, tx, ty)) break;
+      clearDist = step;
+    }
+    if (clearDist > bestDist) {
+      bestDist = clearDist;
+      bestAngle = a;
+    }
+  }
+  // Add small jitter so people don't all pick the exact same angle
+  return bestAngle + (Math.random() - 0.5) * 0.3;
 }
