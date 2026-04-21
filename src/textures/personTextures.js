@@ -1,11 +1,11 @@
-import Phaser from 'phaser';
+import Phaser from "phaser";
 
 export const NUM_SKINS = 200;
 
 // NOTE: avoid values too close to the desert background (#d2b48c = 210,180,140).
 // '#dbb08a' was nearly identical to sand and made arms invisible; replaced
 // with a pinker/cooler fair tone that contrasts.
-export const skinTones = ['#c49a6c', '#b8885c', '#e8a898', '#c8946a'];
+export const skinTones = ["#c49a6c", "#b8885c", "#e8a898", "#c8946a"];
 
 // The full generation (skins + one-off characters) is expensive — 200 skin
 // variants x ~11 poses + a dozen other sprites. Call paths:
@@ -20,88 +20,216 @@ export function generatePersonTextures(scene, opts = {}) {
   const includeCharacters = opts.includeCharacters ?? true;
   // More headwear types for visual variety — weighted by frequency
   const headTypes = [
-    'keffiyeh', 'keffiyeh', 'keffiyeh',
-    'kufi', 'kufi', 'kufi',
-    'hijab', 'hijab',
-    'turban', 'turban',
-    'bare',
+    "keffiyeh",
+    "keffiyeh",
+    "keffiyeh",
+    "kufi",
+    "kufi",
+    "kufi",
+    "hijab",
+    "hijab",
+    "bare",
   ];
   const headColors = [
-    '#fff', '#eee', '#ddd', '#ccc',
-    '#cc3333', '#aa2222', '#ee4444', '#ff6655',
-    '#dd8833', '#cc9944', '#ee7722', '#ffaa44',
-    '#557744', '#338855', '#66aa55',
-    '#882222', '#aa3344',
-    '#884488', '#aa55aa', '#cc77cc',
-    '#4466aa', '#3355cc', '#5588dd', '#2244aa',
-    '#44aaaa', '#33cccc', '#228888',
-    '#ddaa44', '#ccbb33', '#eedd44',
-    '#e8dcc8', '#d8c8a8', '#f0e8d0',
-    '#cc66aa', '#dd88cc',
-    '#88cc88', '#66aa66',
-    '#aaccee', '#88bbdd',
-    '#ffcc88', '#ffddaa',
-    '#dd6644', '#cc5533',
-    '#ffcc44', '#ffdd66',
-    '#88bb88', '#77aa77',
-    '#cc88cc', '#bb77bb',
-    '#eedd88', '#ddcc66',
-    '#ff8866', '#44ddaa', '#8866cc', '#cc8855',
+    "#fff",
+    "#eee",
+    "#ddd",
+    "#ccc",
+    "#cc3333",
+    "#aa2222",
+    "#ee4444",
+    "#ff6655",
+    "#dd8833",
+    "#cc9944",
+    "#ee7722",
+    "#ffaa44",
+    "#557744",
+    "#338855",
+    "#66aa55",
+    "#882222",
+    "#aa3344",
+    "#884488",
+    "#aa55aa",
+    "#cc77cc",
+    "#4466aa",
+    "#3355cc",
+    "#5588dd",
+    "#2244aa",
+    "#44aaaa",
+    "#33cccc",
+    "#228888",
+    "#ddaa44",
+    "#ccbb33",
+    "#eedd44",
+    "#e8dcc8",
+    "#d8c8a8",
+    "#f0e8d0",
+    "#cc66aa",
+    "#dd88cc",
+    "#88cc88",
+    "#66aa66",
+    "#aaccee",
+    "#88bbdd",
+    "#ffcc88",
+    "#ffddaa",
+    "#dd6644",
+    "#cc5533",
+    "#ffcc44",
+    "#ffdd66",
+    "#88bb88",
+    "#77aa77",
+    "#cc88cc",
+    "#bb77bb",
+    "#eedd88",
+    "#ddcc66",
+    "#ff8866",
+    "#44ddaa",
+    "#8866cc",
+    "#cc8855",
   ];
   const robeColors = [
-    '#f0ece0', '#e8dcc8', '#d8c8a8', '#c8b088', '#bbaa88',
-    '#4477aa', '#3366cc', '#5588bb', '#2255aa',
-    '#3a3a3a', '#555', '#444', '#666',
-    '#5a7a4a', '#447744', '#66aa55', '#338833',
-    '#2a2a2a', '#1a1a1a',
-    '#2a3a5a', '#1a2a4a', '#334466',
-    '#6a2a2a', '#882233', '#993344',
-    '#cc8844', '#dd9955', '#bb7733',
-    '#446688', '#335577',
-    '#996633', '#aa7744', '#885522',
-    '#2a4a2a', '#1a3a1a',
-    '#cc4444', '#dd5555', '#ee3333', '#bb2222',
-    '#4488cc', '#55aadd', '#3377bb',
-    '#44aa44', '#55cc55', '#33bb33',
-    '#ddaa33', '#ccbb44', '#eebb22',
-    '#887766', '#776655',
-    '#665544', '#554433',
-    '#aa8866', '#bb9977',
-    '#7a6a5a', '#8a7a6a',
-    '#4a2a4a', '#5a3a5a', '#663366',
-    '#1a3a3a', '#2a4a4a',
-    '#5a2a3a', '#6a3a4a',
-    '#224422', '#335533',
-    '#442244', '#553355',
-    '#553322', '#664433',
-    '#1a2a3a', '#2a3a4a',
-    '#8844aa', '#9955bb', '#7733aa',
-    '#556644', '#667755',
-    '#2a2a4a', '#3a3a5a',
-    '#3a2a1a', '#4a3a2a',
-    '#cc6600', '#ff7700', '#dd5500',
-    '#226688', '#117799',
-    '#88ccaa', '#77bbaa',
-    '#ccaa88', '#ddbb99',
-    '#aa4466', '#cc5577',
-    '#6688aa', '#7799bb',
+    "#f0ece0",
+    "#e8dcc8",
+    "#d8c8a8",
+    "#c8b088",
+    "#bbaa88",
+    "#4477aa",
+    "#3366cc",
+    "#5588bb",
+    "#2255aa",
+    "#3a3a3a",
+    "#555",
+    "#444",
+    "#666",
+    "#5a7a4a",
+    "#447744",
+    "#66aa55",
+    "#338833",
+    "#2a2a2a",
+    "#1a1a1a",
+    "#2a3a5a",
+    "#1a2a4a",
+    "#334466",
+    "#6a2a2a",
+    "#882233",
+    "#993344",
+    "#cc8844",
+    "#dd9955",
+    "#bb7733",
+    "#446688",
+    "#335577",
+    "#996633",
+    "#aa7744",
+    "#885522",
+    "#2a4a2a",
+    "#1a3a1a",
+    "#cc4444",
+    "#dd5555",
+    "#ee3333",
+    "#bb2222",
+    "#4488cc",
+    "#55aadd",
+    "#3377bb",
+    "#44aa44",
+    "#55cc55",
+    "#33bb33",
+    "#ddaa33",
+    "#ccbb44",
+    "#eebb22",
+    "#887766",
+    "#776655",
+    "#665544",
+    "#554433",
+    "#aa8866",
+    "#bb9977",
+    "#7a6a5a",
+    "#8a7a6a",
+    "#4a2a4a",
+    "#5a3a5a",
+    "#663366",
+    "#1a3a3a",
+    "#2a4a4a",
+    "#5a2a3a",
+    "#6a3a4a",
+    "#224422",
+    "#335533",
+    "#442244",
+    "#553355",
+    "#553322",
+    "#664433",
+    "#1a2a3a",
+    "#2a3a4a",
+    "#8844aa",
+    "#9955bb",
+    "#7733aa",
+    "#556644",
+    "#667755",
+    "#2a2a4a",
+    "#3a3a5a",
+    "#3a2a1a",
+    "#4a3a2a",
+    "#cc6600",
+    "#ff7700",
+    "#dd5500",
+    "#226688",
+    "#117799",
+    "#88ccaa",
+    "#77bbaa",
+    "#ccaa88",
+    "#ddbb99",
+    "#aa4466",
+    "#cc5577",
+    "#6688aa",
+    "#7799bb",
   ];
   const shoeColors = [
-    '#8a6a3a', '#5a3a1a', '#333', '#222', '#4a3a1a', '#6a4a2a',
-    '#3a3a2a', '#2a2a2a', '#6a5a3a',
-    '#553322', '#443311',          // dark leather
-    '#884444', '#664422',          // reddish-brown
+    "#8a6a3a",
+    "#5a3a1a",
+    "#333",
+    "#222",
+    "#4a3a1a",
+    "#6a4a2a",
+    "#3a3a2a",
+    "#2a2a2a",
+    "#6a5a3a",
+    "#553322",
+    "#443311", // dark leather
+    "#884444",
+    "#664422", // reddish-brown
   ];
   const accentColors = [
-    '#aa2222', '#222', '#335588', '#111', '#3a5a2a', '#bb6622',
-    '#5a1a1a', '#bbb', '#cc3333', '#aa7722', '#661111', '#333',
-    '#aa6633', '#666', '#775522', '#ddd', '#eee', '#776644',
-    '#dd4444', '#4488aa', '#44aa66', '#cc8833', '#8855aa',
-    '#ffcc33', '#ff6644', '#55ccaa', '#aa4466', '#668833',
+    "#aa2222",
+    "#222",
+    "#335588",
+    "#111",
+    "#3a5a2a",
+    "#bb6622",
+    "#5a1a1a",
+    "#bbb",
+    "#cc3333",
+    "#aa7722",
+    "#661111",
+    "#333",
+    "#aa6633",
+    "#666",
+    "#775522",
+    "#ddd",
+    "#eee",
+    "#776644",
+    "#dd4444",
+    "#4488aa",
+    "#44aa66",
+    "#cc8833",
+    "#8855aa",
+    "#ffcc33",
+    "#ff6644",
+    "#55ccaa",
+    "#aa4466",
+    "#668833",
   ];
 
   // Generate unique combos with seeded randomness for consistency
-  const skinRng = new Phaser.Math.RandomDataGenerator(['skins']);
+  const skinRng = new Phaser.Math.RandomDataGenerator(["skins"]);
   const personSkins = [];
   for (let i = 0; i < NUM_SKINS; i++) {
     const headType = skinRng.pick(headTypes);
@@ -121,11 +249,11 @@ export function generatePersonTextures(scene, opts = {}) {
     ctx.fillStyle = s.skin;
     ctx.fillRect(3, yOff, 4, 4);
     // Eyes
-    ctx.fillStyle = '#222';
+    ctx.fillStyle = "#222";
     ctx.fillRect(4, yOff + 1, 1, 1);
     ctx.fillRect(6, yOff + 1, 1, 1);
 
-    if (s.headType === 'keffiyeh') {
+    if (s.headType === "keffiyeh") {
       // Traditional headscarf — covers top + drapes down the sides
       ctx.fillStyle = s.head;
       ctx.fillRect(3, yOff, 4, 1);
@@ -133,42 +261,42 @@ export function generatePersonTextures(scene, opts = {}) {
       ctx.fillRect(7, yOff, 1, 3);
       ctx.fillStyle = s.accent;
       ctx.fillRect(3, yOff, 4, 1);
-    } else if (s.headType === 'kufi') {
+    } else if (s.headType === "kufi") {
       // Short round cap — 2 rows tall, doesn't extend past the head
       ctx.fillStyle = s.head;
       ctx.fillRect(3, yOff - 1, 4, 1); // top row (above head)
-      ctx.fillRect(3, yOff, 4, 1);     // sits on the head
-    } else if (s.headType === 'hijab') {
+      ctx.fillRect(3, yOff, 4, 1); // sits on the head
+    } else if (s.headType === "hijab") {
       // Full head covering — wraps around and down the sides
       ctx.fillStyle = s.head;
       ctx.fillRect(2, yOff, 6, 2);
       ctx.fillRect(2, yOff + 2, 1, 2);
       ctx.fillRect(7, yOff + 2, 1, 2);
       ctx.fillRect(3, yOff, 4, 1);
-      ctx.fillStyle = '#222';
+      ctx.fillStyle = "#222";
       ctx.fillRect(4, yOff + 1, 1, 1);
       ctx.fillRect(6, yOff + 1, 1, 1);
-    } else if (s.headType === 'turban') {
-      // Wrapped turban — taller than kufi, covers sides
-      ctx.fillStyle = s.head;
-      ctx.fillRect(2, yOff - 1, 6, 2); // tall wrap extends above head
-      ctx.fillRect(3, yOff, 4, 1);
-      // Accent band across the front
-      ctx.fillStyle = s.accent;
-      ctx.fillRect(3, yOff - 1, 4, 1);
     }
     // 'bare' — no headwear drawn, just the skin + eyes from above
   };
 
-  for (let si = skinIndexStart; si < skinIndexEnd && si < personSkins.length; si++) {
+  for (
+    let si = skinIndexStart;
+    si < skinIndexEnd && si < personSkins.length;
+    si++
+  ) {
     const s = personSkins[si];
     const suffix = si;
 
     // --- Standing ---
-    const standC = scene.textures.createCanvas(`person-stand-${suffix}`, 10, 14);
+    const standC = scene.textures.createCanvas(
+      `person-stand-${suffix}`,
+      10,
+      14,
+    );
     const sc = standC.context;
     drawPersonHead(sc, s, 0);
-    sc.fillStyle = '#c44';
+    sc.fillStyle = "#c44";
     sc.fillRect(5, 3, 1, 1);
     sc.fillStyle = s.robe;
     sc.fillRect(3, 4, 4, 6);
@@ -184,10 +312,14 @@ export function generatePersonTextures(scene, opts = {}) {
     standC.refresh();
 
     // --- Wave frame 1 ---
-    const wave1C = scene.textures.createCanvas(`person-wave1-${suffix}`, 10, 14);
+    const wave1C = scene.textures.createCanvas(
+      `person-wave1-${suffix}`,
+      10,
+      14,
+    );
     const w1 = wave1C.context;
     drawPersonHead(w1, s, 0);
-    w1.fillStyle = '#c44';
+    w1.fillStyle = "#c44";
     w1.fillRect(4, 3, 1, 1);
     w1.fillRect(5, 3, 1, 1);
     w1.fillRect(6, 3, 1, 1);
@@ -207,10 +339,14 @@ export function generatePersonTextures(scene, opts = {}) {
     wave1C.refresh();
 
     // --- Wave frame 2 ---
-    const wave2C = scene.textures.createCanvas(`person-wave2-${suffix}`, 10, 14);
+    const wave2C = scene.textures.createCanvas(
+      `person-wave2-${suffix}`,
+      10,
+      14,
+    );
     const w2 = wave2C.context;
     drawPersonHead(w2, s, 0);
-    w2.fillStyle = '#c44';
+    w2.fillStyle = "#c44";
     w2.fillRect(4, 3, 1, 1);
     w2.fillRect(5, 3, 1, 1);
     w2.fillRect(6, 3, 1, 1);
@@ -233,7 +369,7 @@ export function generatePersonTextures(scene, opts = {}) {
     const run1C = scene.textures.createCanvas(`person-run1-${suffix}`, 10, 14);
     const r1 = run1C.context;
     drawPersonHead(r1, s, 0);
-    r1.fillStyle = '#c44';
+    r1.fillStyle = "#c44";
     r1.fillRect(5, 2, 1, 2);
     r1.fillStyle = s.robe;
     r1.fillRect(3, 4, 4, 5);
@@ -252,7 +388,7 @@ export function generatePersonTextures(scene, opts = {}) {
     const run2C = scene.textures.createCanvas(`person-run2-${suffix}`, 10, 14);
     const r2 = run2C.context;
     drawPersonHead(r2, s, 0);
-    r2.fillStyle = '#c44';
+    r2.fillStyle = "#c44";
     r2.fillRect(5, 2, 1, 2);
     r2.fillStyle = s.robe;
     r2.fillRect(3, 4, 4, 5);
@@ -268,13 +404,17 @@ export function generatePersonTextures(scene, opts = {}) {
     run2C.refresh();
 
     // --- Angry stand (normal eyes, frown) ---
-    const angryC = scene.textures.createCanvas(`person-angry-${suffix}`, 10, 14);
+    const angryC = scene.textures.createCanvas(
+      `person-angry-${suffix}`,
+      10,
+      14,
+    );
     const ac = angryC.context;
     drawPersonHead(ac, s, 0);
     // Frowning mouth — 2px lower corners
-    ac.fillStyle = '#7a2222';
+    ac.fillStyle = "#7a2222";
     ac.fillRect(4, 3, 3, 1);
-    ac.fillStyle = '#441111';
+    ac.fillStyle = "#441111";
     ac.fillRect(4, 3, 1, 1);
     ac.fillRect(6, 3, 1, 1);
     // Body (same as stand)
@@ -292,11 +432,15 @@ export function generatePersonTextures(scene, opts = {}) {
     angryC.refresh();
 
     // --- Throw windup (arm cocked back over shoulder, rock in hand) ---
-    const throw1C = scene.textures.createCanvas(`person-throw1-${suffix}`, 10, 14);
+    const throw1C = scene.textures.createCanvas(
+      `person-throw1-${suffix}`,
+      10,
+      14,
+    );
     const t1 = throw1C.context;
     drawPersonHead(t1, s, 0);
     // Frown mouth
-    t1.fillStyle = '#7a2222';
+    t1.fillStyle = "#7a2222";
     t1.fillRect(4, 3, 3, 1);
     // Body
     t1.fillStyle = s.robe;
@@ -311,7 +455,7 @@ export function generatePersonTextures(scene, opts = {}) {
     t1.fillRect(8, 1, 1, 1); // forearm behind head
     t1.fillRect(9, 0, 1, 1); // hand
     // Rock in the raised hand
-    t1.fillStyle = '#555';
+    t1.fillStyle = "#555";
     t1.fillRect(9, 0, 1, 1);
     // Legs + shoes (braced stance, slightly wider)
     t1.fillStyle = s.robe;
@@ -323,10 +467,14 @@ export function generatePersonTextures(scene, opts = {}) {
     throw1C.refresh();
 
     // --- Angry shake (fist raised, no rock — for idle anger animation) ---
-    const shakeC = scene.textures.createCanvas(`person-shake-${suffix}`, 10, 14);
+    const shakeC = scene.textures.createCanvas(
+      `person-shake-${suffix}`,
+      10,
+      14,
+    );
     const sh = shakeC.context;
     drawPersonHead(sh, s, 0);
-    sh.fillStyle = '#7a2222';
+    sh.fillStyle = "#7a2222";
     sh.fillRect(4, 3, 3, 1);
     sh.fillStyle = s.robe;
     sh.fillRect(3, 4, 4, 6);
@@ -348,11 +496,15 @@ export function generatePersonTextures(scene, opts = {}) {
     shakeC.refresh();
 
     // --- Throw release (arm extended forward/high, rock gone) ---
-    const throw2C = scene.textures.createCanvas(`person-throw2-${suffix}`, 10, 14);
+    const throw2C = scene.textures.createCanvas(
+      `person-throw2-${suffix}`,
+      10,
+      14,
+    );
     const t2 = throw2C.context;
     drawPersonHead(t2, s, 0);
     // Shouting mouth (open)
-    t2.fillStyle = '#441111';
+    t2.fillStyle = "#441111";
     t2.fillRect(4, 3, 3, 1);
     // Body leaning forward (slight shift visible via arm layout)
     t2.fillStyle = s.robe;
@@ -378,308 +530,308 @@ export function generatePersonTextures(scene, opts = {}) {
   if (!includeCharacters) return;
 
   // --- Bride (10x14) ---
-  const brideCanvas = scene.textures.createCanvas('bride', 10, 14);
+  const brideCanvas = scene.textures.createCanvas("bride", 10, 14);
   const brc = brideCanvas.context;
-  brc.fillStyle = '#fff';
+  brc.fillStyle = "#fff";
   brc.fillRect(2, 0, 6, 3);
-  brc.fillStyle = '#d4a574';
+  brc.fillStyle = "#d4a574";
   brc.fillRect(3, 1, 4, 3);
-  brc.fillStyle = '#222';
+  brc.fillStyle = "#222";
   brc.fillRect(4, 2, 1, 1);
   brc.fillRect(6, 2, 1, 1);
-  brc.fillStyle = '#c44';
+  brc.fillStyle = "#c44";
   brc.fillRect(4, 3, 3, 1);
-  brc.fillStyle = '#fff';
+  brc.fillStyle = "#fff";
   brc.fillRect(3, 4, 4, 3);
   brc.fillRect(2, 7, 6, 4);
   brc.fillRect(1, 9, 8, 3);
-  brc.fillStyle = '#eee';
+  brc.fillStyle = "#eee";
   brc.fillRect(3, 8, 4, 1);
-  brc.fillStyle = '#ff6688';
+  brc.fillStyle = "#ff6688";
   brc.fillRect(2, 5, 2, 2);
-  brc.fillStyle = '#66cc44';
+  brc.fillStyle = "#66cc44";
   brc.fillRect(2, 7, 1, 1);
   brc.fillRect(3, 7, 1, 1);
-  brc.fillStyle = '#eeddcc';
+  brc.fillStyle = "#eeddcc";
   brc.fillRect(3, 12, 2, 2);
   brc.fillRect(5, 12, 2, 2);
   brideCanvas.refresh();
 
   // --- Groom (10x14) ---
-  const groomCanvas = scene.textures.createCanvas('groom', 10, 14);
+  const groomCanvas = scene.textures.createCanvas("groom", 10, 14);
   const gmc = groomCanvas.context;
-  gmc.fillStyle = '#c49a6c';
+  gmc.fillStyle = "#c49a6c";
   gmc.fillRect(3, 0, 4, 4);
-  gmc.fillStyle = '#fff';
+  gmc.fillStyle = "#fff";
   gmc.fillRect(3, 0, 4, 1);
   gmc.fillRect(2, 0, 1, 3);
   gmc.fillRect(7, 0, 1, 3);
-  gmc.fillStyle = '#cc9933';
+  gmc.fillStyle = "#cc9933";
   gmc.fillRect(3, 0, 4, 1);
-  gmc.fillStyle = '#222';
+  gmc.fillStyle = "#222";
   gmc.fillRect(4, 1, 1, 1);
   gmc.fillRect(6, 1, 1, 1);
-  gmc.fillStyle = '#c44';
+  gmc.fillStyle = "#c44";
   gmc.fillRect(4, 3, 3, 1);
-  gmc.fillStyle = '#f0ece0';
+  gmc.fillStyle = "#f0ece0";
   gmc.fillRect(3, 4, 4, 6);
-  gmc.fillStyle = '#cc9933';
+  gmc.fillStyle = "#cc9933";
   gmc.fillRect(3, 4, 1, 6);
   gmc.fillRect(6, 4, 1, 6);
   gmc.fillRect(4, 4, 2, 1);
-  gmc.fillStyle = '#c49a6c';
+  gmc.fillStyle = "#c49a6c";
   gmc.fillRect(2, 5, 1, 3);
   gmc.fillRect(7, 5, 1, 3);
-  gmc.fillStyle = '#f0ece0';
+  gmc.fillStyle = "#f0ece0";
   gmc.fillRect(3, 9, 2, 3);
   gmc.fillRect(5, 9, 2, 3);
-  gmc.fillStyle = '#5a3a1a';
+  gmc.fillStyle = "#5a3a1a";
   gmc.fillRect(3, 12, 2, 2);
   gmc.fillRect(5, 12, 2, 2);
   groomCanvas.refresh();
 
   // --- Priest/Imam (10x14) ---
-  const priestCanvas = scene.textures.createCanvas('priest', 10, 14);
+  const priestCanvas = scene.textures.createCanvas("priest", 10, 14);
   const prc = priestCanvas.context;
-  prc.fillStyle = '#c49a6c';
+  prc.fillStyle = "#c49a6c";
   prc.fillRect(3, 0, 4, 4);
-  prc.fillStyle = '#fff';
+  prc.fillStyle = "#fff";
   prc.fillRect(2, 0, 6, 2);
   prc.fillRect(3, 0, 4, 1);
-  prc.fillStyle = '#888';
+  prc.fillStyle = "#888";
   prc.fillRect(4, 3, 2, 2);
-  prc.fillStyle = '#222';
+  prc.fillStyle = "#222";
   prc.fillRect(4, 1, 1, 1);
   prc.fillRect(6, 1, 1, 1);
-  prc.fillStyle = '#2a3a2a';
+  prc.fillStyle = "#2a3a2a";
   prc.fillRect(3, 5, 4, 5);
   prc.fillRect(2, 6, 6, 4);
-  prc.fillStyle = '#6a4a2a';
+  prc.fillStyle = "#6a4a2a";
   prc.fillRect(1, 6, 2, 2);
-  prc.fillStyle = '#f0ece0';
+  prc.fillStyle = "#f0ece0";
   prc.fillRect(1, 6, 2, 1);
-  prc.fillStyle = '#c49a6c';
+  prc.fillStyle = "#c49a6c";
   prc.fillRect(2, 5, 1, 1);
   prc.fillRect(7, 5, 1, 3);
-  prc.fillStyle = '#2a3a2a';
+  prc.fillStyle = "#2a3a2a";
   prc.fillRect(3, 10, 2, 2);
   prc.fillRect(5, 10, 2, 2);
-  prc.fillStyle = '#333';
+  prc.fillStyle = "#333";
   prc.fillRect(3, 12, 2, 2);
   prc.fillRect(5, 12, 2, 2);
   priestCanvas.refresh();
 
   // --- Wedding arch (top-down, 20x16) ---
-  const archCanvas = scene.textures.createCanvas('wedding-arch', 20, 16);
+  const archCanvas = scene.textures.createCanvas("wedding-arch", 20, 16);
   const arc = archCanvas.context;
-  arc.fillStyle = '#ddd';
+  arc.fillStyle = "#ddd";
   arc.fillRect(0, 2, 2, 14);
   arc.fillRect(18, 2, 2, 14);
-  arc.fillStyle = '#eee';
+  arc.fillStyle = "#eee";
   arc.fillRect(0, 0, 20, 3);
-  arc.fillStyle = '#fff';
+  arc.fillStyle = "#fff";
   arc.fillRect(2, 1, 16, 2);
-  arc.fillStyle = '#ff88aa';
+  arc.fillStyle = "#ff88aa";
   arc.fillRect(3, 0, 2, 2);
   arc.fillRect(8, 0, 2, 2);
   arc.fillRect(15, 0, 2, 2);
-  arc.fillStyle = '#ff6688';
+  arc.fillStyle = "#ff6688";
   arc.fillRect(5, 1, 2, 1);
   arc.fillRect(11, 1, 2, 1);
-  arc.fillStyle = '#4a8a2a';
+  arc.fillStyle = "#4a8a2a";
   arc.fillRect(1, 1, 1, 2);
   arc.fillRect(18, 1, 1, 2);
   archCanvas.refresh();
 
   // --- Wedding carpet/rug (24x12) ---
-  const rugCanvas = scene.textures.createCanvas('wedding-rug', 24, 12);
+  const rugCanvas = scene.textures.createCanvas("wedding-rug", 24, 12);
   const rgc = rugCanvas.context;
-  rgc.fillStyle = '#882222';
+  rgc.fillStyle = "#882222";
   rgc.fillRect(0, 0, 24, 12);
-  rgc.fillStyle = '#cc9933';
+  rgc.fillStyle = "#cc9933";
   rgc.fillRect(0, 0, 24, 1);
   rgc.fillRect(0, 11, 24, 1);
   rgc.fillRect(0, 0, 1, 12);
   rgc.fillRect(23, 0, 1, 12);
-  rgc.fillStyle = '#aa3333';
+  rgc.fillStyle = "#aa3333";
   rgc.fillRect(4, 3, 3, 3);
   rgc.fillRect(10, 3, 4, 3);
   rgc.fillRect(17, 3, 3, 3);
-  rgc.fillStyle = '#cc9933';
+  rgc.fillStyle = "#cc9933";
   rgc.fillRect(5, 4, 1, 1);
   rgc.fillRect(12, 4, 1, 1);
   rgc.fillRect(18, 4, 1, 1);
-  rgc.fillStyle = '#cc9933';
+  rgc.fillStyle = "#cc9933";
   for (let fx = 1; fx < 24; fx += 3) {
     rgc.fillRect(fx, 11, 1, 1);
   }
   rugCanvas.refresh();
 
   // --- Chair/cushion (6x6) ---
-  const cushionCanvas = scene.textures.createCanvas('cushion', 6, 6);
+  const cushionCanvas = scene.textures.createCanvas("cushion", 6, 6);
   const cuc = cushionCanvas.context;
-  cuc.fillStyle = '#cc8844';
+  cuc.fillStyle = "#cc8844";
   cuc.fillRect(0, 0, 6, 6);
-  cuc.fillStyle = '#aa6633';
+  cuc.fillStyle = "#aa6633";
   cuc.fillRect(0, 0, 6, 1);
   cuc.fillRect(0, 5, 6, 1);
-  cuc.fillStyle = '#dd9955';
+  cuc.fillStyle = "#dd9955";
   cuc.fillRect(2, 2, 2, 2);
   cushionCanvas.refresh();
 
   // --- Lantern (4x6) ---
-  const lanternCanvas = scene.textures.createCanvas('lantern', 4, 6);
+  const lanternCanvas = scene.textures.createCanvas("lantern", 4, 6);
   const lnc = lanternCanvas.context;
-  lnc.fillStyle = '#cc8833';
+  lnc.fillStyle = "#cc8833";
   lnc.fillRect(1, 0, 2, 1);
   lnc.fillRect(0, 1, 4, 4);
   lnc.fillRect(1, 5, 2, 1);
-  lnc.fillStyle = '#ffcc44';
+  lnc.fillStyle = "#ffcc44";
   lnc.fillRect(1, 2, 2, 2);
   lanternCanvas.refresh();
 
   // --- Clapping person frames (10x14) ---
-  const clap1Canvas = scene.textures.createCanvas('person-clap1', 10, 14);
+  const clap1Canvas = scene.textures.createCanvas("person-clap1", 10, 14);
   const cl1 = clap1Canvas.context;
-  cl1.fillStyle = '#c49a6c';
+  cl1.fillStyle = "#c49a6c";
   cl1.fillRect(3, 0, 4, 4);
-  cl1.fillStyle = '#222';
+  cl1.fillStyle = "#222";
   cl1.fillRect(4, 1, 1, 1);
   cl1.fillRect(6, 1, 1, 1);
-  cl1.fillStyle = '#c44';
+  cl1.fillStyle = "#c44";
   cl1.fillRect(4, 3, 3, 1);
-  cl1.fillStyle = '#888';
+  cl1.fillStyle = "#888";
   cl1.fillRect(3, 4, 4, 5);
-  cl1.fillStyle = '#c49a6c';
+  cl1.fillStyle = "#c49a6c";
   cl1.fillRect(1, 4, 2, 1);
   cl1.fillRect(7, 4, 2, 1);
-  cl1.fillStyle = '#888';
+  cl1.fillStyle = "#888";
   cl1.fillRect(3, 9, 2, 3);
   cl1.fillRect(5, 9, 2, 3);
-  cl1.fillStyle = '#333';
+  cl1.fillStyle = "#333";
   cl1.fillRect(3, 12, 2, 2);
   cl1.fillRect(5, 12, 2, 2);
   clap1Canvas.refresh();
 
-  const clap2Canvas = scene.textures.createCanvas('person-clap2', 10, 14);
+  const clap2Canvas = scene.textures.createCanvas("person-clap2", 10, 14);
   const cl2 = clap2Canvas.context;
-  cl2.fillStyle = '#c49a6c';
+  cl2.fillStyle = "#c49a6c";
   cl2.fillRect(3, 0, 4, 4);
-  cl2.fillStyle = '#222';
+  cl2.fillStyle = "#222";
   cl2.fillRect(4, 1, 1, 1);
   cl2.fillRect(6, 1, 1, 1);
-  cl2.fillStyle = '#c44';
+  cl2.fillStyle = "#c44";
   cl2.fillRect(4, 3, 3, 1);
-  cl2.fillStyle = '#888';
+  cl2.fillStyle = "#888";
   cl2.fillRect(3, 4, 4, 5);
-  cl2.fillStyle = '#c49a6c';
+  cl2.fillStyle = "#c49a6c";
   cl2.fillRect(4, 4, 2, 1);
-  cl2.fillStyle = '#888';
+  cl2.fillStyle = "#888";
   cl2.fillRect(3, 9, 2, 3);
   cl2.fillRect(5, 9, 2, 3);
-  cl2.fillStyle = '#333';
+  cl2.fillStyle = "#333";
   cl2.fillRect(3, 12, 2, 2);
   cl2.fillRect(5, 12, 2, 2);
   clap2Canvas.refresh();
 
   // --- Ghost (10x14, translucent floaty person) ---
-  const ghostCanvas = scene.textures.createCanvas('ghost', 10, 14);
+  const ghostCanvas = scene.textures.createCanvas("ghost", 10, 14);
   const gh = ghostCanvas.context;
-  gh.fillStyle = '#ffffff';
+  gh.fillStyle = "#ffffff";
   gh.fillRect(3, 0, 4, 4);
   gh.fillRect(2, 1, 6, 2);
-  gh.fillStyle = '#6688cc';
+  gh.fillStyle = "#6688cc";
   gh.fillRect(3, 1, 1, 1);
   gh.fillRect(6, 1, 1, 1);
   gh.fillRect(4, 3, 2, 1);
-  gh.fillStyle = '#ffffff';
+  gh.fillStyle = "#ffffff";
   gh.fillRect(2, 4, 6, 6);
   gh.fillRect(3, 3, 4, 1);
   gh.fillRect(2, 10, 2, 2);
   gh.fillRect(6, 10, 2, 2);
   gh.fillRect(4, 11, 2, 1);
-  gh.fillStyle = '#ffee66';
+  gh.fillStyle = "#ffee66";
   gh.fillRect(4, -1, 2, 1);
   gh.fillRect(3, -1, 1, 1);
   gh.fillRect(6, -1, 1, 1);
   ghostCanvas.refresh();
 
   // --- Little guy (10x14, side view walking) frame 1 ---
-  const guy1Canvas = scene.textures.createCanvas('guy1', 10, 14);
+  const guy1Canvas = scene.textures.createCanvas("guy1", 10, 14);
   const g1 = guy1Canvas.context;
-  g1.fillStyle = '#ffcc88';
+  g1.fillStyle = "#ffcc88";
   g1.fillRect(3, 0, 4, 4);
-  g1.fillStyle = '#553300';
+  g1.fillStyle = "#553300";
   g1.fillRect(3, 0, 4, 1);
-  g1.fillStyle = '#222';
+  g1.fillStyle = "#222";
   g1.fillRect(4, 1, 1, 1);
   g1.fillRect(6, 1, 1, 1);
-  g1.fillStyle = '#c44';
+  g1.fillStyle = "#c44";
   g1.fillRect(4, 3, 1, 1);
   g1.fillRect(5, 3, 1, 1);
   g1.fillRect(6, 3, 1, 1);
-  g1.fillStyle = '#3366cc';
+  g1.fillStyle = "#3366cc";
   g1.fillRect(3, 4, 4, 5);
-  g1.fillStyle = '#ffcc88';
+  g1.fillStyle = "#ffcc88";
   g1.fillRect(2, 5, 1, 3);
   g1.fillRect(7, 5, 1, 3);
-  g1.fillStyle = '#cc8833';
+  g1.fillStyle = "#cc8833";
   g1.fillRect(3, 6, 4, 1);
-  g1.fillStyle = '#3366cc';
+  g1.fillStyle = "#3366cc";
   g1.fillRect(3, 9, 2, 3);
   g1.fillRect(6, 9, 2, 2);
-  g1.fillStyle = '#442200';
+  g1.fillStyle = "#442200";
   g1.fillRect(3, 12, 2, 2);
   g1.fillRect(6, 11, 2, 2);
   guy1Canvas.refresh();
 
   // --- Little guy frame 2 ---
-  const guy2Canvas = scene.textures.createCanvas('guy2', 10, 14);
+  const guy2Canvas = scene.textures.createCanvas("guy2", 10, 14);
   const g2 = guy2Canvas.context;
-  g2.fillStyle = '#ffcc88';
+  g2.fillStyle = "#ffcc88";
   g2.fillRect(3, 0, 4, 4);
-  g2.fillStyle = '#553300';
+  g2.fillStyle = "#553300";
   g2.fillRect(3, 0, 4, 1);
-  g2.fillStyle = '#222';
+  g2.fillStyle = "#222";
   g2.fillRect(4, 1, 1, 1);
   g2.fillRect(6, 1, 1, 1);
-  g2.fillStyle = '#c44';
+  g2.fillStyle = "#c44";
   g2.fillRect(4, 3, 1, 1);
   g2.fillRect(5, 3, 1, 1);
   g2.fillRect(6, 3, 1, 1);
-  g2.fillStyle = '#3366cc';
+  g2.fillStyle = "#3366cc";
   g2.fillRect(3, 4, 4, 5);
-  g2.fillStyle = '#ffcc88';
+  g2.fillStyle = "#ffcc88";
   g2.fillRect(2, 5, 1, 3);
   g2.fillRect(7, 5, 1, 3);
-  g2.fillStyle = '#cc8833';
+  g2.fillStyle = "#cc8833";
   g2.fillRect(3, 6, 4, 1);
-  g2.fillStyle = '#3366cc';
+  g2.fillStyle = "#3366cc";
   g2.fillRect(3, 9, 2, 2);
   g2.fillRect(6, 9, 2, 3);
-  g2.fillStyle = '#442200';
+  g2.fillStyle = "#442200";
   g2.fillRect(3, 11, 2, 2);
   g2.fillRect(6, 12, 2, 2);
   guy2Canvas.refresh();
 
   // --- Little guy cheer pose 1 (both arms raised high) ---
-  const guyCheer1Canvas = scene.textures.createCanvas('guy-cheer1', 10, 14);
+  const guyCheer1Canvas = scene.textures.createCanvas("guy-cheer1", 10, 14);
   const gc1 = guyCheer1Canvas.context;
-  gc1.fillStyle = '#ffcc88';
+  gc1.fillStyle = "#ffcc88";
   gc1.fillRect(3, 0, 4, 4);
-  gc1.fillStyle = '#553300';
+  gc1.fillStyle = "#553300";
   gc1.fillRect(3, 0, 4, 1);
-  gc1.fillStyle = '#222';
+  gc1.fillStyle = "#222";
   gc1.fillRect(4, 1, 1, 1);
   gc1.fillRect(6, 1, 1, 1);
-  gc1.fillStyle = '#c44';
+  gc1.fillStyle = "#c44";
   gc1.fillRect(4, 3, 2, 1); // open-mouth cheer
-  gc1.fillStyle = '#3366cc';
+  gc1.fillStyle = "#3366cc";
   gc1.fillRect(3, 4, 4, 5);
-  gc1.fillStyle = '#cc8833';
+  gc1.fillStyle = "#cc8833";
   gc1.fillRect(3, 6, 4, 1);
   // Both arms up high (skin pixels rising from shoulder to fist)
-  gc1.fillStyle = '#ffcc88';
+  gc1.fillStyle = "#ffcc88";
   gc1.fillRect(2, 4, 1, 1); // left shoulder
   gc1.fillRect(1, 2, 1, 2); // left upper arm
   gc1.fillRect(1, 0, 1, 2); // left fist high
@@ -687,32 +839,32 @@ export function generatePersonTextures(scene, opts = {}) {
   gc1.fillRect(8, 2, 1, 2); // right upper arm
   gc1.fillRect(8, 0, 1, 2); // right fist high
   // Legs
-  gc1.fillStyle = '#3366cc';
+  gc1.fillStyle = "#3366cc";
   gc1.fillRect(3, 9, 2, 3);
   gc1.fillRect(5, 9, 2, 3);
-  gc1.fillStyle = '#442200';
+  gc1.fillStyle = "#442200";
   gc1.fillRect(3, 12, 2, 2);
   gc1.fillRect(5, 12, 2, 2);
   guyCheer1Canvas.refresh();
 
   // --- Little guy cheer pose 2 (arms slightly lower, jumping apart) ---
-  const guyCheer2Canvas = scene.textures.createCanvas('guy-cheer2', 10, 14);
+  const guyCheer2Canvas = scene.textures.createCanvas("guy-cheer2", 10, 14);
   const gc2 = guyCheer2Canvas.context;
-  gc2.fillStyle = '#ffcc88';
+  gc2.fillStyle = "#ffcc88";
   gc2.fillRect(3, 0, 4, 4);
-  gc2.fillStyle = '#553300';
+  gc2.fillStyle = "#553300";
   gc2.fillRect(3, 0, 4, 1);
-  gc2.fillStyle = '#222';
+  gc2.fillStyle = "#222";
   gc2.fillRect(4, 1, 1, 1);
   gc2.fillRect(6, 1, 1, 1);
-  gc2.fillStyle = '#c44';
+  gc2.fillStyle = "#c44";
   gc2.fillRect(4, 3, 2, 1);
-  gc2.fillStyle = '#3366cc';
+  gc2.fillStyle = "#3366cc";
   gc2.fillRect(3, 4, 4, 5);
-  gc2.fillStyle = '#cc8833';
+  gc2.fillStyle = "#cc8833";
   gc2.fillRect(3, 6, 4, 1);
   // Arms out to the sides (wider V shape)
-  gc2.fillStyle = '#ffcc88';
+  gc2.fillStyle = "#ffcc88";
   gc2.fillRect(2, 4, 1, 1); // shoulder L
   gc2.fillRect(1, 3, 1, 2); // upper arm L
   gc2.fillRect(0, 1, 1, 2); // fist L out
@@ -720,10 +872,10 @@ export function generatePersonTextures(scene, opts = {}) {
   gc2.fillRect(8, 3, 1, 2); // upper arm R
   gc2.fillRect(9, 1, 1, 2); // fist R out
   // Legs — feet apart (jumping)
-  gc2.fillStyle = '#3366cc';
+  gc2.fillStyle = "#3366cc";
   gc2.fillRect(2, 9, 2, 3);
   gc2.fillRect(6, 9, 2, 3);
-  gc2.fillStyle = '#442200';
+  gc2.fillStyle = "#442200";
   gc2.fillRect(2, 12, 2, 2);
   gc2.fillRect(6, 12, 2, 2);
   guyCheer2Canvas.refresh();
