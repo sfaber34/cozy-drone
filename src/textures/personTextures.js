@@ -134,11 +134,10 @@ export function generatePersonTextures(scene, opts = {}) {
       ctx.fillStyle = s.accent;
       ctx.fillRect(3, yOff, 4, 1);
     } else if (s.headType === 'kufi') {
-      // Short round cap — sits on top of the head
+      // Short round cap — 2 rows tall, doesn't extend past the head
       ctx.fillStyle = s.head;
-      ctx.fillRect(3, yOff, 4, 1);
-      ctx.fillRect(2, yOff, 1, 1);
-      ctx.fillRect(7, yOff, 1, 1);
+      ctx.fillRect(3, yOff - 1, 4, 1); // top row (above head)
+      ctx.fillRect(3, yOff, 4, 1);     // sits on the head
     } else if (s.headType === 'hijab') {
       // Full head covering — wraps around and down the sides
       ctx.fillStyle = s.head;
