@@ -45,8 +45,8 @@ export function findNearestBuilding(scene, px, py) {
   let bestDist = Infinity;
   for (const b of scene.buildings) {
     if (b.destroyed) continue;
-    // Can't hide in oil wells, oil tanks, or silos
-    if (b.isOilInfra || b.isOilWell || b.tex === "silo") continue;
+    // Can't hide in oil wells, oil tanks, silos, or market furniture
+    if (b.isOilInfra || b.isOilWell || b.tex === "silo" || b.noHide) continue;
     const d = Phaser.Math.Distance.Between(px, py, b.x, b.y);
     if (d < bestDist) {
       bestDist = d;

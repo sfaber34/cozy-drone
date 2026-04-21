@@ -233,16 +233,17 @@ export function missileImpact(scene, x, y) {
       if (b.hp <= 0) {
         // Destroyed
         b.destroyed = true;
-        if (b.isOilWell) {
-          b.sprite.setTexture("oil-well-burn");
-          b.sprite.clearTint();
-          if (b.wellRef) b.wellRef.alive = false;
-        } else if (b.isOilInfra) {
-          // Oil tank — show as dark burned tank
-          b.sprite.setTint(0x333333);
-        } else {
-          b.sprite.setTexture("rubble");
-          b.sprite.setTint(0x888888);
+        if (b.sprite) {
+          if (b.isOilWell) {
+            b.sprite.setTexture("oil-well-burn");
+            b.sprite.clearTint();
+            if (b.wellRef) b.wellRef.alive = false;
+          } else if (b.isOilInfra) {
+            b.sprite.setTint(0x333333);
+          } else {
+            b.sprite.setTexture("rubble");
+            b.sprite.setTint(0x888888);
+          }
         }
         if (b.cracksSprite) b.cracksSprite.destroy();
         for (const f of b.fireSprites) f.destroy();
@@ -300,7 +301,7 @@ export function missileImpact(scene, x, y) {
         }
         // Kill people hiding in this building
         killPeopleInBuilding(scene, b);
-      } else {
+      } else if (b.sprite) {
         // Show damage — darken tint based on remaining hp
         const dmgFrac = b.hp / b.maxHp;
         const tintVal = Math.floor(0x88 + 0x77 * dmgFrac);

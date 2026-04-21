@@ -206,6 +206,13 @@ export function createTown(scene, rng, opts) {
         const sy = blkY + (row * 2 + 0.5) * roadTile;
         const tex = rng.pick(stallTextures);
         scene.add.image(sx, sy, tex).setScale(SCALE).setDepth(2);
+        // Register stall as a collision obstacle so people steer around it.
+        scene.buildings.push({
+          sprite: null, tex, size: "small",
+          hp: 999, maxHp: 999, radius: 25,
+          x: sx, y: sy, destroyed: false,
+          noHide: true, cracksSprite: null, fireSprites: [],
+        });
 
         // Shopkeeper stands behind (north side of) the stall
         const skinId = rng.between(0, 199);
@@ -246,6 +253,13 @@ export function createTown(scene, rng, opts) {
           // Base frame below chicken
           scene.add.image(cageX, cageY, "market-cage")
             .setScale(SCALE).setDepth(1.8);
+          // Register cage as a collision obstacle
+          scene.buildings.push({
+            sprite: null, tex: "market-cage", size: "small",
+            hp: 999, maxHp: 999, radius: 22,
+            x: cageX, y: cageY, destroyed: false,
+            noHide: true, cracksSprite: null, fireSprites: [],
+          });
           const cageHW = 16;
           const cageHH = 12;
           const aSprite = scene.add.image(cageX, cageY, "chicken")

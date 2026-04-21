@@ -230,15 +230,17 @@ export function cannonImpact(scene, x, y) {
       b.hp -= 0.5;
       if (b.hp <= 0) {
         b.destroyed = true;
-        if (b.isOilWell) {
-          b.sprite.setTexture("oil-well-burn");
-          b.sprite.clearTint();
-          if (b.wellRef) b.wellRef.alive = false;
-        } else if (b.isOilInfra) {
-          b.sprite.setTint(0x333333);
-        } else {
-          b.sprite.setTexture("rubble");
-          b.sprite.setTint(0x888888);
+        if (b.sprite) {
+          if (b.isOilWell) {
+            b.sprite.setTexture("oil-well-burn");
+            b.sprite.clearTint();
+            if (b.wellRef) b.wellRef.alive = false;
+          } else if (b.isOilInfra) {
+            b.sprite.setTint(0x333333);
+          } else {
+            b.sprite.setTexture("rubble");
+            b.sprite.setTint(0x888888);
+          }
         }
         if (b.cracksSprite) b.cracksSprite.destroy();
         for (const f of b.fireSprites) f.destroy();
@@ -250,7 +252,6 @@ export function cannonImpact(scene, x, y) {
         exp.play("explode");
         exp.once("animationcomplete", () => exp.destroy());
         if (b.isOilInfra) {
-          // Oil burns forever
           const permFire = scene.add.image(b.x, b.y - 5, "fire")
             .setScale(SCALE * 1.5).setDepth(3);
           scene.hudCam.ignore(permFire);
@@ -280,7 +281,7 @@ export function cannonImpact(scene, x, y) {
           });
         }
         killPeopleInBuilding(scene, b);
-      } else {
+      } else if (b.sprite) {
         // Damage tint
         const dmgFrac = b.hp / b.maxHp;
         const tintVal = Math.floor(0x88 + 0x77 * dmgFrac);
