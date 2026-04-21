@@ -20,6 +20,8 @@ export function updateAnimals(scene, dt) {
 
   for (const a of scene.animals) {
     if (a.state === "dead") continue;
+    // Caged animals never move, never panic, never animate — frozen in place.
+    if (a.isCaged) continue;
     // Chicken fighters in idle state are controlled by chickenFightSystem
     if ((a.isChickenFighter || a.isRaceCamel) && a.state === "idle") continue;
 
