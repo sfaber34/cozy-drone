@@ -119,8 +119,8 @@ export function createFarmCompound(scene, rng, opts) {
 
   // --- Expanded fence perimeter (FARM_COMPOUND_HEIGHT_FACTOR × taller) ---
   // Original top/bottom Y offsets were ±180/+200; scaled by hf = 1.6.
-  const topY = farmY - Math.round(180 * hf);    // ~farmY - 288
-  const bottomY = farmY + Math.round(200 * hf); // ~farmY + 320
+  const topY = farmY - 6 * fenceLen;             // farmY - 288
+  const bottomY = farmY + 6 * fenceLen;          // farmY + 288 — aligned to vertical fence grid so corners overlap
 
   // Silos sit ABOVE the top fence in a horizontal row.
   const siloY = topY - 70;

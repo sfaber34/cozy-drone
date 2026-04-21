@@ -57,7 +57,9 @@ export function createVehicles(scene, rng) {
       bx = Phaser.Math.Between(500, WORLD_W * TILE * SCALE - 500);
       by = Phaser.Math.Between(500, WORLD_H * TILE * SCALE - 500);
     } while (
-      isInNoGoZone(bx, by, scene) ||
+      // 150 px buffer around every set piece so bikers don't spawn in
+      // narrow gaps between two adjacent pieces and oscillate in place.
+      isInNoGoZone(bx, by, scene, 150) ||
       Phaser.Math.Distance.Between(bx, by, droneX, droneY) < 2000
     );
     const bikeVariant = Phaser.Math.Between(0, 9);
@@ -281,10 +283,11 @@ function forEachNoGoZonePx(scene, fn) {
   }
 }
 
-function isInNoGoZone(px, py, scene) {
+function isInNoGoZone(px, py, scene, padding) {
+  const pad = padding || 0;
   let inside = false;
   forEachNoGoZonePx(scene, (zx, zy, zhw, zhh) => {
-    if (!inside && Math.abs(px - zx) < zhw && Math.abs(py - zy) < zhh) inside = true;
+    if (!inside && Math.abs(px - zx) < zhw + pad && Math.abs(py - zy) < zhh + pad) inside = true;
   });
   return inside;
 }

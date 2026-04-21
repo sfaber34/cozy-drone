@@ -167,25 +167,30 @@ function updateDriver(scene, arena, d, dt) {
   // driver's sprite position — peopleSystem is driving them during panic.
   if (!idle) return;
 
-  // Excited-jump state machine — only advances while idle. Applied via a
-  // Y offset that wraps the controller too so it stays in the driver's hand.
+  // Excited-jump state machine — drivers do a burst of 3 rapid jumps to
+  // show excitement, then wait before the next burst. Applied via a Y
+  // offset that wraps the controller too so it stays in the driver's hand.
   let jumpBob = 0;
   if (d.jumping) {
     d.jumpElapsed += dt * 1000;
     const t = Math.min(1, d.jumpElapsed / RC_CAR_DRIVER_JUMP_DURATION);
     jumpBob = Math.sin(Math.PI * t) * RC_CAR_DRIVER_JUMP_HEIGHT;
     if (t >= 1) {
-      d.jumping = false;
       d.jumpElapsed = 0;
-      d.jumpTimer =
-        RC_CAR_DRIVER_JUMP_INTERVAL_MIN +
-        Math.random() * RC_CAR_DRIVER_JUMP_INTERVAL_RANGE;
+      d.jumpsLeft = (d.jumpsLeft || 1) - 1;
+      if (d.jumpsLeft <= 0) {
+        d.jumping = false;
+        d.jumpTimer =
+          RC_CAR_DRIVER_JUMP_INTERVAL_MIN +
+          Math.random() * RC_CAR_DRIVER_JUMP_INTERVAL_RANGE;
+      }
     }
   } else {
     d.jumpTimer -= dt * 1000;
     if (d.jumpTimer <= 0) {
       d.jumping = true;
       d.jumpElapsed = 0;
+      d.jumpsLeft = 3;
     }
   }
   // Apply jump bob to the person's Y around their home, and keep the
