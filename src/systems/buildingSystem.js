@@ -154,6 +154,39 @@ export function isNearBuilding(scene, px, py, pad) {
   return false;
 }
 
+// Snap a sprite to just outside any building no-go rect it's currently
+// inside. Returns true if it moved the sprite.
+//
+// Why this exists: buildings have a PAD-extended no-go rect, and the
+// wander/panic movement code rejects any step whose destination is inside
+// that rect. But when a person's CENTER is already inside (e.g. spawned
+// there by a set-piece's random-box placement, or pushed there by hide-exit
+// jitter into an adjacent building), the per-frame step (~0.5–1 px) is far
+// smaller than PAD (22 px), so every direction's destination is also
+// inside, every move is rejected, and the person animates in place
+// forever. This routine forces them out along the shortest-overlap axis
+// so normal movement can resume.
+export function pushOutOfBuildings(scene, sprite) {
+  for (const b of scene.buildings) {
+    if (b.destroyed) continue;
+    const bHW = b.hw || b.radius;
+    const bHH = b.hh || b.radius;
+    const dx = sprite.x - b.x;
+    const dy = sprite.y - b.y;
+    if (Math.abs(dx) < bHW && Math.abs(dy) < bHH) {
+      const overlapX = bHW - Math.abs(dx);
+      const overlapY = bHH - Math.abs(dy);
+      if (overlapX < overlapY) {
+        sprite.x = b.x + (dx >= 0 ? bHW + 1 : -(bHW + 1));
+      } else {
+        sprite.y = b.y + (dy >= 0 ? bHH + 1 : -(bHH + 1));
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
 export function steerAroundBuildings(scene, px, py, angle, dt, excludeBuilding) {
   // Rectangular repulsion: aggregate push vectors from all buildings whose
   // AABB the person is inside or whose lookahead would enter. Uses hw/hh

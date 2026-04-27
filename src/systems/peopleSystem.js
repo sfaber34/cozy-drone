@@ -12,7 +12,7 @@ import {
   MOBILE_DIALOG_SCALE,
 } from "../constants.js";
 import { greetings, ghostLines } from "../dialog.js";
-import { findNearestBuilding, steerAroundBuildings, isInsideBuilding, isNearBuilding } from "./buildingSystem.js";
+import { findNearestBuilding, steerAroundBuildings, isInsideBuilding, isNearBuilding, pushOutOfBuildings } from "./buildingSystem.js";
 import { playDeathSfxAt } from "./audioSystem.js";
 import { tryRegisterGhostBubble } from "./ghostBubbleUtils.js";
 
@@ -262,6 +262,13 @@ export function updatePeople(scene, dt, delta) {
 
   for (const p of scene.people) {
     if (p.state === "gone") continue;
+
+    // Recover from being inside a building's no-go rect. Skip ghost
+    // (drifts upward through anything) and hiding (intentionally
+    // positioned inside its hideTarget).
+    if (p.state !== "ghost" && p.state !== "hiding") {
+      pushOutOfBuildings(scene, p.sprite);
+    }
 
     // People hiding in buildings — exit after timeout
     if (p.state === "hiding") {
@@ -662,9 +669,44 @@ export function updatePeople(scene, dt, delta) {
           return true;
         };
         const tryOrder = [0, 0.5, -0.5, 1.0, -1.0, 1.6, -1.6];
-        let chosen = desired;
+        let chosen = null;
         for (const off of tryOrder) {
           if (isClear(desired + off)) { chosen = desired + off; break; }
+        }
+        // Emergency 360° fallback — the flanking arc above only covers
+        // ±1.6 rad. If home sits behind a building, every flanking probe
+        // is blocked and the person walks straight into the wall. Probe
+        // every 45° at one step distance and snap heading to any clear
+        // direction so they actually move.
+        if (chosen === null) {
+          const stepDist = wanderSpeed * 1.5 * dt;
+          const fullProbes = [
+            0, Math.PI / 4, Math.PI / 2, (3 * Math.PI) / 4,
+            Math.PI, -(3 * Math.PI) / 4, -Math.PI / 2, -Math.PI / 4,
+          ];
+          for (let i = fullProbes.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [fullProbes[i], fullProbes[j]] = [fullProbes[j], fullProbes[i]];
+          }
+          for (const a of fullProbes) {
+            const tx = p.sprite.x + Math.cos(a) * stepDist;
+            const ty = p.sprite.y + Math.sin(a) * stepDist;
+            let clear = true;
+            for (const b of buildings) {
+              if (b.destroyed) continue;
+              const bHW = b.hw || b.radius;
+              const bHH = b.hh || b.radius;
+              if (Math.abs(tx - b.x) < bHW && Math.abs(ty - b.y) < bHH) {
+                clear = false; break;
+              }
+            }
+            if (clear) {
+              chosen = a;
+              p._returnHeading = a; // skip smooth turn — emergency escape
+              break;
+            }
+          }
+          if (chosen === null) chosen = desired;
         }
 
         // Smooth heading with a turn-rate limit so changes ease in

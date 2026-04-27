@@ -417,7 +417,8 @@ function updateMice(scene, mice, dt) {
     if (m.y < m.region.top)    { m.y = m.region.top;    m.heading = -m.heading; }
     if (m.y > m.region.bottom) { m.y = m.region.bottom; m.heading = -m.heading; }
     m.sprite.setPosition(m.x, m.y);
-    m.sprite.setFlipX(Math.cos(m.heading) < 0);
+    // Mouse texture is drawn facing left, so flip when moving right.
+    m.sprite.setFlipX(Math.cos(m.heading) > 0);
   }
 }
 
@@ -449,13 +450,15 @@ function buildMiceChasers(scene, rng, farmX, farmY, mice, sprites) {
       .setScale(SCALE)
       .setDepth(2.9);
     sprites.push(stick);
-    chasers.push({
+    const chaser = {
       personEntry, sprite, skinId, stick,
-      target: pickRandom(mice),
+      target: null,
       frameTimer: 0, frameIdx: 0,
       swingTimer: 0,  // when > 0: stick is in swing-pose briefly
       swingCooldown: 0,
-    });
+    };
+    chaser.target = pickUnusedMouse(mice, chasers, chaser);
+    chasers.push(chaser);
   }
   return chasers;
 }
@@ -468,7 +471,7 @@ function updateChasers(scene, chasers, mice, dt) {
     }
     c.stick.setVisible(true);
     // Pick a new target if ours is gone (shouldn't happen — mice don't die — but safety)
-    if (!c.target || !mice.includes(c.target)) c.target = pickRandom(mice);
+    if (!c.target || !mice.includes(c.target)) c.target = pickUnusedMouse(mice, chasers, c);
     if (!c.target) continue;
 
     const dx = c.target.x - c.sprite.x;
@@ -480,33 +483,42 @@ function updateChasers(scene, chasers, mice, dt) {
       const desired = Math.atan2(dy, dx);
 
       // If the direct path runs into a building, try flanking offsets
-      // (±0.6, ±1.2 rad) and pick the first clear one. Prevents the
-      // flip-flop oscillation that happens when steerAroundBuildings
+      // (±0.6, ±1.2, ±1.8 rad) and pick the first clear one. Prevents
+      // the flip-flop oscillation that happens when steerAroundBuildings
       // keeps pushing back toward the same obstacle each frame.
       const probeDist = 40;
-      const isClear = (ang) => {
-        const pnx = c.sprite.x + Math.cos(ang) * probeDist;
-        const pny = c.sprite.y + Math.sin(ang) * probeDist;
+      const isClear = (ang, dist, pad) => {
+        const pnx = c.sprite.x + Math.cos(ang) * dist;
+        const pny = c.sprite.y + Math.sin(ang) * dist;
         for (const b of scene.buildings) {
           if (b.destroyed) continue;
-          const bHW = (b.hw || b.radius) + 12;
-          const bHH = (b.hh || b.radius) + 12;
+          const bHW = (b.hw || b.radius) + pad;
+          const bHH = (b.hh || b.radius) + pad;
           if (Math.abs(pnx - b.x) < bHW && Math.abs(pny - b.y) < bHH) return false;
         }
         return true;
       };
       const tryOrder = [0, 0.6, -0.6, 1.2, -1.2, 1.8, -1.8];
-      let chosen = desired;
+      let chosen = null;
       for (const off of tryOrder) {
-        if (isClear(desired + off)) { chosen = desired + off; break; }
+        if (isClear(desired + off, probeDist, 12)) { chosen = desired + off; break; }
       }
 
-      // Smooth heading toward chosen (turn-rate limit prevents flip-flop)
+      if (chosen === null) chosen = desired;
+
+      // Smooth heading toward chosen (turn-rate limit prevents flip-flop).
+      // Skipped while an escape lock is active so the chaser keeps moving
+      // away from a wall it just unstuck from instead of immediately
+      // rotating back into it.
       if (c.heading === undefined) c.heading = chosen;
-      const delta = Phaser.Math.Angle.Wrap(chosen - c.heading);
-      const maxTurn = 5 * dt; // rad/s
-      if (Math.abs(delta) <= maxTurn) c.heading = chosen;
-      else c.heading += Math.sign(delta) * maxTurn;
+      if (!(c.escapeLockFrames > 0)) {
+        const delta = Phaser.Math.Angle.Wrap(chosen - c.heading);
+        const maxTurn = 5 * dt; // rad/s
+        if (Math.abs(delta) <= maxTurn) c.heading = chosen;
+        else c.heading += Math.sign(delta) * maxTurn;
+      } else {
+        c.escapeLockFrames--;
+      }
 
       const step = FARM_COMPOUND_CHASER_SPEED * dt;
       const nx = c.sprite.x + Math.cos(c.heading) * step;
@@ -514,6 +526,35 @@ function updateChasers(scene, chasers, mice, dt) {
       if (!isInsideBuilding(scene, nx, ny)) {
         c.sprite.x = nx;
         c.sprite.y = ny;
+      } else {
+        // Move blocked at the current heading. The flank probe checks
+        // 40 px ahead with a +12 buffer, but the actual rect ends much
+        // closer — when the chaser is grazing a building edge, the probe
+        // can declare a heading "clear" while the immediate step in that
+        // direction lands inside the rect. Without this escape, the
+        // chaser pins forever against the corner. Probe 360° at step
+        // distance with no buffer (matching the move check exactly),
+        // snap heading, and lock the heading briefly so smooth-turn
+        // doesn't rotate back into the wall on the next frame.
+        const fullProbes = [
+          0, Math.PI / 4, Math.PI / 2, (3 * Math.PI) / 4,
+          Math.PI, -(3 * Math.PI) / 4, -Math.PI / 2, -Math.PI / 4,
+        ];
+        for (let i = fullProbes.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [fullProbes[i], fullProbes[j]] = [fullProbes[j], fullProbes[i]];
+        }
+        for (const a of fullProbes) {
+          const tx = c.sprite.x + Math.cos(a) * step;
+          const ty = c.sprite.y + Math.sin(a) * step;
+          if (!isInsideBuilding(scene, tx, ty)) {
+            c.heading = a;
+            c.escapeLockFrames = 30;
+            c.sprite.x = tx;
+            c.sprite.y = ty;
+            break;
+          }
+        }
       }
 
       // Flip hysteresis — only switch facing when heading is clearly
@@ -564,7 +605,7 @@ function updateChasers(scene, chasers, mice, dt) {
         m.y = m.region.top + Math.random() * (m.region.bottom - m.region.top);
         m.heading = Math.random() * Math.PI * 2;
         m.sprite.setPosition(m.x, m.y);
-        c.target = pickRandom(mice); // switch to a new target
+        c.target = pickUnusedMouse(mice, chasers, c); // switch to a new target
       }
     }
   }
@@ -743,6 +784,22 @@ function walkToward(L, tx, ty, dt) {
     );
   }
   return false;
+}
+
+// Pick a random mouse that isn't currently targeted by any other chaser,
+// so chasers don't pile up on the same mouse and visually overlap.
+// Falls back to any random mouse if every one is already taken (only
+// possible when chasers ≥ mice).
+function pickUnusedMouse(mice, chasers, excludeChaser) {
+  if (!mice || mice.length === 0) return null;
+  const taken = new Set();
+  for (const c of chasers) {
+    if (c === excludeChaser) continue;
+    if (c.target) taken.add(c.target);
+  }
+  const free = mice.filter((m) => !taken.has(m));
+  const pool = free.length > 0 ? free : mice;
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 function pickRandom(arr) {
