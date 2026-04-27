@@ -265,9 +265,13 @@ export function updatePeople(scene, dt, delta) {
 
     // Recover from being inside a building's no-go rect. Skip ghost
     // (drifts upward through anything) and hiding (intentionally
-    // positioned inside its hideTarget).
+    // positioned inside its hideTarget). Crucially, exclude p.hideTarget
+    // so a panicking person can actually run INTO the building they're
+    // trying to hide in — without this, push-out snaps them back the
+    // moment their center crosses the PAD edge and distToB never gets
+    // below the hide threshold.
     if (p.state !== "ghost" && p.state !== "hiding") {
-      pushOutOfBuildings(scene, p.sprite);
+      pushOutOfBuildings(scene, p.sprite, p.hideTarget);
     }
 
     // People hiding in buildings — exit after timeout
@@ -709,12 +713,19 @@ export function updatePeople(scene, dt, delta) {
           if (chosen === null) chosen = desired;
         }
 
-        // Smooth heading with a turn-rate limit so changes ease in
+        // Smooth heading with a turn-rate limit so changes ease in.
+        // Skipped while an escape lock is active so the person actually
+        // gets clear of the corner before the smooth-turn pulls them
+        // back into it.
         if (p._returnHeading === undefined) p._returnHeading = chosen;
-        const deltaA = Phaser.Math.Angle.Wrap(chosen - p._returnHeading);
-        const maxTurn = 5 * dt;
-        if (Math.abs(deltaA) <= maxTurn) p._returnHeading = chosen;
-        else p._returnHeading += Math.sign(deltaA) * maxTurn;
+        if (!(p._returnEscapeLock > 0)) {
+          const deltaA = Phaser.Math.Angle.Wrap(chosen - p._returnHeading);
+          const maxTurn = 5 * dt;
+          if (Math.abs(deltaA) <= maxTurn) p._returnHeading = chosen;
+          else p._returnHeading += Math.sign(deltaA) * maxTurn;
+        } else {
+          p._returnEscapeLock--;
+        }
 
         // Move — but block if the step would enter a building rect
         const step = wanderSpeed * 1.5 * dt;
@@ -732,6 +743,41 @@ export function updatePeople(scene, dt, delta) {
         if (!returnBlocked) {
           p.sprite.x = rnx;
           p.sprite.y = rny;
+        } else {
+          // Move blocked at current heading. The 40-px probe with no
+          // buffer can declare an angle "clear" while the path crosses
+          // through a rect — small immediate step lands inside. Probe
+          // 360° at step distance (matching the move check exactly),
+          // snap heading to a clear direction, and lock briefly so
+          // smooth-turn doesn't immediately pull back into the wall.
+          const fullProbes = [
+            0, Math.PI / 4, Math.PI / 2, (3 * Math.PI) / 4,
+            Math.PI, -(3 * Math.PI) / 4, -Math.PI / 2, -Math.PI / 4,
+          ];
+          for (let i = fullProbes.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [fullProbes[i], fullProbes[j]] = [fullProbes[j], fullProbes[i]];
+          }
+          for (const a of fullProbes) {
+            const tx = p.sprite.x + Math.cos(a) * step;
+            const ty = p.sprite.y + Math.sin(a) * step;
+            let clear = true;
+            for (const b of buildings) {
+              if (b.destroyed) continue;
+              const bHW = b.hw || b.radius;
+              const bHH = b.hh || b.radius;
+              if (Math.abs(tx - b.x) < bHW && Math.abs(ty - b.y) < bHH) {
+                clear = false; break;
+              }
+            }
+            if (clear) {
+              p._returnHeading = a;
+              p._returnEscapeLock = 30;
+              p.sprite.x = tx;
+              p.sprite.y = ty;
+              break;
+            }
+          }
         }
 
         // Flip hysteresis — avoid rapid left/right flicker near vertical headings

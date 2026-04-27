@@ -34,7 +34,7 @@ import {
   FARM_COMPOUND_FEED_PELLET_DURATION,
 } from "../constants.js";
 import { createManagedPerson } from "./managedPersonUtils.js";
-import { steerAroundBuildings, isInsideBuilding } from "./buildingSystem.js";
+import { steerAroundBuildings, isInsideBuilding, pushOutOfBuildings } from "./buildingSystem.js";
 
 // Shirt tints for variety on the clothesline
 const LAUNDRY_TINTS = [0xff6666, 0x66aaff, 0xffcc66, 0x77cc88, 0xcc77cc, 0xffffff];
@@ -373,8 +373,13 @@ function buildMice(scene, rng, farmX, farmY, sprites) {
   };
   const mice = [];
   for (let i = 0; i < FARM_COMPOUND_MICE_COUNT; i++) {
-    const x = rng.between(region.left + 20, region.right - 20);
-    const y = rng.between(region.top + 20, region.bottom - 20);
+    let x, y;
+    let tries = 0;
+    do {
+      x = rng.between(region.left + 20, region.right - 20);
+      y = rng.between(region.top + 20, region.bottom - 20);
+      tries++;
+    } while (isInsideBuilding(scene, x, y) && tries < 50);
     const sprite = scene.add
       .image(x, y, "mouse")
       .setScale(SCALE).setDepth(2.2);
@@ -393,6 +398,17 @@ function buildMice(scene, rng, farmX, farmY, sprites) {
 
 function updateMice(scene, mice, dt) {
   for (const m of mice) {
+    // If a mouse is inside a building rect (teleport-after-hit landed
+    // there, or any other path that bypassed the spawn check), snap it
+    // out along the shortest-overlap axis. Otherwise the small step is
+    // too short to escape PAD and the mouse paces forever — chasers
+    // then run tight circles around it.
+    m.sprite.setPosition(m.x, m.y);
+    if (pushOutOfBuildings(scene, m.sprite)) {
+      m.x = m.sprite.x;
+      m.y = m.sprite.y;
+    }
+
     m.turnTimer -= dt * 1000;
     if (m.turnTimer <= 0) {
       m.turnTimer = FARM_COMPOUND_MOUSE_TURN_MIN_MS +
@@ -430,8 +446,12 @@ function buildMiceChasers(scene, rng, farmX, farmY, mice, sprites) {
   const chasers = [];
   const hf = FARM_COMPOUND_HEIGHT_FACTOR;
   for (let i = 0; i < FARM_COMPOUND_CHASER_COUNT; i++) {
-    const sx = farmX + Phaser.Math.Between(-180, 260);
-    const sy = farmY + Phaser.Math.Between(-120, Math.round(160 * hf));
+    let sx, sy, tries = 0;
+    do {
+      sx = farmX + Phaser.Math.Between(-180, 260);
+      sy = farmY + Phaser.Math.Between(-120, Math.round(160 * hf));
+      tries++;
+    } while (isInsideBuilding(scene, sx, sy) && tries < 50);
     const skinId = rng.between(0, 199);
     const { sprite, personEntry } = createManagedPerson(scene, {
       x: sx, y: sy, skinId,
@@ -586,9 +606,21 @@ function updateChasers(scene, chasers, mice, dt) {
       stickRot = dir * Math.sin(Math.PI * progress) * peak;
       c.sprite.setTexture(`person-wave2-${c.skinId}`);
     }
-    // Hand position (shoulder ~ y - 6 is roughly the upper arm region)
-    const stickX = c.sprite.x + (c.sprite.flipX ? -6 : 6);
-    const stickY = c.sprite.y - 6;
+    // Pivot the stick from the actual hand pixel for whichever pose is
+    // showing — at SCALE=3 the run frames place the right hand at
+    // (+9, -4.5) / (+9, -7.5) and wave2 raises the hand to (+13.5, -16.5).
+    // Alternating run1/run2 makes the stick bob up and down with the
+    // running arm. Mirror the X offset when the chaser is facing left.
+    let handXOff, handYOff;
+    if (c.swingTimer > 0) {
+      handXOff = 13.5;
+      handYOff = -16.5;
+    } else {
+      handXOff = 9;
+      handYOff = c.frameIdx === 0 ? -4.5 : -7.5;
+    }
+    const stickX = c.sprite.x + (c.sprite.flipX ? -handXOff : handXOff);
+    const stickY = c.sprite.y + handYOff;
     c.stick.setPosition(stickX, stickY);
     c.stick.setRotation(stickRot);
 
@@ -599,10 +631,18 @@ function updateChasers(scene, chasers, mice, dt) {
       c.swingTimer = FARM_COMPOUND_CHASER_SWING_POSE_MS;
       // Miss or hit — randomly; mice "teleport" away on hit
       if (Math.random() < 0.5) {
-        // Teleport the mouse to a random spot within its region
+        // Teleport the mouse to a random spot within its region, retrying
+        // until it lands outside every building rect (a teleport into the
+        // barn would leave the mouse pacing in place forever).
         const m = c.target;
-        m.x = m.region.left + Math.random() * (m.region.right - m.region.left);
-        m.y = m.region.top + Math.random() * (m.region.bottom - m.region.top);
+        let tx, ty, tries = 0;
+        do {
+          tx = m.region.left + Math.random() * (m.region.right - m.region.left);
+          ty = m.region.top + Math.random() * (m.region.bottom - m.region.top);
+          tries++;
+        } while (isInsideBuilding(scene, tx, ty) && tries < 50);
+        m.x = tx;
+        m.y = ty;
         m.heading = Math.random() * Math.PI * 2;
         m.sprite.setPosition(m.x, m.y);
         c.target = pickUnusedMouse(mice, chasers, c); // switch to a new target

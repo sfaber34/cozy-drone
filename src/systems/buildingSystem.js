@@ -166,9 +166,9 @@ export function isNearBuilding(scene, px, py, pad) {
 // inside, every move is rejected, and the person animates in place
 // forever. This routine forces them out along the shortest-overlap axis
 // so normal movement can resume.
-export function pushOutOfBuildings(scene, sprite) {
+export function pushOutOfBuildings(scene, sprite, excludeBuilding) {
   for (const b of scene.buildings) {
-    if (b.destroyed) continue;
+    if (b.destroyed || b === excludeBuilding) continue;
     const bHW = b.hw || b.radius;
     const bHH = b.hh || b.radius;
     const dx = sprite.x - b.x;
