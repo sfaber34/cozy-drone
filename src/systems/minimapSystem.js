@@ -32,6 +32,7 @@ import {
   MINIMAP_DRONE_COLOR,
   MINIMAP_DRONE_SIZE_PX,
   MOBILE_ZOOM_FACTOR,
+  ART_SCREENSHOT_MODE,
 } from "../constants.js";
 
 const MINIMAP_DEPTH = 100; // above HUD text? They use 100 too — tie-broken by creation order, which is fine.
@@ -134,7 +135,7 @@ export function updateMinimap(scene, deltaMs) {
   // called. This naturally aligns with the intro-cutscene end because
   // GameScene.update() early-returns during introPlaying — so the first
   // call here means the cutscene has finished and the HUD is live.
-  if (!m.visible && !scene.isMobile && !m._autoShown) {
+  if (!m.visible && !scene.isMobile && !m._autoShown && !ART_SCREENSHOT_MODE) {
     m._autoShown = true;
     setMinimapVisible(scene, true);
   }
