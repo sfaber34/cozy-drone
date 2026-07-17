@@ -24,9 +24,17 @@ function buildBriefingBody(scene) {
   );
 }
 
-export function showBriefingModal(scene, onStart) {
+// opts:
+//   hasSave  — when true, shows CONTINUE MISSION (primary) + RESTART
+//              MISSION (secondary) instead of the single START button
+//   onChoice — called with "start" | "continue" | "restart" after the
+//              audio unlock + modal teardown
+export function showBriefingModal(scene, opts) {
+  const { hasSave = false, onChoice } = opts;
   let items = [];
-  let btnRect = { x: 0, y: 0, w: 0, h: 0 };
+  // Hit-test rects for the raw DOM listeners, one per button:
+  // { x, y, w, h, choice }
+  let btnRects = [];
   let pulseTween = null;
 
   // Rebuild the modal layout for the current viewport size. Called on
@@ -72,10 +80,17 @@ export function showBriefingModal(scene, onStart) {
       .setDepth(501);
     items.push(title);
 
-    // Button — sized to viewport, anchored near bottom with landscape safe area
+    // Buttons — sized to viewport, anchored near bottom with landscape safe
+    // area. With a save present the primary (CONTINUE) sits above a smaller
+    // secondary (RESTART); without one it's the single START button in the
+    // original spot.
     const btnW = Math.min(w * 0.75, 360);
     const btnH = Math.max(50, Math.min(74, Math.round(narrow * 0.11)));
-    const btnY = h - bottomSafe - btnH / 2 - 20;
+    const secH = hasSave ? Math.max(38, Math.round(btnH * 0.7)) : 0;
+    const secGap = hasSave ? 12 : 0;
+    const stackBottom = h - bottomSafe - 20;
+    const secY = stackBottom - secH / 2;
+    const btnY = stackBottom - secH - secGap - btnH / 2;
 
     // Body — wrap to fit viewport width, centered between title and button
     const bodySize = Math.max(14, Math.min(20, Math.round(narrow * 0.034)));
@@ -106,7 +121,7 @@ export function showBriefingModal(scene, onStart) {
 
     const labelSize = Math.max(14, Math.min(22, Math.round(narrow * 0.04)));
     const btnLabel = scene.add
-      .text(w / 2, btnY, "START MISSION", {
+      .text(w / 2, btnY, hasSave ? "CONTINUE MISSION" : "START MISSION", {
         fontFamily: "monospace",
         fontSize: `${labelSize}px`,
         color: "#ffffff",
@@ -114,6 +129,29 @@ export function showBriefingModal(scene, onStart) {
       .setOrigin(0.5)
       .setDepth(502);
     items.push(btnLabel);
+
+    btnRects = [
+      { x: w / 2, y: btnY, w: btnW, h: btnH, choice: hasSave ? "continue" : "start" },
+    ];
+
+    if (hasSave) {
+      const secBtn = scene.add
+        .rectangle(w / 2, secY, btnW, secH, 0x333333, 0.9)
+        .setStrokeStyle(2, 0xaaaaaa, 0.9)
+        .setDepth(501)
+        .setInteractive({ useHandCursor: true });
+      items.push(secBtn);
+      const secLabel = scene.add
+        .text(w / 2, secY, "RESTART MISSION", {
+          fontFamily: "monospace",
+          fontSize: `${Math.max(12, Math.round(labelSize * 0.85))}px`,
+          color: "#cccccc",
+        })
+        .setOrigin(0.5)
+        .setDepth(502);
+      items.push(secLabel);
+      btnRects.push({ x: w / 2, y: secY, w: btnW, h: secH, choice: "restart" });
+    }
 
     scene.cameras.main.ignore(items);
     // Published so later world-init code can exclude these from the HUD
@@ -128,9 +166,6 @@ export function showBriefingModal(scene, onStart) {
       yoyo: true,
       repeat: -1,
     });
-
-    // Record button hit-test rect (Phaser scale coords)
-    btnRect = { x: w / 2, y: btnY, w: btnW, h: btnH };
   };
 
   build();
@@ -154,20 +189,22 @@ export function showBriefingModal(scene, onStart) {
   const canvas = scene.game.canvas;
   let dismissed = false;
 
-  // Convert raw client coords to Phaser scale coords, then hit-test the button
+  // Convert raw client coords to Phaser scale coords, then hit-test the
+  // buttons. Returns the hit button's choice string, or null.
   const hitButton = (clientX, clientY) => {
     const rect = canvas.getBoundingClientRect();
     const scaleX = scene.scale.width / rect.width;
     const scaleY = scene.scale.height / rect.height;
     const px = (clientX - rect.left) * scaleX;
     const py = (clientY - rect.top) * scaleY;
-    return (
-      Math.abs(px - btnRect.x) <= btnRect.w / 2 &&
-      Math.abs(py - btnRect.y) <= btnRect.h / 2
-    );
+    for (const r of btnRects) {
+      if (Math.abs(px - r.x) <= r.w / 2 && Math.abs(py - r.y) <= r.h / 2)
+        return r.choice;
+    }
+    return null;
   };
 
-  const unlockAndDismiss = () => {
+  const unlockAndDismiss = (choice) => {
     if (dismissed) return;
     dismissed = true;
 
@@ -212,20 +249,22 @@ export function showBriefingModal(scene, onStart) {
     scene._briefingModalItems = null;
     scene.briefingActive = false;
 
-    if (onStart) onStart();
+    if (onChoice) onChoice(choice);
   };
 
   const onTouchEnd = (e) => {
-    // Only dismiss if the tap landed on the button
+    // Only dismiss if the tap landed on a button
     const t = e.changedTouches && e.changedTouches[0];
     if (!t) return;
-    if (!hitButton(t.clientX, t.clientY)) return;
+    const choice = hitButton(t.clientX, t.clientY);
+    if (!choice) return;
     e.preventDefault();
-    unlockAndDismiss();
+    unlockAndDismiss(choice);
   };
   const onMouseDown = (e) => {
-    if (!hitButton(e.clientX, e.clientY)) return;
-    unlockAndDismiss();
+    const choice = hitButton(e.clientX, e.clientY);
+    if (!choice) return;
+    unlockAndDismiss(choice);
   };
 
   canvas.addEventListener("touchend", onTouchEnd, { passive: false });

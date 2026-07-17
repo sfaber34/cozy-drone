@@ -28,8 +28,13 @@ export function createVehicles(scene, rng) {
   for (let ci = 0; ci < CAR_COUNT; ci++) {
     // Start at a random intersection
     const startNode = Phaser.Utils.Array.GetRandom(townRoadNodes);
-    const carTex = Phaser.Utils.Array.GetRandom(carNames);
-    const passengers = Phaser.Math.Between(CAR_PASSENGERS_MIN, CAR_PASSENGERS_MAX);
+    // Texture and passenger count MUST come from the seeded rng: the save
+    // system regenerates the world from the seed and overlays state by
+    // array index, and the wanderer budget in createPeople subtracts total
+    // car passengers — unseeded counts would desync people.length between
+    // the saved run and the restored run.
+    const carTex = rng.pick(carNames);
+    const passengers = rng.between(CAR_PASSENGERS_MIN, CAR_PASSENGERS_MAX);
     const sprite = scene.add
       .image(startNode.x, startNode.y, carTex)
       .setScale(SCALE)
@@ -62,7 +67,10 @@ export function createVehicles(scene, rng) {
       isInNoGoZone(bx, by, scene, 150) ||
       Phaser.Math.Distance.Between(bx, by, droneX, droneY) < 2000
     );
-    const bikeVariant = Phaser.Math.Between(0, 9);
+    // Seeded for save/restore determinism (the position do-while above is
+    // unseeded on purpose — it retries a variable number of times, and
+    // positions get overlaid from the save anyway).
+    const bikeVariant = rng.between(0, 9);
     const sprite = scene.add
       .image(bx, by, `dirtbike-${bikeVariant}`)
       .setScale(SCALE)

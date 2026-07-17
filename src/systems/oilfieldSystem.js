@@ -55,9 +55,14 @@ export function createOilfield(scene, rng, opts) {
   const wellPositions = [];
   for (let wy = -2; wy <= 3; wy++) {
     for (let wx = -3; wx <= 3; wx++) {
-      // Skip positions too close to tanks
-      const wpx = cx + wx * 200 + Phaser.Math.Between(-40, 40);
-      const wpy = cy + wy * 180 + Phaser.Math.Between(-40, 40);
+      // Skip positions too close to tanks. Jitter MUST come from the
+      // seeded rng, not Phaser's global RNG: this distance check gates
+      // whether the well is created at all, so unseeded jitter would
+      // make the well COUNT (and hence scene.buildings.length) vary
+      // between two loads of the same seed — breaking the save system's
+      // world-regeneration integrity check (see saveSystem.js).
+      const wpx = cx + wx * 200 + rng.between(-40, 40);
+      const wpy = cy + wy * 180 + rng.between(-40, 40);
       let tooClose = false;
       for (const tp of tankPositions) {
         if (Phaser.Math.Distance.Between(wpx, wpy, tp.x, tp.y) < 100) {

@@ -31,6 +31,12 @@ import {
 } from "../systems/audioSystem.js";
 import { playIntroCutscene } from "../systems/introSystem.js";
 import { showBriefingModal } from "../systems/briefingModal.js";
+import {
+  loadSave,
+  clearSave,
+  applySave,
+  initAutosave,
+} from "../systems/saveSystem.js";
 import { createBuildings } from "../systems/buildingSystem.js";
 import { createAnimals, updateAnimals } from "../systems/animalSystem.js";
 import { fireMissile, updateMissiles } from "../systems/missileSystem.js";
@@ -94,9 +100,17 @@ export class GameScene extends Phaser.Scene {
     // Per-run seed so building/set-piece placement varies each refresh.
     // Texture RNGs (personSkins, props, etc.) have their own fixed seeds
     // so sprite appearance stays consistent — only world layout varies.
-    const rng = new Phaser.Math.RandomDataGenerator([
-      `desert-${Date.now()}-${Math.floor(Math.random() * 1e9)}`,
-    ]);
+    // With a save present the SAVED seed is used instead, so the world
+    // regenerates identically and the save overlay can be applied by
+    // array index (see saveSystem.js).
+    const save = loadSave();
+    this._pendingSave = save;
+    this._restoreRequested = false;
+    this._restoreDone = false;
+    this._worldSeed = save
+      ? save.seed
+      : `desert-${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
+    const rng = new Phaser.Math.RandomDataGenerator([this._worldSeed]);
 
     // Patch the scene's text factory so every Text object auto-applies
     // bilinear (LINEAR) filtering on its canvas texture. With pixelArt:true
@@ -410,12 +424,39 @@ export class GameScene extends Phaser.Scene {
 
     // --- Intro cutscene (gated by briefing modal for audio unlock) ---
     this.introPlaying = true;
-    showBriefingModal(this, () => {
+    initAutosave(this);
+
+    const startFresh = () => {
       if (this.isMobile) {
         this.scene.launch("MobileControls", { gameScene: this });
       }
       // Brief pause after tap before the intro cutscene starts
       this.time.delayedCall(1500, () => playIntroCutscene(this));
+    };
+
+    showBriefingModal(this, {
+      hasSave: !!save,
+      onChoice: (choice) => {
+        if (choice === "restart") {
+          // Fresh mission with a fresh seed. Full page reload — same as
+          // the victory screen's restart — because scene.restart() would
+          // re-run the person-skin texture generation against the global
+          // TextureManager and crash on duplicate keys.
+          clearSave();
+          window.location.reload();
+        } else if (choice === "continue") {
+          if (this.isMobile) {
+            this.scene.launch("MobileControls", { gameScene: this });
+          }
+          // World generation may still be waiting on person skins;
+          // tryApplyRestore runs now if ready, or is re-invoked by
+          // tryDeferredWorldInit when it is.
+          this._restoreRequested = true;
+          tryApplyRestore(this);
+        } else {
+          startFresh();
+        }
+      },
     });
   }
 
@@ -593,6 +634,8 @@ export class GameScene extends Phaser.Scene {
       this._touchedRunway
     ) {
       this.missionEndTime = Date.now();
+      // Mission complete — the resume point is gone for good
+      clearSave();
       startVictory(this);
     }
 
@@ -919,4 +962,32 @@ function tryDeferredWorldInit(scene) {
   // graphics aren't swept into the ignore list. The module registers its
   // own cameras.main.ignore() so the overlay only appears on the HUD.
   createMinimap(scene);
+
+  // If the player already chose CONTINUE MISSION on the briefing, the
+  // restore was waiting on this world init — apply it now.
+  tryApplyRestore(scene);
+}
+
+// Overlay the pending save onto the freshly generated world. Runs only
+// once both the player has chosen CONTINUE and deferred world init has
+// finished. On success the intro cutscene is skipped entirely and play
+// resumes frozen-where-it-was; a save that doesn't line up with the
+// regenerated world falls back to a fresh mission.
+function tryApplyRestore(scene) {
+  if (!scene._restoreRequested || scene._restoreDone) return;
+  if (!scene._worldInitDone) return; // tryDeferredWorldInit will call again
+  scene._restoreDone = true;
+
+  const ok = applySave(scene, scene._pendingSave);
+  if (!ok) {
+    clearSave();
+    scene.time.delayedCall(1500, () => playIntroCutscene(scene));
+    return;
+  }
+
+  // Skip the intro: hand control to the player immediately. update()'s
+  // altitude-based zoom logic takes over on the next frame.
+  scene.introZoomActive = false;
+  scene._introZoomTweenStarted = true;
+  scene.introPlaying = false;
 }
