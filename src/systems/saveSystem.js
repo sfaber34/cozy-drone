@@ -222,6 +222,23 @@ export function applySave(scene, save) {
     mismatches.push(
       `farmTractors ${save.farmTractors.length}->${tractors.length}`,
     );
+  // Cross-check: at any moment in a correctly-running game, scene.kills is
+  // exactly (dead people) + (dead bikers) + (passengers of dead cars) — a
+  // person/car/biker kill is the only thing that ever increments it. If the
+  // save's own death markers don't add up to its own saved kill count, the
+  // save is internally inconsistent — applying it risks an alive person
+  // silently ending up permanently unreachable (making 600/600 impossible).
+  // This is computed from save data + fresh (not-yet-mutated) car.passenger
+  // counts only, so it runs before any restore loop touches the scene.
+  let impliedDead = 0;
+  for (const rec of save.people) if (rec === 0) impliedDead++;
+  for (const rec of save.bikers) if (rec === 0) impliedDead++;
+  for (let i = 0; i < save.cars.length; i++) {
+    if (save.cars[i][0] === 0) impliedDead += scene.townCars[i].passengers || 0;
+  }
+  if (impliedDead !== save.kills) {
+    mismatches.push(`kills accounting ${save.kills} vs implied ${impliedDead}`);
+  }
   if (mismatches.length > 0) {
     console.warn(
       `[saveSystem] Save/world mismatch, discarding save: ${mismatches.join(", ")} (seed=${save.seed})`,
