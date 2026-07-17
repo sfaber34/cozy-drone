@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { SCALE } from "../constants.js";
+import { SCALE, ART_SCREENSHOT_MODE } from "../constants.js";
 import { introLines } from "../dialog.js";
 
 export function playIntroCutscene(scene) {
@@ -84,7 +84,8 @@ export function playIntroCutscene(scene) {
         })
         .setOrigin(0.5, 1.4)
         .setDepth(13)
-        .setScale(SCALE * 0.6);
+        .setScale(SCALE * 0.6)
+        .setVisible(!ART_SCREENSHOT_MODE);
       // Override the scene-wide LINEAR text filter — intro text should
       // stay blocky/nearest-neighbor to match the pixel-art cutscene.
       bubble.texture.setFilter(Phaser.Textures.FilterMode.NEAREST);

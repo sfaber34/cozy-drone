@@ -10,6 +10,7 @@ import {
   PEOPLE_SPAWN_COUNT, PEOPLE_TOWN_SPAWN_COUNT, PEOPLE_SPAWN_AVOID_DIST,
   PEOPLE_DEPTH_BASE, PEOPLE_DEPTH_BAND,
   MOBILE_DIALOG_SCALE,
+  ART_SCREENSHOT_MODE,
 } from "../constants.js";
 import { greetings, ghostLines } from "../dialog.js";
 import { findNearestBuilding, steerAroundBuildings, isInsideBuilding, isNearBuilding, pushOutOfBuildings } from "./buildingSystem.js";
@@ -195,7 +196,7 @@ export function affectNearbyPeople(scene, x, y) {
       p.ghostWobbleOffset = Math.random() * Math.PI * 2;
 
       // Ghost speech bubble — skip if too many already visible in this cluster
-      if (tryRegisterGhostBubble(scene, p.sprite.x, p.sprite.y)) {
+      if (!ART_SCREENSHOT_MODE && tryRegisterGhostBubble(scene, p.sprite.x, p.sprite.y)) {
         const line = Phaser.Utils.Array.GetRandom(ghostLines);
         const ghostBubbleScale = SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1);
         p.bubble = scene.add
@@ -340,7 +341,7 @@ export function updatePeople(scene, dt, delta) {
             break;
           }
         }
-        if (!tooClose) {
+        if (!tooClose && !ART_SCREENSHOT_MODE) {
           const greetBubbleScale = SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1);
           p.bubble = scene.add
             .text(p.sprite.x + 20, p.sprite.y - 30, p.greeting, {

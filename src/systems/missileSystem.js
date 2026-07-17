@@ -5,6 +5,7 @@ import {
   MISSILE_MAX_SPEED, MISSILE_ACCEL, MISSILE_MIN_SCALE,
   MISSILE_HIT_RADIUS, MISSILE_SMOKE_INTERVAL, MISSILE_SMOKE_OPACITY,
   SCREEN_SHAKE_DURATION, SCREEN_SHAKE_INTENSITY,
+  ART_SCREENSHOT_MODE,
 } from "../constants.js";
 import { ghostLines } from "../dialog.js";
 import { playSfx, playSfxAt, playDeathSfxAt } from "./audioSystem.js";
@@ -401,7 +402,7 @@ export function missileImpact(scene, x, y) {
           .setAlpha(0.8);
         scene.hudCam.ignore(ghost);
         let bubble = null;
-        if (tryRegisterGhostBubble(scene, ghost.x, ghost.y)) {
+        if (!ART_SCREENSHOT_MODE && tryRegisterGhostBubble(scene, ghost.x, ghost.y)) {
           const line = Phaser.Utils.Array.GetRandom(ghostLines);
           bubble = scene.add
             .text(ghost.x + 20, ghost.y - 20, line, {
@@ -471,7 +472,7 @@ export function missileImpact(scene, x, y) {
       bk.ghostWobble = Math.random() * Math.PI * 2;
       bk.isGhost = true;
       // Speech bubble — skip if cluster already saturated
-      if (tryRegisterGhostBubble(scene, bk.sprite.x, bk.sprite.y)) {
+      if (!ART_SCREENSHOT_MODE && tryRegisterGhostBubble(scene, bk.sprite.x, bk.sprite.y)) {
         const line = Phaser.Utils.Array.GetRandom(ghostLines);
         bk.bubble = scene.add
           .text(bk.sprite.x + 20, bk.sprite.y - 20, line, {

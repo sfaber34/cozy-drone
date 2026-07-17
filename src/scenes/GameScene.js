@@ -21,6 +21,7 @@ import {
   INTRO_TARGET_RIGHT_PX,
   INTRO_ZOOM_MAX,
   INTRO_ZOOM_OUT_DURATION_MS,
+  ART_SCREENSHOT_MODE,
 } from "../constants.js";
 import { createWater, WATER_BOUNDS } from "../systems/waterSystem.js";
 
@@ -186,6 +187,12 @@ export class GameScene extends Phaser.Scene {
       .image(rwX, rwBottom - 80, "drone")
       .setScale(SCALE)
       .setDepth(20);
+
+    if (ART_SCREENSHOT_MODE) {
+      this.drone.setVisible(false);
+      this.droneShadow.setVisible(false);
+      this.dronePropShadow.setVisible(false);
+    }
 
     // Propeller animation timer
     this.propFrame = 0;
@@ -355,6 +362,8 @@ export class GameScene extends Phaser.Scene {
         },
       )
       .setDepth(100);
+
+    if (ART_SCREENSHOT_MODE) this.controlsText.setVisible(false);
 
     // Main camera ignores HUD, HUD camera only sees HUD
     this.cameras.main.ignore([
@@ -641,7 +650,7 @@ export class GameScene extends Phaser.Scene {
     this.drone.setAngle(ds.angle);
 
     // --- Shadow (offset increases with altitude) ---
-    if (ds.altitude > 0) {
+    if (ds.altitude > 0 && !ART_SCREENSHOT_MODE) {
       this.droneShadow.setVisible(true);
       const shadowOffset = ds.altitude * 0.04;
       this.droneShadow.setPosition(ds.x + shadowOffset, ds.y + shadowOffset);
@@ -795,7 +804,8 @@ export class GameScene extends Phaser.Scene {
     for (const sp of this.setPieces) sp.update(dt, delta);
 
     // --- HUD ---
-    if (!this.hudText.visible) this.hudText.setVisible(true);
+    if (!this.hudText.visible && !ART_SCREENSHOT_MODE)
+      this.hudText.setVisible(true);
     const spdDisplay = Math.round(speedKnots);
     // const lastSfx = this.lastDeathSfxName ?? "--";
     // const lastAnimalSfx = this.lastAnimalDeathSfxName ?? "--";
@@ -818,7 +828,7 @@ export class GameScene extends Phaser.Scene {
     // Mission-complete HUD alert (shown once threshold met, hidden during cutscene)
     const missionReady = this.kills >= this.totalPeople && !this.victoryActive;
     if (this.missionCompleteText) {
-      this.missionCompleteText.setVisible(missionReady);
+      this.missionCompleteText.setVisible(missionReady && !ART_SCREENSHOT_MODE);
       // Anchor directly under the main HUD block
       const hudBottom = this.hudText.y + this.hudText.height;
       this.missionCompleteText.setPosition(10, hudBottom + 4);
@@ -919,4 +929,5 @@ function tryDeferredWorldInit(scene) {
   // graphics aren't swept into the ignore list. The module registers its
   // own cameras.main.ignore() so the overlay only appears on the HUD.
   createMinimap(scene);
+  if (ART_SCREENSHOT_MODE) setMinimapVisible(scene, false);
 }

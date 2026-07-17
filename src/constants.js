@@ -5,6 +5,13 @@ export const TILE = 16; // tile size in pixels
 export const SCALE = 3; // pixel art scale multiplier
 export const MOAT_TILES = 30; // water tiles surrounding the map on every side
 
+// Set true temporarily to hide the drone/drone-shadow, all scattered desert
+// props (rocks, brush, tumbleweed, etc.), the HUD/mini-map overlay, and every
+// speech-bubble-style dialog box (greetings, ghost death lines, hit
+// reactions, intro-cutscene lines) so the world renders clean for capturing
+// art/Steam screenshots. Flip back to false afterward.
+export const ART_SCREENSHOT_MODE = true;
+
 // Set-piece positions are passed at call-time now:
 //   scene.setPieces.push(createX(scene, rng, { tileX, tileY }))
 // Per-setpiece BALANCE knobs live below; the positions live in GameScene.

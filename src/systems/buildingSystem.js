@@ -3,6 +3,7 @@ import {
   SCALE, MOBILE_DIALOG_SCALE,
   BUILDING_HP_SMALL, BUILDING_HP_MEDIUM, BUILDING_HP_LARGE,
   BUILDING_RADIUS_SMALL, BUILDING_RADIUS_MEDIUM, BUILDING_RADIUS_LARGE,
+  ART_SCREENSHOT_MODE,
 } from "../constants.js";
 import { buildingGhostLines } from "../dialog.js";
 import { playDeathSfxAt } from "./audioSystem.js";
@@ -113,7 +114,7 @@ export function killPeopleInBuilding(scene, building) {
     p.ghostDriftY = -(20 + Math.random() * 20);
     p.ghostWobbleOffset = Math.random() * Math.PI * 2;
 
-    if (tryRegisterGhostBubble(scene, p.sprite.x, p.sprite.y)) {
+    if (!ART_SCREENSHOT_MODE && tryRegisterGhostBubble(scene, p.sprite.x, p.sprite.y)) {
       const line = Phaser.Utils.Array.GetRandom(buildingGhostLines);
       p.bubble = scene.add
         .text(p.sprite.x + 20, p.sprite.y - 20, line, {

@@ -11,6 +11,7 @@ import {
   CANNON_MUZZLE_SCALE_END_MIN, CANNON_MUZZLE_SCALE_END_RANGE,
   CANNON_MUZZLE_ALPHA, CANNON_MUZZLE_ALPHA_RANGE, CANNON_MUZZLE_DRIFT_SPREAD,
   EXPLOSION_VOLUME,
+  ART_SCREENSHOT_MODE,
 } from "../constants.js";
 import { playSfxAt, playDeathSfxAt, playAnimalDeathSfxAt } from "./audioSystem.js";
 import { tryRegisterGhostBubble } from "./ghostBubbleUtils.js";
@@ -207,7 +208,7 @@ export function cannonImpact(scene, x, y) {
         p.ghostDriftX = Math.cos(awayAngle) * (15 + Math.random() * 25);
         p.ghostDriftY = -(20 + Math.random() * 20);
         p.ghostWobbleOffset = Math.random() * Math.PI * 2;
-        if (tryRegisterGhostBubble(scene, p.sprite.x, p.sprite.y)) {
+        if (!ART_SCREENSHOT_MODE && tryRegisterGhostBubble(scene, p.sprite.x, p.sprite.y)) {
           const line = Phaser.Utils.Array.GetRandom(ghostLines);
           p.bubble = scene.add
             .text(p.sprite.x + 20, p.sprite.y - 20, line, {
@@ -324,7 +325,7 @@ export function cannonImpact(scene, x, y) {
           ).setScale(SCALE).setDepth(13).setAlpha(0.8);
           scene.hudCam.ignore(ghost);
           let bubble = null;
-          if (tryRegisterGhostBubble(scene, ghost.x, ghost.y)) {
+          if (!ART_SCREENSHOT_MODE && tryRegisterGhostBubble(scene, ghost.x, ghost.y)) {
             const line = Phaser.Utils.Array.GetRandom(ghostLines);
             bubble = scene.add.text(ghost.x + 20, ghost.y - 20, line, {
               fontFamily: "monospace", fontSize: "8px",
@@ -382,7 +383,7 @@ export function cannonImpact(scene, x, y) {
         bk.ghostDriftY = -(20 + Math.random() * 20);
         bk.ghostWobble = Math.random() * Math.PI * 2;
         bk.isGhost = true;
-        if (tryRegisterGhostBubble(scene, bk.sprite.x, bk.sprite.y)) {
+        if (!ART_SCREENSHOT_MODE && tryRegisterGhostBubble(scene, bk.sprite.x, bk.sprite.y)) {
           const line = Phaser.Utils.Array.GetRandom(ghostLines);
           bk.bubble = scene.add.text(bk.sprite.x + 20, bk.sprite.y - 20, line, {
             fontFamily: "monospace", fontSize: "8px",
