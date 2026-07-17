@@ -69,6 +69,10 @@ export function createFarmField(scene, rng, opts) {
   return {
     type: "farmField",
     bounds: { cx, cy, hw: halfW, hh: halfH },
+    // Exposed so saveSystem.js can persist/restore tractor alive-state and
+    // driving phase — tractors are otherwise entirely closure-local and
+    // invisible to the save system (unlike people/animals/cars/bikers).
+    tractors,
     update(dt) {
       for (const t of tractors) updateTractor(scene, t, dt);
       for (const p of pickers)  updatePicker (scene, p, dt, field);

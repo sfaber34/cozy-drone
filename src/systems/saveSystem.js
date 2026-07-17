@@ -16,14 +16,18 @@ import { countTotalPeople } from "./peopleSystem.js";
 // concert notes, …) intentionally restarts fresh — it's ambient and holds
 // no mission progress. Everything that counts toward FREEDOMS (people,
 // car passengers, bikers, people hiding in buildings) lives in the
-// overlaid arrays.
+// overlaid arrays. Farm-field TRACTORS are the one exception: like town
+// cars, they're persistently destructible (a wrecked tractor should stay
+// wrecked), so their alive/hp/driving-phase state is saved explicitly too
+// (see getFarmTractors below) rather than left to reset with the rest of
+// the ambient choreography.
 //
 // Foolproofing: versioned payload + array-length integrity checks. Any
 // parse error or mismatch abandons the save and the game starts a fresh
 // mission instead of applying a half-valid state.
 
 const SAVE_KEY = "cozy-drone-save";
-const SAVE_VERSION = 1;
+const SAVE_VERSION = 5; // bumped: cannonHits persisted for people/animals/cars/bikers (animals' dead encoding changed 0->null)
 const AUTOSAVE_INTERVAL_MS = 5000;
 
 export function loadSave() {
@@ -51,6 +55,17 @@ function isPersonDead(p) {
   return p.state === "ghost" || p.state === "gone";
 }
 
+// Flattened across every farmField set piece, in scene.setPieces order —
+// same pattern as scene.townCars: deterministic world regen means this
+// list's order (and length) reproduces exactly given the same seed.
+function getFarmTractors(scene) {
+  const list = [];
+  for (const sp of scene.setPieces || []) {
+    if (sp.type === "farmField" && sp.tractors) list.push(...sp.tractors);
+  }
+  return list;
+}
+
 function captureSave(scene) {
   const ds = scene.droneState;
   return {
@@ -74,23 +89,70 @@ function captureSave(scene) {
     // Dead entries collapse to 0 — their ghost anim has played; all that
     // matters is that they stay gone. Hiding people are saved at their
     // home spot so they restore visible on open ground, not inside a
-    // building.
+    // building. cannonHits is the cannon's separate multi-hit-to-kill
+    // counter (2 hits for people/animals/bikers, 4 for cars) — without
+    // saving it, a person hit once by the cannon (not yet dead) forgets
+    // that hit on restore and silently needs a fresh 2 hits.
     people: scene.people.map((p) => {
       if (isPersonDead(p)) return 0;
       const x = p.state === "hiding" ? p.homeX : p.sprite.x;
       const y = p.state === "hiding" ? p.homeY : p.sprite.y;
-      return [Math.round(x), Math.round(y), p.skinId];
+      return [Math.round(x), Math.round(y), p.skinId, p.cannonHits || 0];
     }),
-    animals: scene.animals.map((a) => (a.state === "dead" ? 0 : 1)),
+    // Dead -> null (distinct from a live animal with 0 cannon hits).
+    animals: scene.animals.map((a) =>
+      a.state === "dead" ? null : a.cannonHits || 0,
+    ),
+    // currentNode/targetNode are saved verbatim (not re-derived from
+    // position on restore): town cars are strictly grid-following — every
+    // frame's movement assumes the car is travelling in a straight line
+    // between exactly these two nodes. Re-guessing "nearest node" from a
+    // mid-transit (x,y) instead would pick the wrong node whenever the car
+    // is more than halfway to its target, snapping its logical position
+    // to the wrong intersection while the sprite stays off that node —
+    // the car then drives off the road toward an unrelated neighbor.
     cars: scene.townCars.map((car) => [
       car.alive ? 1 : 0,
       Math.round(car.sprite.x),
       Math.round(car.sprite.y),
+      Math.round(car.currentNode.x),
+      Math.round(car.currentNode.y),
+      car.targetNode
+        ? [Math.round(car.targetNode.x), Math.round(car.targetNode.y)]
+        : null,
+      // Rotation is set only while driving (setRotation(moveAngle + PI/2))
+      // and never touched again once destroyed — a wrecked sprite keeps
+      // whatever angle it died at forever. A freshly-created restore
+      // sprite defaults to rotation 0, so without saving this a wrecked
+      // horizontal car would visibly snap to the vertical orientation.
+      car.sprite.rotation,
+      // Cannon hits (4 to destroy) — a car damaged but not yet destroyed
+      // shows a "-damaged" texture; without saving the count, restore
+      // would silently heal it back to a pristine, undamaged car.
+      car.cannonHits || 0,
     ]),
     bikers: scene.dirtBikers.map((bk) =>
-      bk.alive ? [Math.round(bk.sprite.x), Math.round(bk.sprite.y)] : 0,
+      bk.alive
+        ? [Math.round(bk.sprite.x), Math.round(bk.sprite.y), bk.cannonHits || 0]
+        : 0,
     ),
     buildings: scene.buildings.map((b) => b.hp),
+    farmTractors: getFarmTractors(scene).map((t) => ({
+      alive: t.alive,
+      x: Math.round(t.sprite.x),
+      y: Math.round(t.sprite.y),
+      angle: t.sprite.angle,
+      hp: t.hp,
+      phase: t.phase,
+      direction: t.direction,
+      rowIndex: t.rowIndex,
+      rowDir: t.rowDir,
+      turnT: t.turnT,
+      turnFromX: t.turnFromX,
+      turnToX: t.turnToX,
+      turnEdgeY: t.turnEdgeY,
+      turnExitDir: t.turnExitDir,
+    })),
   };
 }
 
@@ -155,6 +217,11 @@ export function applySave(scene, save) {
     mismatches.push(
       `buildings ${save.buildings.length}->${scene.buildings.length}`,
     );
+  const tractors = getFarmTractors(scene);
+  if (save.farmTractors.length !== tractors.length)
+    mismatches.push(
+      `farmTractors ${save.farmTractors.length}->${tractors.length}`,
+    );
   if (mismatches.length > 0) {
     console.warn(
       `[saveSystem] Save/world mismatch, discarding save: ${mismatches.join(", ")} (seed=${save.seed})`,
@@ -178,54 +245,63 @@ export function applySave(scene, save) {
       }
       p.sprite.destroy();
       p.state = "gone";
-    } else if (!p.managedBySetPiece) {
-      // Alive free-roamer — restore where they were. Managed people keep
-      // their regenerated set-piece spot (their choreography owns them).
-      const [x, y, skinId] = rec;
-      p.sprite.setPosition(x, y);
-      p.homeX = x;
-      p.homeY = y;
-      // Wanderer spawn placement retries depend on live drone position,
-      // so wanderer skins can diverge from the saved run — restore them.
-      if (!p.teamSkin && skinId !== p.skinId) {
-        p.skinId = skinId;
-        p.sprite.setTexture(`person-stand-${skinId}`);
+    } else {
+      // Alive — cannonHits restores for everyone (managed or not), so
+      // cannon damage progress isn't silently forgotten on resume.
+      const [x, y, skinId, cannonHits] = rec;
+      p.cannonHits = cannonHits;
+      if (!p.managedBySetPiece) {
+        // Free-roamer — restore where they were. Managed people keep
+        // their regenerated set-piece spot (their choreography owns it).
+        p.sprite.setPosition(x, y);
+        p.homeX = x;
+        p.homeY = y;
+        // Wanderer spawn placement retries depend on live drone position,
+        // so wanderer skins can diverge from the saved run — restore them.
+        if (!p.teamSkin && skinId !== p.skinId) {
+          p.skinId = skinId;
+          p.sprite.setTexture(`person-stand-${skinId}`);
+        }
       }
     }
   }
 
-  // --- Animals (position is ambient — only dead-ness persists) ---
+  // --- Animals (dead-ness + cannon-hit progress persist; position is ambient) ---
   for (let i = 0; i < scene.animals.length; i++) {
-    if (save.animals[i] === 0) {
-      const a = scene.animals[i];
+    const rec = save.animals[i];
+    const a = scene.animals[i];
+    if (rec === null) {
       a.state = "dead";
       a.sprite.setVisible(false);
+    } else {
+      a.cannonHits = rec;
     }
   }
 
   // --- Town cars ---
   for (let i = 0; i < scene.townCars.length; i++) {
-    const [alive, x, y] = save.cars[i];
+    const [alive, x, y, curX, curY, target, rotation, cannonHits] =
+      save.cars[i];
     const car = scene.townCars[i];
     car.sprite.setPosition(x, y);
+    car.sprite.setRotation(rotation || 0);
+    car.cannonHits = cannonHits || 0;
     if (!alive) {
       car.alive = false;
       car.sprite.setTexture("car-dead");
     } else {
-      // Re-anchor to the road grid: nearest intersection becomes the
-      // current node; targetNode null makes updateTownCars pick a fresh
-      // destination next frame.
-      let best = null;
-      let bestD = Infinity;
-      for (const n of scene.townRoadNodes || []) {
-        const d = (n.x - x) * (n.x - x) + (n.y - y) * (n.y - y);
-        if (d < bestD) {
-          bestD = d;
-          best = n;
-        }
+      // Restore the exact node pair the car was driving between — not a
+      // nearest-node guess from (x, y), which picks the wrong node once
+      // the car is more than halfway to its target and leaves the sprite
+      // off the road relative to that (wrong) node.
+      car.currentNode = { x: curX, y: curY };
+      car.targetNode = target ? { x: target[0], y: target[1] } : null;
+      // A car cannon-hit at least once (but not yet destroyed) shows a
+      // "-damaged" texture — without reapplying it, restore would show a
+      // pristine car despite cannonHits (and the underlying dent) persisting.
+      if (car.cannonHits > 0) {
+        car.sprite.setTexture(car.tex + "-damaged");
       }
-      if (best) car.currentNode = { ...best };
-      car.targetNode = null;
     }
   }
 
@@ -237,16 +313,70 @@ export function applySave(scene, save) {
       bk.alive = false;
       bk.sprite.setVisible(false);
     } else {
-      const [x, y] = rec;
+      const [x, y, cannonHits] = rec;
       bk.sprite.setPosition(x, y);
       bk.targetX = x;
       bk.targetY = y;
+      bk.cannonHits = cannonHits || 0;
     }
   }
 
   // --- Buildings ---
   for (let i = 0; i < scene.buildings.length; i++) {
     applyBuildingState(scene, scene.buildings[i], save.buildings[i]);
+  }
+
+  // --- Farm tractors ---
+  for (let i = 0; i < tractors.length; i++) {
+    const s = save.farmTractors[i];
+    const t = tractors[i];
+    t.sprite.setPosition(s.x, s.y);
+    t.sprite.setAngle(s.angle);
+    t.hp = s.hp;
+    t.alive = s.alive;
+    t.phase = s.phase;
+    t.direction = s.direction;
+    t.rowIndex = s.rowIndex;
+    t.rowDir = s.rowDir;
+    t.turnT = s.turnT;
+    t.turnFromX = s.turnFromX;
+    t.turnToX = s.turnToX;
+    t.turnEdgeY = s.turnEdgeY;
+    t.turnExitDir = s.turnExitDir;
+    if (!s.alive) {
+      // Matches destroyTractor()'s end state — wreckage, no re-explosion.
+      t.sprite.setTint(0x333333);
+      t.driving = false;
+      continue;
+    }
+
+    const driverDead =
+      !t.driver || t.driver.state === "ghost" || t.driver.state === "gone";
+    if (driverDead) {
+      // Matches the game's own rule: a dead driver never returns, so the
+      // tractor stays stopped forever.
+      t.driving = false;
+    } else {
+      // Whatever the driver was doing at save time (driving normally, mid-
+      // panic after dismounting, hiding in a building) isn't preserved —
+      // managedBySetPiece people are intentionally left at their fresh-
+      // spawn position by the loop above, and their state resets to
+      // "idle". That breaks the NORMAL remount check in updateTractor(),
+      // which requires the driver be physically close to the tractor: once
+      // the tractor has driven on to a different field row since the
+      // driver dismounted, "idle at fresh-spawn position" is nowhere near
+      // "idle next to the tractor," so they'd never remount and the
+      // tractor would sit stopped forever. Simplest correct resolution:
+      // put a live driver straight back on the tractor and resume driving.
+      t.driving = true;
+      t.driver.state = "idle";
+      t.driver.hideTarget = null;
+      t.driver.sprite.setPosition(t.sprite.x, t.sprite.y - 2);
+      t.driver.homeX = t.sprite.x;
+      t.driver.homeY = t.sprite.y;
+      t.driver.returnHome.x = t.sprite.x;
+      t.driver.returnHome.y = t.sprite.y;
+    }
   }
 
   // --- Drone ---
