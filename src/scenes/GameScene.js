@@ -274,6 +274,37 @@ export class GameScene extends Phaser.Scene {
     this.introZoomActive = true;
     this.cameras.main.setZoom(computeIntroZoom(this));
 
+    // If the player can Continue Mission, show the drone at its saved
+    // position/altitude right away — behind the briefing modal — instead
+    // of always sitting on the runway. Only the drone itself needs this
+    // (buildings/people can't be previewed yet; person-skin textures are
+    // still generating), but that's the one thing visible around the
+    // modal's edges, and it should match what Continue will actually do.
+    // If the save later fails validation once the world finishes
+    // regenerating, resetDroneToRunway() (called from tryApplyRestore)
+    // undoes this so the fresh-mission intro cutscene starts sanely.
+    if (save) {
+      const sd = save.drone;
+      this.drone.setPosition(sd.x, sd.y);
+      this.drone.setAngle(sd.angle);
+      this.droneState.x = sd.x;
+      this.droneState.y = sd.y;
+      this.droneState.angle = sd.angle;
+      this.droneState.speed = sd.speed;
+      this.droneState.altitude = sd.altitude;
+      this.flightState = sd.flightState;
+      this._touchedRunway = sd.touchedRunway;
+      this.introZoomActive = false;
+      this._introZoomTweenStarted = true;
+      applyAltitudeZoom(this, sd.altitude);
+      syncDroneShadow(this);
+      // startFollow() lerps the camera toward its target over subsequent
+      // frames rather than snapping instantly — without this, the camera
+      // visibly pans from wherever it started (near the runway) to the
+      // saved position instead of showing it immediately.
+      this.cameras.main.centerOn(sd.x, sd.y);
+    }
+
     // --- Input ---
     this.cursors = this.input.keyboard.addKeys({
       left: Phaser.Input.Keyboard.KeyCodes.A,
@@ -684,36 +715,7 @@ export class GameScene extends Phaser.Scene {
     this.drone.setAngle(ds.angle);
 
     // --- Shadow (offset increases with altitude) ---
-    if (ds.altitude > 0) {
-      this.droneShadow.setVisible(true);
-      const shadowOffset = ds.altitude * 0.04;
-      this.droneShadow.setPosition(ds.x + shadowOffset, ds.y + shadowOffset);
-      this.droneShadow.setAngle(ds.angle);
-      this.droneShadow.setAlpha(
-        Phaser.Math.Clamp(
-          DRONE_SHADOW_OPACITY - ds.altitude * 0.0001,
-          DRONE_SHADOW_OPACITY * 0.125,
-          DRONE_SHADOW_OPACITY,
-        ),
-      );
-      const shadowScale =
-        SCALE * Phaser.Math.Clamp(1.2 - ds.altitude * 0.0003, 0.6, 1.2);
-      this.droneShadow.setScale(shadowScale);
-      this.dronePropShadow.setVisible(true);
-      this.dronePropShadow.setPosition(
-        ds.x + shadowOffset,
-        ds.y + shadowOffset,
-      );
-      this.dronePropShadow.setAngle(ds.angle);
-      this.dronePropShadow.setAlpha(this.droneShadow.alpha);
-      this.dronePropShadow.setScale(shadowScale);
-      this.dronePropShadow.setTexture(
-        this.propFrame === 0 ? "drone-prop-shadow1" : "drone-prop-shadow2",
-      );
-    } else {
-      this.droneShadow.setVisible(false);
-      this.dronePropShadow.setVisible(false);
-    }
+    syncDroneShadow(this);
 
     // --- Camera zoom (zoom out above threshold) ---
     // While the intro zoom-out tween is still running, leave the camera alone.
@@ -722,17 +724,7 @@ export class GameScene extends Phaser.Scene {
     // device — avoids the nearest-neighbor flicker that fractional camera
     // zooms cause with pixelArt mode.
     if (!this.introZoomActive) {
-      if (ds.altitude <= DRONE_ZOOM_ALT_THRESHOLD) {
-        this.cameras.main.setZoom(DRONE_ZOOM_MAX);
-        this.drone.setScale(SCALE);
-      } else {
-        const t =
-          (ds.altitude - DRONE_ZOOM_ALT_THRESHOLD) /
-          (ds.maxAlt - DRONE_ZOOM_ALT_THRESHOLD);
-        const worldZoom = Phaser.Math.Linear(DRONE_ZOOM_MAX, DRONE_ZOOM_MIN, t);
-        this.cameras.main.setZoom(worldZoom);
-        this.drone.setScale(SCALE / worldZoom);
-      }
+      applyAltitudeZoom(this, ds.altitude);
     }
 
     // --- Propeller animation (faster spin at higher speed) ---
@@ -882,6 +874,85 @@ function computeIntroZoom(scene) {
   return Phaser.Math.Clamp(desired, 1.0, INTRO_ZOOM_MAX);
 }
 
+// Gameplay camera zoom / drone scale as a function of altitude — shared by
+// update()'s per-frame zoom logic and the Continue-Mission preview below,
+// so both compute it identically.
+function applyAltitudeZoom(scene, altitude) {
+  if (altitude <= DRONE_ZOOM_ALT_THRESHOLD) {
+    scene.cameras.main.setZoom(DRONE_ZOOM_MAX);
+    scene.drone.setScale(SCALE);
+  } else {
+    const t =
+      (altitude - DRONE_ZOOM_ALT_THRESHOLD) /
+      (DRONE_MAX_ALT - DRONE_ZOOM_ALT_THRESHOLD);
+    const worldZoom = Phaser.Math.Linear(DRONE_ZOOM_MAX, DRONE_ZOOM_MIN, t);
+    scene.cameras.main.setZoom(worldZoom);
+    scene.drone.setScale(SCALE / worldZoom);
+  }
+}
+
+// Shadow sprites as a function of the current drone state — shared by
+// update() and the Continue-Mission preview below.
+function syncDroneShadow(scene) {
+  const ds = scene.droneState;
+  if (ds.altitude > 0) {
+    scene.droneShadow.setVisible(true);
+    const shadowOffset = ds.altitude * 0.04;
+    scene.droneShadow.setPosition(ds.x + shadowOffset, ds.y + shadowOffset);
+    scene.droneShadow.setAngle(ds.angle);
+    scene.droneShadow.setAlpha(
+      Phaser.Math.Clamp(
+        DRONE_SHADOW_OPACITY - ds.altitude * 0.0001,
+        DRONE_SHADOW_OPACITY * 0.125,
+        DRONE_SHADOW_OPACITY,
+      ),
+    );
+    const shadowScale =
+      SCALE * Phaser.Math.Clamp(1.2 - ds.altitude * 0.0003, 0.6, 1.2);
+    scene.droneShadow.setScale(shadowScale);
+    scene.dronePropShadow.setVisible(true);
+    scene.dronePropShadow.setPosition(
+      ds.x + shadowOffset,
+      ds.y + shadowOffset,
+    );
+    scene.dronePropShadow.setAngle(ds.angle);
+    scene.dronePropShadow.setAlpha(scene.droneShadow.alpha);
+    scene.dronePropShadow.setScale(shadowScale);
+    scene.dronePropShadow.setTexture(
+      scene.propFrame === 0 ? "drone-prop-shadow1" : "drone-prop-shadow2",
+    );
+  } else {
+    scene.droneShadow.setVisible(false);
+    scene.dronePropShadow.setVisible(false);
+  }
+}
+
+// Puts the drone back at its default runway spawn — used when a
+// Continue-Mission preview (see create()) has to be undone because the
+// save later failed validation once the world finished regenerating, so
+// the fresh-mission intro cutscene plays from a sane starting point
+// instead of wherever the previewed save had the drone.
+function resetDroneToRunway(scene) {
+  const rw = scene.runway;
+  const x = rw.x;
+  const y = rw.bottom - 80;
+  scene.drone.setPosition(x, y);
+  scene.drone.setAngle(0);
+  scene.drone.setScale(SCALE);
+  const ds = scene.droneState;
+  ds.x = x;
+  ds.y = y;
+  ds.angle = 0;
+  ds.speed = 0;
+  ds.altitude = 0;
+  scene.flightState = "grounded";
+  scene._touchedRunway = false;
+  syncDroneShadow(scene);
+  scene.introZoomActive = true;
+  scene._introZoomTweenStarted = false;
+  scene.cameras.main.setZoom(computeIntroZoom(scene));
+}
+
 // Deferred world initialization — runs once person-skin textures have
 // finished their async generation. Creates every set piece that spawns
 // people, plus the wandering-person and vehicle populations. Intro only
@@ -981,6 +1052,10 @@ function tryApplyRestore(scene) {
   const ok = applySave(scene, scene._pendingSave);
   if (!ok) {
     clearSave();
+    // Undo the Continue-Mission drone preview from create() — the intro
+    // cutscene's guy-walks-to-drone choreography assumes the drone is on
+    // the runway.
+    resetDroneToRunway(scene);
     scene.time.delayedCall(1500, () => playIntroCutscene(scene));
     return;
   }
