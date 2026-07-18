@@ -31,11 +31,14 @@ import {
 } from "../systems/audioSystem.js";
 import { playIntroCutscene } from "../systems/introSystem.js";
 import { showBriefingModal } from "../systems/briefingModal.js";
+import { showPauseModal, hidePauseModal } from "../systems/pauseModal.js";
 import {
   loadSave,
   clearSave,
   applySave,
   initAutosave,
+  restartMission,
+  consumeSkipBriefing,
 } from "../systems/saveSystem.js";
 import { createBuildings } from "../systems/buildingSystem.js";
 import { createAnimals, updateAnimals } from "../systems/animalSystem.js";
@@ -105,6 +108,10 @@ export class GameScene extends Phaser.Scene {
     // array index (see saveSystem.js).
     const save = loadSave();
     this._pendingSave = save;
+    // Set right before a restart-confirmed reload (pause menu, or the
+    // briefing/victory screens' own restart buttons) — skips the mission-
+    // briefing text on this one load only (see briefingModal.js `minimal`).
+    const skipBriefing = consumeSkipBriefing();
     this._restoreRequested = false;
     this._restoreDone = false;
     this._worldSeed = save
@@ -317,6 +324,7 @@ export class GameScene extends Phaser.Scene {
       weapon1: Phaser.Input.Keyboard.KeyCodes.ONE,
       weapon2: Phaser.Input.Keyboard.KeyCodes.TWO,
       weapon3: Phaser.Input.Keyboard.KeyCodes.THREE,
+      pause: Phaser.Input.Keyboard.KeyCodes.ESC,
     });
 
     // Weapon system: 1 = missile, 2 = cannon, 3 = cluster bomb
@@ -324,9 +332,11 @@ export class GameScene extends Phaser.Scene {
     this.missileFireTimer = 0;
     initCannon(this);
     initClusterBomb(this);
+    this.paused = false;
 
     // Pointer down: set missile target, or restart after crash
     this.input.on("pointerdown", (pointer) => {
+      if (this.paused) return;
       if (this.introPlaying) return;
       // Crashed: tap anywhere (off controls) to restart
       if (this.flightState === "crashed") {
@@ -461,34 +471,51 @@ export class GameScene extends Phaser.Scene {
       if (this.isMobile) {
         this.scene.launch("MobileControls", { gameScene: this });
       }
-      // Brief pause after tap before the intro cutscene starts
+      // Brief pause before the intro cutscene starts
       this.time.delayedCall(1500, () => playIntroCutscene(this));
     };
 
-    showBriefingModal(this, {
-      hasSave: !!save,
-      onChoice: (choice) => {
-        if (choice === "restart") {
-          // Fresh mission with a fresh seed. Full page reload — same as
-          // the victory screen's restart — because scene.restart() would
-          // re-run the person-skin texture generation against the global
-          // TextureManager and crash on duplicate keys.
-          clearSave();
-          window.location.reload();
-        } else if (choice === "continue") {
-          if (this.isMobile) {
-            this.scene.launch("MobileControls", { gameScene: this });
+    if (skipBriefing) {
+      // The player just confirmed a restart (pause menu, or a restart
+      // button on the briefing/victory screens) and the page reloaded
+      // into a guaranteed-fresh state. Do NOT show the briefing modal at
+      // all — go straight into the runway + intro cutscene, exactly as if
+      // they'd refreshed the browser, with no interstitial to click.
+      //
+      // Audio: the briefing modal normally doubles as the audio-unlock
+      // gesture. Skipping it means the AudioContext starts suspended on
+      // this fresh load; Phaser's sound manager re-unlocks automatically
+      // on the player's first in-game input (targeting / firing), so
+      // music + SFX kick in a moment into play without a gating tap. That
+      // trades the pre-unlock for zero friction — which is the whole point
+      // of a restart going straight back into the action.
+      const loader = document.getElementById("loader");
+      if (loader) {
+        loader.classList.add("hide");
+        setTimeout(() => loader.remove(), 400);
+      }
+      startFresh();
+    } else {
+      showBriefingModal(this, {
+        hasSave: !!save,
+        onChoice: (choice) => {
+          if (choice === "restart") {
+            restartMission();
+          } else if (choice === "continue") {
+            if (this.isMobile) {
+              this.scene.launch("MobileControls", { gameScene: this });
+            }
+            // World generation may still be waiting on person skins;
+            // tryApplyRestore runs now if ready, or is re-invoked by
+            // tryDeferredWorldInit when it is.
+            this._restoreRequested = true;
+            tryApplyRestore(this);
+          } else {
+            startFresh();
           }
-          // World generation may still be waiting on person skins;
-          // tryApplyRestore runs now if ready, or is re-invoked by
-          // tryDeferredWorldInit when it is.
-          this._restoreRequested = true;
-          tryApplyRestore(this);
-        } else {
-          startFresh();
-        }
-      },
-    });
+        },
+      });
+    }
   }
 
   // Returns true if screen-space (px, py) falls on a mobile control widget
@@ -521,6 +548,23 @@ export class GameScene extends Phaser.Scene {
   update(time, delta) {
     const dt = delta / 1000;
     const ds = this.droneState;
+
+    // --- Pause toggle (ESC) --- Checked before the early-returns below so
+    // ESC can always resume out of pause; entering pause is only allowed
+    // during normal flight (not intro/crashed/victory), same gate as
+    // canSave()'s in saveSystem.js.
+    if (Phaser.Input.Keyboard.JustDown(this.cursors.pause)) {
+      if (this.paused) {
+        hidePauseModal(this);
+      } else if (
+        !this.introPlaying &&
+        this.flightState !== "crashed" &&
+        !this.victoryActive
+      ) {
+        showPauseModal(this);
+      }
+    }
+    if (this.paused) return;
 
     // --- Intro cutscene playing ---
     if (this.introPlaying) return;

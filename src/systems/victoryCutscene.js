@@ -3,6 +3,7 @@
 // of the hangar, surround the drone, jump + cheer, and emojis rain down.
 // After VICTORY_CELEBRATION_DURATION a modal announces victory.
 import { getBrowserBottomInset } from "./viewportUtils.js";
+import { restartMission } from "./saveSystem.js";
 import Phaser from "phaser";
 import {
   SCALE, WORLD_W, WORLD_H, TILE,
@@ -363,13 +364,8 @@ function showVictoryModal(scene) {
       .setDepth(601)
       .setInteractive({ useHandCursor: true })
       .on("pointerdown", () => {
-        scene.sound.stopAll();
-        scene.scale.off("resize", build);
-        // Full page reload — guarantees a clean game state (every scene,
-        // every RNG, every texture, every audio element). This is critical
-        // once set-piece positions become randomized; a scene-only restart
-        // wouldn't re-seed / re-launch all sibling scenes cleanly.
-        window.location.reload();
+        // Same shared action every restart entry point uses.
+        restartMission();
       });
     items.push(btn);
 

@@ -30,6 +30,15 @@ const SAVE_KEY = "cozy-drone-save";
 const SAVE_VERSION = 5; // bumped: cannonHits persisted for people/animals/cars/bikers (animals' dead encoding changed 0->null)
 const AUTOSAVE_INTERVAL_MS = 5000;
 
+// Set true by restartMission() so the beforeunload/pagehide autosave that
+// fires DURING the restart reload can't resurrect the save we just cleared.
+// This was the pause-menu-restart bug: mid-flight, canSave() is true, so
+// the unload handler re-wrote the in-flight save right after clearSave(),
+// and the reloaded game previewed the drone at that position instead of
+// resetting to the runway. (The briefing-modal restart dodged this only
+// because it runs during the intro, when canSave() is already false.)
+let restarting = false;
+
 export function loadSave() {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
@@ -49,6 +58,53 @@ export function clearSave() {
   } catch (e) {
     /* storage unavailable — nothing to clear */
   }
+}
+
+const SKIP_BRIEFING_KEY = "cozy-drone-skip-briefing";
+
+// Set right before a restart-triggered page reload (pause menu, or the
+// briefing/victory screens' own restart buttons) so the next load can
+// skip straight past the mission-briefing text — see briefingModal.js's
+// `minimal` mode. The player already explicitly confirmed the restart;
+// rereading the briefing at that point is just friction.
+export function markSkipBriefing() {
+  try {
+    localStorage.setItem(SKIP_BRIEFING_KEY, "1");
+  } catch (e) {
+    /* storage unavailable — next load just shows the full briefing */
+  }
+}
+
+// Read-and-clear so this only ever applies to the one load immediately
+// following a restart, never lingering into later fresh sessions.
+export function consumeSkipBriefing() {
+  try {
+    const v = localStorage.getItem(SKIP_BRIEFING_KEY) === "1";
+    if (v) localStorage.removeItem(SKIP_BRIEFING_KEY);
+    return v;
+  } catch (e) {
+    return false;
+  }
+}
+
+// THE one and only "restart mission" action. Every restart entry point
+// (mission-briefing modal, victory screen, ESC pause menu) must call this
+// — do NOT re-inline these steps, or the paths drift apart and one ends up
+// broken (which is exactly what happened before this was centralized).
+//
+// Wipes the save, flags the next load to skip the briefing modal (so the
+// reload drops straight onto the runway + intro cutscene, no interstitial),
+// then hard-reloads for a guaranteed-clean slate — every scene, RNG,
+// texture, and audio element rebuilt from scratch, exactly like a manual
+// browser refresh. The reload itself tears down all audio, so callers do
+// NOT need to stop sounds first.
+export function restartMission() {
+  // Block the unload autosave first — otherwise beforeunload/pagehide
+  // fires during the reload below and re-saves the game we just cleared.
+  restarting = true;
+  clearSave();
+  markSkipBriefing();
+  window.location.reload();
 }
 
 function isPersonDead(p) {
@@ -170,6 +226,7 @@ function canSave(scene) {
 }
 
 export function saveNow(scene) {
+  if (restarting) return; // restart in progress — see `restarting` note above
   if (!canSave(scene)) return;
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify(captureSave(scene)));

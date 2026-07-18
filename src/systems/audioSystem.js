@@ -42,6 +42,11 @@ export function initAudio(scene) {
     goatDeath: [],
   };
   scene.sfxVolumes = new Map(); // key → per-sound volume modifier
+  // Player-adjustable mix controls (pause menu sliders), 0–1.5 = 0%–150%.
+  // Applied on top of the fixed MASTER_VOLUME/MUSIC_VOLUME/per-sfx mix
+  // levels below, not in place of them.
+  if (scene.sfxVolumeMult == null) scene.sfxVolumeMult = 1;
+  if (scene.musicVolumeMult == null) scene.musicVolumeMult = 1;
   scene.lastDeathSfxName = null; // filename stem of the most recently played death SFX
   scene.deathSfxActive = 0;
   scene.engineKey = null;
@@ -211,6 +216,22 @@ function loadDeferredAudio(scene, sfxResults, cannonGunFiles, musicFiles, firstM
   scene.load.start();
 }
 
+// Pause-menu slider handlers. `mult` is 0–1.5 (0%–150%). Engine/cannon-gun
+// volume picks up the new multiplier on their very next per-frame update
+// (they already read scene.sfxVolumeMult each call), so only the currently
+// playing music track needs an explicit live update here — everything
+// else that plays fresh per-shot reads the multiplier at play time.
+export function setSfxVolume(scene, mult) {
+  scene.sfxVolumeMult = mult;
+}
+
+export function setMusicVolume(scene, mult) {
+  scene.musicVolumeMult = mult;
+  if (scene.currentTrack) {
+    scene.currentTrack.setVolume(MUSIC_VOLUME * mult);
+  }
+}
+
 export function playRandomTrack(scene) {
   if (scene.musicTracks.length === 0) return;
   if (!scene.audioLoaded) return;
@@ -225,7 +246,9 @@ export function playRandomTrack(scene) {
 
   if (scene.currentTrack) scene.currentTrack.stop();
 
-  scene.currentTrack = scene.sound.add(key, { volume: MUSIC_VOLUME });
+  scene.currentTrack = scene.sound.add(key, {
+    volume: MUSIC_VOLUME * scene.musicVolumeMult,
+  });
   scene.currentTrack.play();
   scene.lastTrackKey = key;
 
@@ -238,7 +261,7 @@ export function playSfx(scene, category, volume = 0.5) {
   const keys = scene.sfx[category];
   if (!keys || keys.length === 0) return;
   const key = Phaser.Utils.Array.GetRandom(keys);
-  scene.sound.play(key, { volume });
+  scene.sound.play(key, { volume: volume * scene.sfxVolumeMult });
 }
 
 function computeSpatialAudio(scene, x, y, maxVolume) {
@@ -259,7 +282,7 @@ export function playSfxAt(scene, category, x, y, maxVolume = 0.7) {
   if (!keys || keys.length === 0) return;
   const key = Phaser.Utils.Array.GetRandom(keys);
   const { volume, pan } = computeSpatialAudio(scene, x, y, maxVolume);
-  const sfx = scene.sound.add(key, { volume });
+  const sfx = scene.sound.add(key, { volume: volume * scene.sfxVolumeMult });
   sfx.play({ pan });
   sfx.once("complete", () => sfx.destroy());
 }
@@ -283,7 +306,10 @@ export function playDeathSfxAt(scene, x, y) {
 
     const { volume, pan } = computeSpatialAudio(scene, x, y, DEATH_SFX_VOLUME);
     const volumeModifier = scene.sfxVolumes.get(key) ?? 1;
-    const finalVolume = Math.max(volume, DEATH_SFX_VOLUME * DEATH_SFX_MIN_VOLUME_FRAC) * volumeModifier;
+    const finalVolume =
+      Math.max(volume, DEATH_SFX_VOLUME * DEATH_SFX_MIN_VOLUME_FRAC) *
+      volumeModifier *
+      scene.sfxVolumeMult;
 
     // Track name for HUD display: "sfx-death-death1.mp3" → "death1"
     scene.lastDeathSfxName = key.replace(/^sfx-death-/, "").replace(/\.[^.]+$/, "");
@@ -326,7 +352,8 @@ export function playAnimalDeathSfxAt(scene, type, x, y) {
     const volumeModifier = scene.sfxVolumes.get(key) ?? 1;
     const finalVolume =
       Math.max(volume, DEATH_SFX_VOLUME * DEATH_SFX_MIN_VOLUME_FRAC) *
-      volumeModifier;
+      volumeModifier *
+      scene.sfxVolumeMult;
 
     // Track for HUD display: "sfx-pigDeath-oink1.mp3" → "oink1"
     scene.lastAnimalDeathSfxName = key
@@ -346,7 +373,11 @@ export function updateEngineSound(scene, ds, delta) {
   if (scene.engineA && scene.engineB) {
     const speedFrac = ds.speed / ds.maxSpeed;
     const targetRate = ENGINE_RATE_MIN + speedFrac * ENGINE_RATE_RANGE;
-    const targetVol = ds.speed > 0 ? ENGINE_VOLUME_MIN + speedFrac * ENGINE_VOLUME_RANGE : 0;
+    const targetVol =
+      ds.speed > 0
+        ? (ENGINE_VOLUME_MIN + speedFrac * ENGINE_VOLUME_RANGE) *
+          scene.sfxVolumeMult
+        : 0;
     const fade = scene.engineCrossfade;
 
     if (ds.speed > 0 && !scene.engineA.isPlaying && !scene.engineB.isPlaying) {
@@ -405,10 +436,11 @@ export function updateCannonFiringSound(scene, isFiring) {
   }
 
   const fade = CANNON_GUN_CROSSFADE_SEC;
+  const vol = CANNON_GUN_VOLUME * scene.sfxVolumeMult;
 
   // Kick off playback if nothing is running
   if (!a.isPlaying && !b.isPlaying) {
-    a.setVolume(CANNON_GUN_VOLUME);
+    a.setVolume(vol);
     a.play();
     scene.cannonGunActive = a;
   }
@@ -428,14 +460,14 @@ export function updateCannonFiringSound(scene, isFiring) {
     // Crossfade volumes
     if (remaining < fade) {
       const t = remaining / fade;
-      active.setVolume(CANNON_GUN_VOLUME * t);
+      active.setVolume(vol * t);
     } else {
-      active.setVolume(CANNON_GUN_VOLUME);
+      active.setVolume(vol);
     }
     if (other.isPlaying && other.seek < fade) {
-      other.setVolume(CANNON_GUN_VOLUME * (other.seek / fade));
+      other.setVolume(vol * (other.seek / fade));
     } else if (other.isPlaying && other === scene.cannonGunActive) {
-      other.setVolume(CANNON_GUN_VOLUME);
+      other.setVolume(vol);
     }
   }
 }
