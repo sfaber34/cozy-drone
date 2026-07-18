@@ -8,6 +8,7 @@ import Phaser from "phaser";
 import { getBrowserBottomInset } from "./viewportUtils.js";
 import { restartMission } from "./saveSystem.js";
 import { setSfxVolume, setMusicVolume } from "./audioSystem.js";
+import { persistSettings } from "./settingsSystem.js";
 
 const VOLUME_MIN = 0;
 const VOLUME_MAX = 1.5;
@@ -73,7 +74,7 @@ function buildPauseModal(scene) {
 
 function buildMainView(scene, items, w, h, narrow, bottomSafe) {
   const titleSize = Math.max(24, Math.min(44, Math.round(narrow * 0.07)));
-  const titleY = Math.max(24, h * 0.07);
+  const titleY = Math.max(20, h * 0.05);
   const title = scene.add
     .text(w / 2, titleY, "PAUSED", {
       fontFamily: "monospace",
@@ -86,44 +87,103 @@ function buildMainView(scene, items, w, h, narrow, bottomSafe) {
     .setDepth(701);
   items.push(title);
 
+  // Buttons anchored at the bottom (Resume / Restart / Quit stack up).
   const btnW = Math.min(w * 0.75, 360);
-  const btnH = Math.max(46, Math.min(66, Math.round(narrow * 0.1)));
-  const btnGap = Math.max(10, Math.round(btnH * 0.2));
+  const btnH = Math.max(44, Math.min(62, Math.round(narrow * 0.09)));
+  const btnGap = Math.max(8, Math.round(btnH * 0.18));
   const stackBottom = h - bottomSafe - 10;
   const quitY = stackBottom - btnH / 2;
   const restartY = quitY - btnH - btnGap;
   const resumeY = restartY - btnH - btnGap;
 
-  // --- Sliders (vertically centered between title and the button stack) ---
-  const sliderW = Math.min(w * 0.7, 340);
-  const sliderX = w / 2 - sliderW / 2;
-  const labelSize = Math.max(13, Math.min(18, Math.round(narrow * 0.032)));
-  const sliderGap = Math.max(60, Math.round(narrow * 0.14));
-  const stackTop = titleY + titleSize + 20;
-  const stackBottomForSliders = resumeY - btnH / 2 - 20;
-  const midY = (stackTop + stackBottomForSliders) / 2;
-  const sfxY = midY - sliderGap / 2;
-  const musicY = midY + sliderGap / 2;
+  // Content region: SFX slider, music slider, 3 toggles — laid out
+  // top-down between the title and the button stack, evenly gapped.
+  const rowW = Math.min(w * 0.7, 340);
+  const rowX = w / 2 - rowW / 2;
+  const labelSize = Math.max(13, Math.min(18, Math.round(narrow * 0.03)));
+  const toggleH = Math.max(30, Math.min(44, Math.round(narrow * 0.055)));
+  const sliderH = labelSize + 36; // label above + track + handle below
 
+  const contentTop = titleY + titleSize + Math.round(narrow * 0.03);
+  const contentBottom = resumeY - btnH / 2 - Math.round(narrow * 0.03);
+  const rowHeights = [sliderH, sliderH, toggleH, toggleH, toggleH];
+  const totalRowH = rowHeights.reduce((a, b) => a + b, 0);
+  const gap = Math.max(
+    6,
+    (contentBottom - contentTop - totalRowH) / (rowHeights.length - 1),
+  );
+
+  const persist = () => persistSettings(scene);
+
+  let y = contentTop;
+  const advance = (rowH) => {
+    const top = y;
+    y += rowH + gap;
+    return top;
+  };
+
+  // SFX slider — the track sits below its label within the row.
+  let top = advance(sliderH);
   createLabeledSlider(scene, items, {
-    x: sliderX,
-    y: sfxY,
-    width: sliderW,
+    x: rowX,
+    y: top + labelSize + 14,
+    width: rowW,
     labelText: "SFX VOLUME",
     labelSize,
     value: scene.sfxVolumeMult,
-    onChange: (v) => setSfxVolume(scene, v),
+    onChange: (v) => {
+      setSfxVolume(scene, v);
+      persist();
+    },
   });
 
+  top = advance(sliderH);
   createLabeledSlider(scene, items, {
-    x: sliderX,
-    y: musicY,
-    width: sliderW,
+    x: rowX,
+    y: top + labelSize + 14,
+    width: rowW,
     labelText: "MUSIC VOLUME",
     labelSize,
     value: scene.musicVolumeMult,
-    onChange: (v) => setMusicVolume(scene, v),
+    onChange: (v) => {
+      setMusicVolume(scene, v);
+      persist();
+    },
   });
+
+  const makeToggle = (labelText, get, set) => {
+    const rowTop = advance(toggleH);
+    createToggle(scene, items, {
+      x: rowX,
+      y: rowTop + toggleH / 2,
+      width: rowW,
+      labelText,
+      labelSize,
+      height: toggleH,
+      value: get(),
+      onChange: (on) => {
+        set(on);
+        scene.applyHudVisibility();
+        persist();
+      },
+    });
+  };
+
+  makeToggle(
+    "MINIMAP",
+    () => scene.showMinimap,
+    (on) => (scene.showMinimap = on),
+  );
+  makeToggle(
+    "HUD",
+    () => scene.showHud,
+    (on) => (scene.showHud = on),
+  );
+  makeToggle(
+    "TOOLTIPS",
+    () => scene.showTooltips,
+    (on) => (scene.showTooltips = on),
+  );
 
   const btnLabelSize = Math.max(14, Math.min(22, Math.round(narrow * 0.04)));
 
@@ -310,6 +370,17 @@ function createLabeledSlider(scene, items, opts) {
     .setDepth(701);
   items.push(fill);
 
+  // 100% reference tick — a short vertical mark at the default (1.0)
+  // position so the player can see where "normal" volume sits on the
+  // 0–150% range. Above the fill so it stays visible when the fill
+  // overlaps it.
+  const oneHundredFrac = (1 - VOLUME_MIN) / (VOLUME_MAX - VOLUME_MIN);
+  const tick = scene.add
+    .rectangle(x + width * oneHundredFrac, y, 2, trackH + 10, 0xffffff, 0.85)
+    .setOrigin(0.5)
+    .setDepth(702);
+  items.push(tick);
+
   const handleR = trackH * 1.6;
   const handle = scene.add
     .circle(x + width * frac0to1, y, handleR, 0xffffff, 1)
@@ -361,5 +432,52 @@ function createLabeledSlider(scene, items, opts) {
   items._cleanupFns.push(() => {
     scene.input.off("pointermove", onMove);
     scene.input.off("pointerup", onUp);
+  });
+}
+
+// A labeled ON/OFF row: label on the left, a green(ON)/grey(OFF) pill on
+// the right. `value` is the initial boolean; `onChange(bool)` fires on each
+// flip. Toggles its own visual state locally so the whole modal doesn't
+// need a rebuild just to repaint one pill.
+function createToggle(scene, items, opts) {
+  const { x, y, width, labelText, labelSize, height, value, onChange } = opts;
+
+  const label = scene.add
+    .text(x, y, labelText, {
+      fontFamily: "monospace",
+      fontSize: `${labelSize}px`,
+      color: "#ffffff",
+    })
+    .setOrigin(0, 0.5)
+    .setDepth(701);
+  items.push(label);
+
+  const pillW = Math.max(66, Math.round(width * 0.24));
+  const pillH = Math.max(26, Math.round(height * 0.82));
+  const pillX = x + width - pillW / 2;
+
+  let state = !!value;
+  const pill = scene.add
+    .rectangle(pillX, y, pillW, pillH, state ? 0x226a2a : 0x555555, 0.95)
+    .setStrokeStyle(2, 0xffffff, 0.7)
+    .setDepth(701)
+    .setInteractive({ useHandCursor: true });
+  items.push(pill);
+
+  const pillLabel = scene.add
+    .text(pillX, y, state ? "ON" : "OFF", {
+      fontFamily: "monospace",
+      fontSize: `${Math.max(12, Math.round(labelSize * 0.9))}px`,
+      color: "#ffffff",
+    })
+    .setOrigin(0.5)
+    .setDepth(702);
+  items.push(pillLabel);
+
+  pill.on("pointerdown", () => {
+    state = !state;
+    pill.setFillStyle(state ? 0x226a2a : 0x555555, 0.95);
+    pillLabel.setText(state ? "ON" : "OFF");
+    onChange(state);
   });
 }
