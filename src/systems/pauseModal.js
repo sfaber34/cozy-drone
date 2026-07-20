@@ -107,7 +107,7 @@ function buildMainView(scene, items, w, h, narrow, bottomSafe) {
   const restartY = quitY - btnH - btnGap;
   const resumeY = restartY - btnH - btnGap;
 
-  // Content region: SFX slider, music slider, 3 toggles — laid out
+  // Content region: SFX slider, music slider, 2 toggles — laid out
   // top-down between the title and the button stack, evenly gapped.
   const rowW = Math.min(w * 0.7, 340);
   const rowX = w / 2 - rowW / 2;
@@ -117,7 +117,7 @@ function buildMainView(scene, items, w, h, narrow, bottomSafe) {
 
   const contentTop = titleY + titleSize + Math.round(narrow * 0.03);
   const contentBottom = resumeY - btnH / 2 - Math.round(narrow * 0.03);
-  const rowHeights = [sliderH, sliderH, toggleH, toggleH, toggleH];
+  const rowHeights = [sliderH, sliderH, toggleH, toggleH];
   const totalRowH = rowHeights.reduce((a, b) => a + b, 0);
   const gap = Math.max(
     6,
@@ -184,11 +184,6 @@ function buildMainView(scene, items, w, h, narrow, bottomSafe) {
     "MINIMAP",
     () => scene.showMinimap,
     (on) => (scene.showMinimap = on),
-  );
-  makeToggle(
-    "HUD",
-    () => scene.showHud,
-    (on) => (scene.showHud = on),
   );
   makeToggle(
     "TOOLTIPS",

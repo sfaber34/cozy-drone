@@ -16,7 +16,6 @@ export const DEFAULT_SETTINGS = {
   sfxVolume: 1,
   musicVolume: 1,
   showMinimap: true,
-  showHud: true,
   showTooltips: true,
 };
 
@@ -43,7 +42,6 @@ export function persistSettings(scene) {
         sfxVolume: scene.sfxVolumeMult,
         musicVolume: scene.musicVolumeMult,
         showMinimap: scene.showMinimap,
-        showHud: scene.showHud,
         showTooltips: scene.showTooltips,
       }),
     );

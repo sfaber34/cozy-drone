@@ -114,14 +114,16 @@ export class GameScene extends Phaser.Scene {
     // briefing text on this one load only (see briefingModal.js `minimal`).
     const skipBriefing = consumeSkipBriefing();
 
-    // Persistent user preferences (audio + HUD visibility). Applied to the
-    // scene fields the game reads at runtime. Loaded here — before initAudio
-    // and HUD/minimap creation — so those pick up saved values immediately.
-    // These live independent of the game save: a restart never resets them.
+    // Persistent user preferences (audio + minimap/tooltips visibility).
+    // Applied to the scene fields the game reads at runtime. Loaded here —
+    // before initAudio and HUD/minimap creation — so those pick up saved
+    // values immediately. Independent of the game save: a restart never
+    // resets them. NOTE: the HUD (top-left ALT/SPD/FREEDOMS block) is
+    // intentionally NOT toggleable — it carries mission-completion context
+    // the player needs, so it's always visible.
     const settings = loadSettings();
     this.sfxVolumeMult = settings.sfxVolume;
     this.musicVolumeMult = settings.musicVolume;
-    this.showHud = settings.showHud;
     this.showTooltips = settings.showTooltips;
     this.showMinimap = settings.showMinimap;
     this._restoreRequested = false;
@@ -445,10 +447,13 @@ export class GameScene extends Phaser.Scene {
     });
     this.controlsText.setY(this.scale.height - 30);
 
-    // Apply persisted HUD-element visibility (see applyHudVisibility). This
-    // covers the bottom-left controls "tooltips" and, once it exists, the
-    // minimap; hudText/missionComplete visibility is driven each frame by
-    // update() reading this.showHud.
+    // Mark the intro as playing up-front so the toggleable HUD elements
+    // (tooltips + minimap) start HIDDEN — applyHudVisibility() gates them on
+    // !introPlaying. They're revealed only once the intro cutscene ends
+    // (see the intro-zoom block in update(), and tryApplyRestore for the
+    // Continue path). The main HUD block is likewise hidden until then
+    // because update() early-returns during the intro.
+    this.introPlaying = true;
     this.applyHudVisibility();
 
     // --- Mobile controls ---
@@ -482,7 +487,7 @@ export class GameScene extends Phaser.Scene {
     initAudio(this);
 
     // --- Intro cutscene (gated by briefing modal for audio unlock) ---
-    this.introPlaying = true;
+    // introPlaying was already set true above (before applyHudVisibility).
     initAutosave(this);
 
     const startFresh = () => {
@@ -563,34 +568,26 @@ export class GameScene extends Phaser.Scene {
     return false;
   }
 
-  // Apply the current HUD-visibility preferences (this.showHud /
-  // showTooltips / showMinimap) to the actual objects immediately. Called
-  // once at setup and again whenever a pause-menu toggle flips — applying
-  // everything HERE (not deferring hudText to update()) is what makes the
-  // toggles take effect instantly while the game is paused, since update()
-  // is frozen then. update() re-applies hudText/missionComplete every
-  // frame during play so they still track mission state afterward.
+  // Apply the current minimap/tooltips visibility preferences to the actual
+  // objects immediately. Called at setup, when the intro ends, and whenever
+  // a pause-menu toggle flips — applying HERE (rather than deferring to
+  // update()) is what makes the toggles take effect instantly while the
+  // game is paused, since update() is frozen then.
   //
-  // hudText + the mission-complete banner only show during active gameplay
-  // (never during the intro cutscene), so they're gated on !introPlaying.
-  // Tooltips never show on mobile (on-screen controls replace them); the
-  // minimap on mobile is owned by its own "M" button, so the persisted flag
-  // applies on desktop only.
+  // Both are force-hidden during the intro cutscene (gated on !introPlaying)
+  // and only appear once it ends, alongside the main HUD. The HUD itself
+  // (hudText + mission-complete banner) is deliberately not handled here:
+  // it's always shown during play by update() because it carries mission-
+  // completion context the player needs. Tooltips never show on mobile
+  // (on-screen controls replace them); the minimap on mobile is owned by
+  // its own "M" button, so the persisted flag applies on desktop only.
   applyHudVisibility() {
     const active = !this.introPlaying;
-    if (this.hudText) {
-      this.hudText.setVisible(this.showHud && active);
-    }
-    if (this.missionCompleteText) {
-      const missionReady =
-        active && this.kills >= this.totalPeople && !this.victoryActive;
-      this.missionCompleteText.setVisible(this.showHud && missionReady);
-    }
     if (this.controlsText) {
-      this.controlsText.setVisible(this.showTooltips && !this.isMobile);
+      this.controlsText.setVisible(active && this.showTooltips && !this.isMobile);
     }
     if (!this.isMobile) {
-      setMinimapVisible(this, this.showMinimap);
+      setMinimapVisible(this, active && this.showMinimap);
     }
   }
 
@@ -627,6 +624,9 @@ export class GameScene extends Phaser.Scene {
       this._introZoomTweenStarted = true;
       // Mission clock starts the instant the intro cutscene ends.
       this.missionStartTime = Date.now();
+      // Intro's over — reveal the toggleable HUD elements (minimap +
+      // tooltips) per their preferences, now that introPlaying is false.
+      this.applyHudVisibility();
       // Mobile "zoom out" is now handled by main.js via a larger internal
       // canvas + CSS downscale, so camera zoom stays at DRONE_ZOOM_MAX
       // regardless of device.
@@ -925,10 +925,9 @@ export class GameScene extends Phaser.Scene {
     for (const sp of this.setPieces) sp.update(dt, delta);
 
     // --- HUD ---
-    // Visibility is driven by the persisted showHud preference (pause menu
-    // toggle) rather than force-shown — but the text still updates while
-    // hidden so it's correct the instant it's toggled back on.
-    this.hudText.setVisible(this.showHud);
+    // Always visible during play (revealed once the intro cutscene ends) —
+    // it carries mission-completion context, so it is not toggleable.
+    if (!this.hudText.visible) this.hudText.setVisible(true);
     const spdDisplay = Math.round(speedKnots);
     // const lastSfx = this.lastDeathSfxName ?? "--";
     // const lastAnimalSfx = this.lastAnimalDeathSfxName ?? "--";
@@ -949,11 +948,10 @@ export class GameScene extends Phaser.Scene {
     updateMinimap(this, delta);
 
     // Mission-complete HUD alert (shown once threshold met, hidden during
-    // cutscene). Also suppressed when the HUD is toggled off — it's part of
-    // the same top-left status readout.
+    // cutscene).
     const missionReady = this.kills >= this.totalPeople && !this.victoryActive;
     if (this.missionCompleteText) {
-      this.missionCompleteText.setVisible(missionReady && this.showHud);
+      this.missionCompleteText.setVisible(missionReady);
       // Anchor directly under the main HUD block
       const hudBottom = this.hudText.y + this.hudText.height;
       this.missionCompleteText.setPosition(10, hudBottom + 4);
@@ -1133,14 +1131,15 @@ function tryDeferredWorldInit(scene) {
   // graphics aren't swept into the ignore list. The module registers its
   // own cameras.main.ignore() so the overlay only appears on the HUD.
   createMinimap(scene);
-  // On desktop the minimap normally auto-shows on its first update; apply
-  // the persisted showMinimap preference instead (and mark _autoShown so
-  // that auto-show doesn't override a "hidden" preference). Mobile keeps
-  // its own "M"-button behavior, untouched.
+  // Disable the minimap's built-in desktop auto-show — GameScene owns its
+  // visibility now (via applyHudVisibility, gated on the intro + the
+  // showMinimap preference). Then apply that visibility: during the intro
+  // it stays hidden; if world-init happens to finish AFTER the intro
+  // already ended, applyHudVisibility reveals it here per the preference.
   if (scene._minimap && !scene.isMobile) {
     scene._minimap._autoShown = true;
-    setMinimapVisible(scene, scene.showMinimap);
   }
+  scene.applyHudVisibility();
 
   // If the player already chose CONTINUE MISSION on the briefing, the
   // restore was waiting on this world init — apply it now.
@@ -1173,4 +1172,7 @@ function tryApplyRestore(scene) {
   scene.introZoomActive = false;
   scene._introZoomTweenStarted = true;
   scene.introPlaying = false;
+  // Intro was skipped — reveal the toggleable HUD elements (minimap +
+  // tooltips) now that introPlaying is false.
+  scene.applyHudVisibility();
 }
