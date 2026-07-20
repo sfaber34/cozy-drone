@@ -107,29 +107,33 @@ function buildMainView(scene, items, w, h, narrow, bottomSafe) {
   const restartY = quitY - btnH - btnGap;
   const resumeY = restartY - btnH - btnGap;
 
-  // Content region: SFX slider, music slider, 2 toggles — laid out
-  // top-down between the title and the button stack, evenly gapped.
+  // Content: SFX slider, music slider, 2 toggles — kept as ONE tight group
+  // (small fixed gap between rows) and centered in the empty region between
+  // the title and the button stack, so the menu reads as: title / space /
+  // settings group / space / buttons.
   const rowW = Math.min(w * 0.7, 340);
   const rowX = w / 2 - rowW / 2;
   const labelSize = Math.max(13, Math.min(18, Math.round(narrow * 0.03)));
   const toggleH = Math.max(30, Math.min(44, Math.round(narrow * 0.055)));
   const sliderH = labelSize + 36; // label above + track + handle below
 
-  const contentTop = titleY + titleSize + Math.round(narrow * 0.03);
-  const contentBottom = resumeY - btnH / 2 - Math.round(narrow * 0.03);
+  const rowGap = Math.max(12, Math.round(narrow * 0.022));
   const rowHeights = [sliderH, sliderH, toggleH, toggleH];
-  const totalRowH = rowHeights.reduce((a, b) => a + b, 0);
-  const gap = Math.max(
-    6,
-    (contentBottom - contentTop - totalRowH) / (rowHeights.length - 1),
-  );
+  const groupH =
+    rowHeights.reduce((a, b) => a + b, 0) + rowGap * (rowHeights.length - 1);
+
+  // Vertically center the group in the gap between title bottom and the
+  // top of the button stack.
+  const regionTop = titleY + titleSize;
+  const regionBottom = resumeY - btnH / 2;
+  const groupTop = regionTop + Math.max(0, (regionBottom - regionTop - groupH) / 2);
 
   const persist = () => persistSettings(scene);
 
-  let y = contentTop;
+  let y = groupTop;
   const advance = (rowH) => {
     const top = y;
-    y += rowH + gap;
+    y += rowH + rowGap;
     return top;
   };
 
@@ -223,7 +227,7 @@ function buildMainView(scene, items, w, h, narrow, bottomSafe) {
     y: quitY,
     w: btnW,
     h: btnH,
-    label: "QUIT",
+    label: "QUIT GAME",
     labelSize: btnLabelSize,
     color: 0x444444,
     onClick: () => {
