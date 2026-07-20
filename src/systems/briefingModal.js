@@ -66,8 +66,12 @@ export function showBriefingModal(scene, opts) {
 
     // Full-bleed overlay — over-extended by 20 px in every direction so no
     // sub-pixel / letterbox gap can show the world through at the edges.
+    // Fully OPAQUE: it doubles as the hide layer while the world is (re)built
+    // behind it. On Continue the whole modal stays up until the world is
+    // ready, then fades — so the building/empty map is never seen. (See the
+    // deferred-teardown path in unlockAndDismiss.)
     const overlay = scene.add
-      .rectangle(-20, -20, w + 40, h + 40, 0x000000, 0.85)
+      .rectangle(-20, -20, w + 40, h + 40, 0x000000, 1)
       .setOrigin(0, 0)
       .setDepth(500);
     items.push(overlay);
@@ -360,18 +364,47 @@ export function showBriefingModal(scene, opts) {
     mgr.locked = false;
     if (mgr.emit) mgr.emit("unlocked", mgr);
 
+    // No more clicks in any case — the choice is made.
     canvas.removeEventListener("touchend", onTouchEnd);
     canvas.removeEventListener("mousedown", onMouseDown);
+
+    if (choice === "continue") {
+      // Keep the whole modal up as the hide layer while the world finishes
+      // regenerating behind it (the player sees the briefing, never a
+      // building/empty map). GameScene calls the provided callback to fade
+      // the modal out once the world is fully built AND rendered.
+      if (onChoice) onChoice("continue", () => teardown(true));
+    } else {
+      // start / restart change scenes anyway — snap the modal away.
+      teardown(false);
+      if (onChoice) onChoice(choice);
+    }
+  };
+
+  // Tear the modal down. `fade` crossfades it out over 500ms (revealing the
+  // world beneath) for the Continue reveal; otherwise it's destroyed at once.
+  const teardown = (fade) => {
     scene.scale.off("resize", build);
     if (window.visualViewport) {
       window.visualViewport.removeEventListener("resize", build);
     }
     if (pulseTween) pulseTween.stop();
-    for (const it of items) it.destroy();
-    scene._briefingModalItems = null;
     scene.briefingActive = false;
-
-    if (onChoice) onChoice(choice);
+    scene._briefingModalItems = null;
+    if (fade) {
+      const fading = items;
+      scene.tweens.add({
+        targets: fading,
+        alpha: 0,
+        duration: 500,
+        ease: "Sine.easeInOut",
+        onComplete: () => {
+          for (const it of fading) it.destroy();
+        },
+      });
+    } else {
+      for (const it of items) it.destroy();
+    }
   };
 
   // The quit flow (button only exists in the desktop build) is handled

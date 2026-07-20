@@ -521,10 +521,14 @@ export class GameScene extends Phaser.Scene {
     } else {
       showBriefingModal(this, {
         hasSave: !!save,
-        onChoice: (choice) => {
+        onChoice: (choice, fadeBriefing) => {
           if (choice === "restart") {
             restartMission();
           } else if (choice === "continue") {
+            // The briefing modal stays up as the hide layer while the world
+            // regenerates; fadeBriefing fades it out once we're ready to
+            // reveal (called from tryApplyRestore via revealAfterRestore).
+            this._fadeBriefing = fadeBriefing;
             if (this.isMobile) {
               this.scene.launch("MobileControls", { gameScene: this });
             }
@@ -1129,9 +1133,9 @@ function tryDeferredWorldInit(scene) {
   // These sprites were added after the HUD camera's initial `ignore`
   // snapshot, so they'd be seen by both cameras. Re-apply the HUD
   // camera's ignore to every sprite except the HUD text elements —
-  // and specifically SKIP the briefing modal items (if still up), since
-  // those are already in cameras.main.ignore and would otherwise end
-  // up invisible to both cameras.
+  // and specifically SKIP the briefing modal items (still up during a
+  // Continue), since those are already in cameras.main.ignore and would
+  // otherwise end up invisible to both cameras.
   const briefingItems = scene._briefingModalItems || [];
   scene.hudCam.ignore(
     scene.children.list.filter(
@@ -1182,6 +1186,9 @@ function tryApplyRestore(scene) {
     // cutscene's guy-walks-to-drone choreography assumes the drone is on
     // the runway.
     resetDroneToRunway(scene);
+    // Fade the briefing away to reveal the (fully built) fresh world +
+    // runway, then the intro cutscene starts.
+    revealAfterRestore(scene);
     scene.time.delayedCall(1500, () => playIntroCutscene(scene));
     return;
   }
@@ -1194,4 +1201,24 @@ function tryApplyRestore(scene) {
   // Intro was skipped — reveal the toggleable HUD elements (minimap +
   // tooltips) now that introPlaying is false.
   scene.applyHudVisibility();
+  // World is built and the save is applied — fade the briefing away to
+  // reveal the fully populated world.
+  revealAfterRestore(scene);
+}
+
+// Fade out the still-up briefing modal to reveal the restored world. Called
+// the instant the restore is applied (world built in memory) — but we wait a
+// short REAL-TIME beat first so the freshly created 600+ sprites actually
+// render at least a few frames UNDER the opaque briefing before it fades.
+// Using setTimeout (wall-clock), not a frame count or scene timer, makes
+// this robust across machines / the packaged build: the frame right after a
+// heavy build carries a huge delta that a frame- or scene-time gate would
+// blow through, showing a half-populated map. The briefing stays fully
+// opaque during this beat, so the player just sees the briefing a moment
+// longer — never a building map.
+function revealAfterRestore(scene) {
+  const fade = scene._fadeBriefing;
+  if (!fade) return;
+  scene._fadeBriefing = null;
+  setTimeout(fade, 250);
 }
