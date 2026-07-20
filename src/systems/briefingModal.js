@@ -1,5 +1,6 @@
 import { getBrowserBottomInset } from "./viewportUtils.js";
 import { isDesktop, quitGame } from "./desktop.js";
+import { restartMission } from "./saveSystem.js";
 
 // Briefing modal shown before gameplay starts.
 // Its primary job is to provide a user-gesture hook that reliably unlocks
@@ -37,10 +38,10 @@ export function showBriefingModal(scene, opts) {
   // { x, y, w, h, choice }
   let btnRects = [];
   let pulseTween = null;
-  // When the desktop "QUIT GAME" button is pressed we swap the whole modal
-  // for a Yes/No confirmation (same idea as the pause menu's quit confirm)
-  // rather than quitting immediately.
-  let confirmingQuit = false;
+  // RESTART MISSION and (desktop) QUIT GAME swap the whole modal for a Yes/No
+  // confirmation (same as the pause menu) rather than acting immediately.
+  // null | "restart" | "quit".
+  let confirmMode = null;
 
   // Rebuild the modal layout for the current viewport size. Called on
   // orientation / resize so the text + button always fit.
@@ -76,8 +77,9 @@ export function showBriefingModal(scene, opts) {
       .setDepth(500);
     items.push(overlay);
 
-    // --- Quit confirmation view (replaces the briefing until dismissed) ---
-    if (confirmingQuit) {
+    // --- Confirmation view (replaces the briefing until dismissed) ---
+    // Shared by RESTART and QUIT; only the body copy differs.
+    if (confirmMode) {
       const cTitleSize = Math.max(20, Math.min(32, Math.round(narrow * 0.055)));
       const cBodySize = Math.max(15, Math.min(22, Math.round(narrow * 0.038)));
       const cBtnW = Math.min(w * 0.6, 260);
@@ -98,12 +100,17 @@ export function showBriefingModal(scene, opts) {
         .setDepth(501);
       items.push(cTitle);
 
+      const cBodyText =
+        confirmMode === "restart"
+          ? "Restart the mission?\nAll progress will be lost."
+          : "Quit the game?";
       const cBody = scene.add
-        .text(w / 2, cTitleY + cTitleSize + 20, "Quit the game?", {
+        .text(w / 2, cTitleY + cTitleSize + 20, cBodyText, {
           fontFamily: "monospace",
           fontSize: `${cBodySize}px`,
           color: "#dddddd",
           align: "center",
+          lineSpacing: 4,
         })
         .setOrigin(0.5, 0)
         .setDepth(501);
@@ -149,8 +156,8 @@ export function showBriefingModal(scene, opts) {
       );
 
       btnRects = [
-        { x: noX, y: cBtnY, w: cBtnW, h: cBtnH, choice: "quit-no" },
-        { x: yesX, y: cBtnY, w: cBtnW, h: cBtnH, choice: "quit-yes" },
+        { x: noX, y: cBtnY, w: cBtnW, h: cBtnH, choice: "confirm-no" },
+        { x: yesX, y: cBtnY, w: cBtnW, h: cBtnH, choice: "confirm-yes" },
       ];
 
       scene.cameras.main.ignore(items);
@@ -407,24 +414,27 @@ export function showBriefingModal(scene, opts) {
     }
   };
 
-  // The quit flow (button only exists in the desktop build) is handled
-  // separately from start/continue/restart: it must NOT run the audio-unlock/
-  // dismiss path, which would start the mission. QUIT opens a Yes/No confirm;
-  // YES quits the app; NO returns to the briefing. Returns true if `choice`
-  // belonged to the quit flow and was handled.
-  const handleQuitChoice = (choice) => {
-    if (choice === "quit") {
-      confirmingQuit = true;
+  // RESTART and QUIT both open a Yes/No confirm instead of acting straight
+  // away. These are handled here — NOT via the audio-unlock/dismiss path,
+  // which would start the mission. YES runs the action; NO returns to the
+  // briefing. Returns true if `choice` belonged to a confirm flow.
+  const handleConfirmChoice = (choice) => {
+    if (choice === "restart" || choice === "quit") {
+      confirmMode = choice;
       build();
       return true;
     }
-    if (choice === "quit-no") {
-      confirmingQuit = false;
+    if (choice === "confirm-no") {
+      confirmMode = null;
       build();
       return true;
     }
-    if (choice === "quit-yes") {
-      quitGame(); // desktop: closes the app. web: n/a (button hidden).
+    if (choice === "confirm-yes") {
+      if (confirmMode === "restart") {
+        restartMission(); // clears save, flags skip-briefing, reloads
+      } else if (confirmMode === "quit") {
+        quitGame(); // desktop: closes the app. web: n/a (button hidden).
+      }
       return true;
     }
     return false;
@@ -437,13 +447,13 @@ export function showBriefingModal(scene, opts) {
     const choice = hitButton(t.clientX, t.clientY);
     if (!choice) return;
     e.preventDefault();
-    if (handleQuitChoice(choice)) return;
+    if (handleConfirmChoice(choice)) return;
     unlockAndDismiss(choice);
   };
   const onMouseDown = (e) => {
     const choice = hitButton(e.clientX, e.clientY);
     if (!choice) return;
-    if (handleQuitChoice(choice)) return;
+    if (handleConfirmChoice(choice)) return;
     unlockAndDismiss(choice);
   };
 

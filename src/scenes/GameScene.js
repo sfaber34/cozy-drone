@@ -37,7 +37,6 @@ import {
   clearSave,
   applySave,
   initAutosave,
-  restartMission,
   consumeSkipBriefing,
 } from "../systems/saveSystem.js";
 import { loadSettings } from "../systems/settingsSystem.js";
@@ -521,10 +520,10 @@ export class GameScene extends Phaser.Scene {
     } else {
       showBriefingModal(this, {
         hasSave: !!save,
+        // restart + quit are confirmed and executed inside the briefing
+        // modal itself, so onChoice only sees "continue" and "start".
         onChoice: (choice, fadeBriefing) => {
-          if (choice === "restart") {
-            restartMission();
-          } else if (choice === "continue") {
+          if (choice === "continue") {
             // The briefing modal stays up as the hide layer while the world
             // regenerates; fadeBriefing fades it out once we're ready to
             // reveal (called from tryApplyRestore via revealAfterRestore).
