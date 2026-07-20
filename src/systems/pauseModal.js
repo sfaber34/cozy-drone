@@ -7,7 +7,12 @@
 import Phaser from "phaser";
 import { getBrowserBottomInset } from "./viewportUtils.js";
 import { restartMission } from "./saveSystem.js";
-import { setSfxVolume, setMusicVolume } from "./audioSystem.js";
+import {
+  setSfxVolume,
+  setMusicVolume,
+  silenceForPauseMenu,
+  unsilenceAfterPauseMenu,
+} from "./audioSystem.js";
 import { persistSettings } from "./settingsSystem.js";
 
 const VOLUME_MIN = 0;
@@ -27,6 +32,10 @@ export function showPauseModal(scene) {
   scene.tweens.pauseAll();
   scene.time.paused = true;
 
+  // Silence everything but the background music while the menu is up (the
+  // engine drone in particular shouldn't keep playing behind the overlay).
+  silenceForPauseMenu(scene);
+
   const build = () => buildPauseModal(scene);
   scene._pauseModalBuild = build;
   build();
@@ -37,6 +46,7 @@ export function hidePauseModal(scene) {
   scene.paused = false;
   scene.tweens.resumeAll();
   scene.time.paused = false;
+  unsilenceAfterPauseMenu(scene);
   destroyPauseModalItems(scene);
   if (scene._pauseModalBuild) {
     scene.scale.off("resize", scene._pauseModalBuild);

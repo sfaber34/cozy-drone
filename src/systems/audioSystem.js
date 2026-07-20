@@ -232,6 +232,34 @@ export function setMusicVolume(scene, mult) {
   }
 }
 
+// Called when the pause menu opens: leave ONLY the background music audible.
+// The engine + cannon loops are stopped outright (they're rebuilt by
+// update() on resume, so there's nothing to un-pause); every other sound —
+// a transient explosion/death SFX still mid-play when the pause hit — is
+// muted so it goes silent immediately. Muting (not stopping) lets those
+// transients still finish and self-destruct normally, so their completion
+// handlers (e.g. the death-SFX concurrency counter) aren't skipped.
+export function silenceForPauseMenu(scene) {
+  if (scene.engineA && scene.engineA.isPlaying) scene.engineA.stop();
+  if (scene.engineB && scene.engineB.isPlaying) scene.engineB.stop();
+  scene.engineActive = null;
+  updateCannonFiringSound(scene, false);
+
+  const music = scene.currentTrack;
+  for (const snd of scene.sound.sounds) {
+    if (snd !== music) snd.setMute(true);
+  }
+}
+
+// Called when the pause menu closes: lift the blanket mute. Engine + cannon
+// were stopped (not muted), so update() resumes them cleanly on the next
+// frame at their correct volumes.
+export function unsilenceAfterPauseMenu(scene) {
+  for (const snd of scene.sound.sounds) {
+    snd.setMute(false);
+  }
+}
+
 export function playRandomTrack(scene) {
   if (scene.musicTracks.length === 0) return;
   if (!scene.audioLoaded) return;
