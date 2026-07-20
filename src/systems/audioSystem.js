@@ -247,7 +247,7 @@ export function silenceForPauseMenu(scene) {
 
   const music = scene.currentTrack;
   for (const snd of scene.sound.sounds) {
-    if (snd !== music) snd.setMute(true);
+    if (isMutable(snd) && snd !== music) snd.setMute(true);
   }
 }
 
@@ -256,8 +256,16 @@ export function silenceForPauseMenu(scene) {
 // frame at their correct volumes.
 export function unsilenceAfterPauseMenu(scene) {
   for (const snd of scene.sound.sounds) {
-    snd.setMute(false);
+    if (isMutable(snd)) snd.setMute(false);
   }
+}
+
+// scene.sound.sounds can contain sounds that finished this frame and are
+// mid-teardown (pendingRemove, with currentConfig nulled). Calling setMute
+// on those throws inside Phaser's mute setter ("Cannot set properties of
+// null") — which, thrown from update(), freezes the whole game. Skip them.
+function isMutable(snd) {
+  return snd && !snd.pendingRemove && snd.currentConfig != null;
 }
 
 export function playRandomTrack(scene) {

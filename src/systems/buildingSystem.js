@@ -67,6 +67,61 @@ export function createBuildings(scene, rng) {
   scene._addBuilding = addBuilding;
 }
 
+// --- Spatial grid for per-point building queries -----------------------
+// Buildings are static (they get destroyed but never move), so bucket them
+// once into a coarse grid. The per-frame, per-person avoidance checks
+// (pushOutOfBuildings / isInsideBuilding / steerAroundBuildings) then look at
+// only the buildings in the query point's own cell instead of all ~360 —
+// collapsing an O(people × buildings) hot loop (the "shoot a building →
+// crowd panics → frame stutters" bug) down to O(people). Each building is
+// stored in every cell its footprint (expanded by GRID_MARGIN, which covers
+// the person half-extent + steer lookahead) overlaps, so a single point→cell
+// lookup returns every building that could affect that point — no neighbor
+// scan needed.
+const GRID_CELL = 128;
+const GRID_MARGIN = 80;
+const NO_BUILDINGS = [];
+
+// Numeric cell key; offset keeps it positive/collision-free for the world's
+// small cell range (world is ~60 cells across; moat pushes a few negative).
+function cellKey(cx, cy) {
+  return (cx + 1024) * 100000 + (cy + 1024);
+}
+
+export function buildBuildingGrid(scene) {
+  const grid = new Map();
+  for (const b of scene.buildings) {
+    const bHW = (b.hw || b.radius) + GRID_MARGIN;
+    const bHH = (b.hh || b.radius) + GRID_MARGIN;
+    const minCx = Math.floor((b.x - bHW) / GRID_CELL);
+    const maxCx = Math.floor((b.x + bHW) / GRID_CELL);
+    const minCy = Math.floor((b.y - bHH) / GRID_CELL);
+    const maxCy = Math.floor((b.y + bHH) / GRID_CELL);
+    for (let cx = minCx; cx <= maxCx; cx++) {
+      for (let cy = minCy; cy <= maxCy; cy++) {
+        const key = cellKey(cx, cy);
+        let arr = grid.get(key);
+        if (!arr) {
+          arr = [];
+          grid.set(key, arr);
+        }
+        arr.push(b);
+      }
+    }
+  }
+  scene._buildingGrid = grid;
+}
+
+// Buildings whose footprint could affect the point (px, py). Falls back to
+// the full list if the grid hasn't been built yet (early world-init calls).
+function buildingsNear(scene, px, py) {
+  const grid = scene._buildingGrid;
+  if (!grid) return scene.buildings;
+  const cx = Math.floor(px / GRID_CELL);
+  const cy = Math.floor(py / GRID_CELL);
+  return grid.get(cellKey(cx, cy)) || NO_BUILDINGS;
+}
+
 export function findNearestBuilding(scene, px, py) {
   let best = null;
   let bestDist = Infinity;
@@ -131,7 +186,7 @@ export function killPeopleInBuilding(scene, building) {
 }
 
 export function isInsideBuilding(scene, px, py) {
-  for (const b of scene.buildings) {
+  for (const b of buildingsNear(scene, px, py)) {
     if (b.destroyed) continue;
     const bHW = b.hw || b.radius;
     const bHH = b.hh || b.radius;
@@ -167,7 +222,7 @@ export function isNearBuilding(scene, px, py, pad) {
 // forever. This routine forces them out along the shortest-overlap axis
 // so normal movement can resume.
 export function pushOutOfBuildings(scene, sprite, excludeBuilding) {
-  for (const b of scene.buildings) {
+  for (const b of buildingsNear(scene, sprite.x, sprite.y)) {
     if (b.destroyed || b === excludeBuilding) continue;
     const bHW = b.hw || b.radius;
     const bHH = b.hh || b.radius;
@@ -194,7 +249,12 @@ export function steerAroundBuildings(scene, px, py, angle, dt, excludeBuilding) 
   let repelX = 0;
   let repelY = 0;
 
-  for (const b of scene.buildings) {
+  // Both the direct and lookahead (60px) checks below only touch buildings
+  // near (px, py) — the grid's 80px margin covers the lookahead — so one
+  // point-cell lookup serves both loops.
+  const near = buildingsNear(scene, px, py);
+
+  for (const b of near) {
     if (b.destroyed || b === excludeBuilding) continue;
     const bHW = b.hw || b.radius;
     const bHH = b.hh || b.radius;
@@ -216,7 +276,7 @@ export function steerAroundBuildings(scene, px, py, angle, dt, excludeBuilding) 
   const checkDist = 60;
   const nx = px + Math.cos(angle) * checkDist;
   const ny = py + Math.sin(angle) * checkDist;
-  for (const b of scene.buildings) {
+  for (const b of near) {
     if (b.destroyed || b === excludeBuilding) continue;
     const bHW = (b.hw || b.radius) + 15;
     const bHH = (b.hh || b.radius) + 15;

@@ -41,7 +41,7 @@ import {
   consumeSkipBriefing,
 } from "../systems/saveSystem.js";
 import { loadSettings } from "../systems/settingsSystem.js";
-import { createBuildings } from "../systems/buildingSystem.js";
+import { createBuildings, buildBuildingGrid } from "../systems/buildingSystem.js";
 import { createAnimals, updateAnimals } from "../systems/animalSystem.js";
 import { fireMissile, updateMissiles } from "../systems/missileSystem.js";
 import {
@@ -1123,6 +1123,12 @@ function tryDeferredWorldInit(scene) {
     reserved,
   );
   scene.setPieces.push(...placed);
+
+  // All buildings (airfield + town + set pieces) exist now and never move —
+  // bucket them into the spatial grid so per-person building avoidance is
+  // cheap. Built BEFORE createPeople so its isInsideBuilding spawn checks
+  // already use the grid.
+  buildBuildingGrid(scene);
 
   // Vehicles first — createPeople needs scene.townCars / scene.dirtBikers
   // to exist so it can count car passengers + bikers and compute the
