@@ -591,6 +591,25 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  // Freeze the camera exactly where it is when the pause menu opens. The
+  // main camera follows the drone with lerp smoothing, and that follow
+  // interpolation keeps running even while gameplay update() is frozen — so
+  // without this the view drifts a little after pausing as the lerp catches
+  // up to the drone. stopFollow halts it in place; unfreezeCameraForResume
+  // re-attaches the identical smoothed follow.
+  freezeCameraForPause() {
+    this.cameras.main.stopFollow();
+  }
+
+  unfreezeCameraForResume() {
+    this.cameras.main.startFollow(
+      this.drone,
+      true,
+      CAMERA_FOLLOW_LERP,
+      CAMERA_FOLLOW_LERP,
+    );
+  }
+
   update(time, delta) {
     const dt = delta / 1000;
     const ds = this.droneState;

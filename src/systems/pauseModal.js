@@ -36,6 +36,10 @@ export function showPauseModal(scene) {
   // engine drone in particular shouldn't keep playing behind the overlay).
   silenceForPauseMenu(scene);
 
+  // Freeze the camera in place — otherwise its follow-lerp keeps drifting
+  // toward the drone for a moment after the overlay appears.
+  scene.freezeCameraForPause();
+
   const build = () => buildPauseModal(scene);
   scene._pauseModalBuild = build;
   build();
@@ -47,6 +51,7 @@ export function hidePauseModal(scene) {
   scene.tweens.resumeAll();
   scene.time.paused = false;
   unsilenceAfterPauseMenu(scene);
+  scene.unfreezeCameraForResume();
   destroyPauseModalItems(scene);
   if (scene._pauseModalBuild) {
     scene.scale.off("resize", scene._pauseModalBuild);
@@ -338,7 +343,15 @@ function createButton(scene, items, opts) {
     .setStrokeStyle(3, 0xffffff, 0.9)
     .setDepth(701)
     .setInteractive({ useHandCursor: true })
-    .on("pointerdown", onClick);
+    // stopPropagation prevents this click from also reaching GameScene's
+    // scene-level 'pointerdown' (missile targeting). Without it, RESUME
+    // clears `paused` and then the scene handler — which Phaser fires after
+    // game-object handlers — runs with paused already false and re-targets
+    // the missile to wherever the cursor maps in the world.
+    .on("pointerdown", (pointer, x2, y2, event) => {
+      event.stopPropagation();
+      onClick();
+    });
   items.push(btn);
 
   const btnLabel = scene.add
@@ -436,7 +449,8 @@ function createLabeledSlider(scene, items, opts) {
     onChange(newVal);
   };
 
-  hitZone.on("pointerdown", (pointer) => {
+  hitZone.on("pointerdown", (pointer, x2, y2, event) => {
+    event.stopPropagation(); // don't leak to GameScene's targeting handler
     dragging = true;
     updateFromPointerX(pointer.x);
   });
@@ -494,7 +508,8 @@ function createToggle(scene, items, opts) {
     .setDepth(702);
   items.push(pillLabel);
 
-  pill.on("pointerdown", () => {
+  pill.on("pointerdown", (pointer, x2, y2, event) => {
+    event.stopPropagation(); // don't leak to GameScene's targeting handler
     state = !state;
     pill.setFillStyle(state ? 0x226a2a : 0x555555, 0.95);
     pillLabel.setText(state ? "ON" : "OFF");
