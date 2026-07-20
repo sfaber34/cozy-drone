@@ -65,24 +65,12 @@
       opacity: 0;
       pointer-events: none;
     }
-
-    /* Desktop: widget stays bottom-right (default). Mobile: move to top-right
-       so it doesn't cover touch controls. */
-    @media (hover: none) and (pointer: coarse) {
-      a[href*="vibej.am"] {
-        bottom: auto !important;
-        top: -1px !important;
-        border-top-left-radius: 0 !important;
-        border-bottom-left-radius: 12px !important;
-      }
-    }
   </style>
 </head>
 
 <body>
   <div id="loader"></div>
   <script type="module" src="/src/main.js"></script>
-  <script async src="https://vibej.am/2026/widget.js"></script>
 </body>
 
 </html>

@@ -6,7 +6,7 @@
   <!-- viewport-fit=cover: render into iOS safe areas (notch / home indicator)
        instead of letterboxing the canvas away from the screen edges. -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
   <title>Cozy Drone</title>
   <style>
     * {
@@ -65,24 +65,12 @@
       opacity: 0;
       pointer-events: none;
     }
-
-    /* Desktop: widget stays bottom-right (default). Mobile: move to top-right
-       so it doesn't cover touch controls. */
-    @media (hover: none) and (pointer: coarse) {
-      a[href*="vibej.am"] {
-        bottom: auto !important;
-        top: -1px !important;
-        border-top-left-radius: 0 !important;
-        border-bottom-left-radius: 12px !important;
-      }
-    }
   </style>
-  <script type="module" crossorigin src="/assets/index-Bl-6SODe.js"></script>
+  <script type="module" crossorigin src="./assets/index-CruT-JpL.js"></script>
 </head>
 
 <body>
   <div id="loader"></div>
-  <script async src="https://vibej.am/2026/widget.js"></script>
 </body>
 
 </html>

@@ -14,6 +14,7 @@ import {
   unsilenceAfterPauseMenu,
 } from "./audioSystem.js";
 import { persistSettings } from "./settingsSystem.js";
+import { isDesktop, quitGame } from "./desktop.js";
 
 const VOLUME_MIN = 0;
 const VOLUME_MAX = 1.5;
@@ -113,14 +114,20 @@ function buildMainView(scene, items, w, h, narrow, bottomSafe) {
     .setDepth(701);
   items.push(title);
 
-  // Buttons anchored at the bottom (Resume / Restart / Quit stack up).
+  // Buttons anchored at the bottom, stacked bottom-up: Resume on top,
+  // then Restart, then Quit Game at the very bottom. Quit only exists in the
+  // desktop build (quitting a browser tab is meaningless), so the stack is
+  // either 3 buttons or 2 — laid out from the bottom so the topmost button's
+  // position adjusts to the count.
   const btnW = Math.min(w * 0.75, 360);
   const btnH = Math.max(44, Math.min(62, Math.round(narrow * 0.09)));
   const btnGap = Math.max(8, Math.round(btnH * 0.18));
   const stackBottom = h - bottomSafe - 10;
-  const quitY = stackBottom - btnH / 2;
-  const restartY = quitY - btnH - btnGap;
-  const resumeY = restartY - btnH - btnGap;
+  const showQuit = isDesktop();
+  const btnCount = showQuit ? 3 : 2;
+  const resumeY = stackBottom - btnH / 2 - (btnCount - 1) * (btnH + btnGap);
+  const restartY = resumeY + (btnH + btnGap);
+  const quitY = restartY + (btnH + btnGap); // only used when showQuit
 
   // Content: SFX slider, music slider, 2 toggles — kept as ONE tight group
   // (small fixed gap between rows) and centered in the empty region between
@@ -237,19 +244,21 @@ function buildMainView(scene, items, w, h, narrow, bottomSafe) {
     },
   });
 
-  createButton(scene, items, {
-    x: w / 2,
-    y: quitY,
-    w: btnW,
-    h: btnH,
-    label: "QUIT GAME",
-    labelSize: btnLabelSize,
-    color: 0x444444,
-    onClick: () => {
-      scene._pauseConfirmMode = "quit";
-      buildPauseModal(scene);
-    },
-  });
+  if (showQuit) {
+    createButton(scene, items, {
+      x: w / 2,
+      y: quitY,
+      w: btnW,
+      h: btnH,
+      label: "QUIT GAME",
+      labelSize: btnLabelSize,
+      color: 0x444444,
+      onClick: () => {
+        scene._pauseConfirmMode = "quit";
+        buildPauseModal(scene);
+      },
+    });
+  }
 }
 
 function buildConfirmView(scene, items, w, h, narrow, bottomSafe) {
@@ -317,16 +326,17 @@ function buildConfirmView(scene, items, w, h, narrow, bottomSafe) {
     h: btnH,
     label: "YES",
     labelSize: btnLabelSize,
-    color: mode === "restart" ? 0x8a3a10 : 0x444444,
+    // Both confirmations (restart + quit) use the same orange YES.
+    color: 0x8a3a10,
     onClick: () => {
       if (mode === "restart") {
         // Same shared action the mission-briefing modal's restart uses.
         restartMission();
-      } else {
-        // Quit is a placeholder — there's no "exit" concept in a browser
-        // tab. Wire this up to the Steam/Electron wrapper's real quit
-        // (e.g. app.quit()) once that wrapper exists; for now just back
-        // out of the confirmation.
+      } else if (!quitGame()) {
+        // Desktop build: quitGame() closed the app. Web build: it no-ops
+        // (returns false) — there's no tab to quit, so just back out. (The
+        // Quit button is hidden on web anyway, so this branch is a safety
+        // net rather than a normal path.)
         scene._pauseConfirmMode = null;
         buildPauseModal(scene);
       }

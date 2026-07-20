@@ -1,4 +1,5 @@
 import { getBrowserBottomInset } from "./viewportUtils.js";
+import { isDesktop, quitGame } from "./desktop.js";
 
 // Briefing modal shown before gameplay starts.
 // Its primary job is to provide a user-gesture hook that reliably unlocks
@@ -36,6 +37,10 @@ export function showBriefingModal(scene, opts) {
   // { x, y, w, h, choice }
   let btnRects = [];
   let pulseTween = null;
+  // When the desktop "QUIT GAME" button is pressed we swap the whole modal
+  // for a Yes/No confirmation (same idea as the pause menu's quit confirm)
+  // rather than quitting immediately.
+  let confirmingQuit = false;
 
   // Rebuild the modal layout for the current viewport size. Called on
   // orientation / resize so the text + button always fit.
@@ -66,6 +71,88 @@ export function showBriefingModal(scene, opts) {
       .setOrigin(0, 0)
       .setDepth(500);
     items.push(overlay);
+
+    // --- Quit confirmation view (replaces the briefing until dismissed) ---
+    if (confirmingQuit) {
+      const cTitleSize = Math.max(20, Math.min(32, Math.round(narrow * 0.055)));
+      const cBodySize = Math.max(15, Math.min(22, Math.round(narrow * 0.038)));
+      const cBtnW = Math.min(w * 0.6, 260);
+      const cBtnH = Math.max(46, Math.min(64, Math.round(narrow * 0.1)));
+      const cBtnGap = Math.max(16, Math.round(cBtnW * 0.08));
+      const cBtnY = h - bottomSafe - 10 - cBtnH / 2;
+      const cTitleY = h * 0.35;
+
+      const cTitle = scene.add
+        .text(w / 2, cTitleY, "ARE YOU SURE?", {
+          fontFamily: "monospace",
+          fontSize: `${cTitleSize}px`,
+          color: "#ffcc44",
+          stroke: "#000",
+          strokeThickness: 4,
+        })
+        .setOrigin(0.5)
+        .setDepth(501);
+      items.push(cTitle);
+
+      const cBody = scene.add
+        .text(w / 2, cTitleY + cTitleSize + 20, "Quit the game?", {
+          fontFamily: "monospace",
+          fontSize: `${cBodySize}px`,
+          color: "#dddddd",
+          align: "center",
+        })
+        .setOrigin(0.5, 0)
+        .setDepth(501);
+      items.push(cBody);
+
+      const cLabelSize = Math.max(14, Math.min(20, Math.round(narrow * 0.036)));
+      const noX = w / 2 - cBtnW / 2 - cBtnGap / 2;
+      const yesX = w / 2 + cBtnW / 2 + cBtnGap / 2;
+
+      const noBtn = scene.add
+        .rectangle(noX, cBtnY, cBtnW, cBtnH, 0x444444, 0.9)
+        .setStrokeStyle(3, 0xffffff, 0.9)
+        .setDepth(501)
+        .setInteractive({ useHandCursor: true });
+      items.push(noBtn);
+      items.push(
+        scene.add
+          .text(noX, cBtnY, "NO", {
+            fontFamily: "monospace",
+            fontSize: `${cLabelSize}px`,
+            color: "#ffffff",
+          })
+          .setOrigin(0.5)
+          .setDepth(502),
+      );
+
+      // Orange YES — matches the pause menu's confirmation buttons.
+      const yesBtn = scene.add
+        .rectangle(yesX, cBtnY, cBtnW, cBtnH, 0x8a3a10, 0.9)
+        .setStrokeStyle(3, 0xffffff, 0.9)
+        .setDepth(501)
+        .setInteractive({ useHandCursor: true });
+      items.push(yesBtn);
+      items.push(
+        scene.add
+          .text(yesX, cBtnY, "YES", {
+            fontFamily: "monospace",
+            fontSize: `${cLabelSize}px`,
+            color: "#ffffff",
+          })
+          .setOrigin(0.5)
+          .setDepth(502),
+      );
+
+      btnRects = [
+        { x: noX, y: cBtnY, w: cBtnW, h: cBtnH, choice: "quit-no" },
+        { x: yesX, y: cBtnY, w: cBtnW, h: cBtnH, choice: "quit-yes" },
+      ];
+
+      scene.cameras.main.ignore(items);
+      scene._briefingModalItems = items;
+      return;
+    }
 
     // Title — scale down on narrow viewports, pinned near the top
     const titleSize = Math.max(18, Math.min(32, Math.round(narrow * 0.05)));
@@ -154,12 +241,11 @@ export function showBriefingModal(scene, opts) {
     }
 
     // Quit button — small, tucked into the lower-right corner, away from
-    // the centered Start/Continue stack. Desktop only: quitting has no
-    // meaning on the mobile web build (the Steam/Electron wrapper is where
-    // this gets wired to a real app.quit()). Deep crimson so it reads as a
-    // distinct, more "serious" action next to the orange primary button
-    // without clashing.
-    if (!scene.isMobile) {
+    // the centered Start/Continue stack. Only in the desktop (Electron)
+    // build: quitting has no meaning in a browser tab, so it's hidden on
+    // web/mobile entirely. Deep crimson so it reads as a distinct, more
+    // "serious" action next to the orange primary button without clashing.
+    if (isDesktop()) {
       const quitW = Math.min(w * 0.22, 150);
       const quitH = Math.max(32, Math.round(btnH * 0.55));
       const quitMargin = Math.max(16, Math.round(w * 0.02));
@@ -288,14 +374,27 @@ export function showBriefingModal(scene, opts) {
     if (onChoice) onChoice(choice);
   };
 
-  // Quit is a placeholder for now — a browser tab has no real "quit". The
-  // Steam/Electron wrapper will wire this to the app's actual quit
-  // (e.g. window.close() / app.quit()). Until then it intentionally does
-  // nothing AND must NOT run the audio-unlock/dismiss path, so the briefing
-  // stays up. Kept here (not routed through onChoice) so GameScene's choice
-  // handling stays start/continue/restart only.
-  const handleQuit = () => {
-    /* inop placeholder — see comment above */
+  // The quit flow (button only exists in the desktop build) is handled
+  // separately from start/continue/restart: it must NOT run the audio-unlock/
+  // dismiss path, which would start the mission. QUIT opens a Yes/No confirm;
+  // YES quits the app; NO returns to the briefing. Returns true if `choice`
+  // belonged to the quit flow and was handled.
+  const handleQuitChoice = (choice) => {
+    if (choice === "quit") {
+      confirmingQuit = true;
+      build();
+      return true;
+    }
+    if (choice === "quit-no") {
+      confirmingQuit = false;
+      build();
+      return true;
+    }
+    if (choice === "quit-yes") {
+      quitGame(); // desktop: closes the app. web: n/a (button hidden).
+      return true;
+    }
+    return false;
   };
 
   const onTouchEnd = (e) => {
@@ -305,13 +404,13 @@ export function showBriefingModal(scene, opts) {
     const choice = hitButton(t.clientX, t.clientY);
     if (!choice) return;
     e.preventDefault();
-    if (choice === "quit") return handleQuit();
+    if (handleQuitChoice(choice)) return;
     unlockAndDismiss(choice);
   };
   const onMouseDown = (e) => {
     const choice = hitButton(e.clientX, e.clientY);
     if (!choice) return;
-    if (choice === "quit") return handleQuit();
+    if (handleQuitChoice(choice)) return;
     unlockAndDismiss(choice);
   };
 
