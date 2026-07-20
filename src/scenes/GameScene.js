@@ -564,15 +564,28 @@ export class GameScene extends Phaser.Scene {
   }
 
   // Apply the current HUD-visibility preferences (this.showHud /
-  // showTooltips / showMinimap) to the actual objects. Called once at
-  // setup and again whenever a pause-menu toggle flips. hudText and the
-  // mission-complete banner are ALSO driven each frame by update() (so they
-  // stay correct as the mission state changes), so this only needs to own
-  // the bottom-left controls text and the minimap here. Tooltips never show
-  // on mobile (the on-screen controls replace them); the minimap on mobile
-  // is owned by its own "M" button, so the persisted flag applies on
-  // desktop only.
+  // showTooltips / showMinimap) to the actual objects immediately. Called
+  // once at setup and again whenever a pause-menu toggle flips — applying
+  // everything HERE (not deferring hudText to update()) is what makes the
+  // toggles take effect instantly while the game is paused, since update()
+  // is frozen then. update() re-applies hudText/missionComplete every
+  // frame during play so they still track mission state afterward.
+  //
+  // hudText + the mission-complete banner only show during active gameplay
+  // (never during the intro cutscene), so they're gated on !introPlaying.
+  // Tooltips never show on mobile (on-screen controls replace them); the
+  // minimap on mobile is owned by its own "M" button, so the persisted flag
+  // applies on desktop only.
   applyHudVisibility() {
+    const active = !this.introPlaying;
+    if (this.hudText) {
+      this.hudText.setVisible(this.showHud && active);
+    }
+    if (this.missionCompleteText) {
+      const missionReady =
+        active && this.kills >= this.totalPeople && !this.victoryActive;
+      this.missionCompleteText.setVisible(this.showHud && missionReady);
+    }
     if (this.controlsText) {
       this.controlsText.setVisible(this.showTooltips && !this.isMobile);
     }
@@ -586,14 +599,16 @@ export class GameScene extends Phaser.Scene {
     const ds = this.droneState;
 
     // --- Pause toggle (ESC) --- Checked before the early-returns below so
-    // ESC can always resume out of pause; entering pause is only allowed
-    // during normal flight (not intro/crashed/victory), same gate as
-    // canSave()'s in saveSystem.js.
+    // ESC can always resume out of pause. Entering pause is allowed during
+    // the intro cutscene too (so the player can adjust settings before the
+    // action starts) — only the briefing modal, a crash, and the victory
+    // sequence block it. briefingActive keeps ESC from stacking pause on
+    // top of the mission-briefing modal.
     if (Phaser.Input.Keyboard.JustDown(this.cursors.pause)) {
       if (this.paused) {
         hidePauseModal(this);
       } else if (
-        !this.introPlaying &&
+        !this.briefingActive &&
         this.flightState !== "crashed" &&
         !this.victoryActive
       ) {

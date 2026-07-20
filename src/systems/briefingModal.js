@@ -153,6 +153,42 @@ export function showBriefingModal(scene, opts) {
       btnRects.push({ x: w / 2, y: secY, w: btnW, h: secH, choice: "restart" });
     }
 
+    // Quit button — small, tucked into the lower-right corner, away from
+    // the centered Start/Continue stack. Desktop only: quitting has no
+    // meaning on the mobile web build (the Steam/Electron wrapper is where
+    // this gets wired to a real app.quit()). Deep crimson so it reads as a
+    // distinct, more "serious" action next to the orange primary button
+    // without clashing.
+    if (!scene.isMobile) {
+      const quitW = Math.min(w * 0.22, 150);
+      const quitH = Math.max(32, Math.round(btnH * 0.55));
+      const quitMargin = Math.max(16, Math.round(w * 0.02));
+      const quitX = w - quitW / 2 - quitMargin;
+      const quitY = h - quitH / 2 - Math.max(14, Math.round(h * 0.025));
+      const quitBtn = scene.add
+        .rectangle(quitX, quitY, quitW, quitH, 0xb02222, 0.9)
+        .setStrokeStyle(2, 0xff8866, 0.9)
+        .setDepth(501)
+        .setInteractive({ useHandCursor: true });
+      items.push(quitBtn);
+      const quitLabel = scene.add
+        .text(quitX, quitY, "QUIT GAME", {
+          fontFamily: "monospace",
+          fontSize: `${Math.max(11, Math.round(labelSize * 0.7))}px`,
+          color: "#ffffff",
+        })
+        .setOrigin(0.5)
+        .setDepth(502);
+      items.push(quitLabel);
+      btnRects.push({
+        x: quitX,
+        y: quitY,
+        w: quitW,
+        h: quitH,
+        choice: "quit",
+      });
+    }
+
     scene.cameras.main.ignore(items);
     // Published so later world-init code can exclude these from the HUD
     // camera's catch-up ignore filter (otherwise the modal ends up
@@ -252,6 +288,16 @@ export function showBriefingModal(scene, opts) {
     if (onChoice) onChoice(choice);
   };
 
+  // Quit is a placeholder for now — a browser tab has no real "quit". The
+  // Steam/Electron wrapper will wire this to the app's actual quit
+  // (e.g. window.close() / app.quit()). Until then it intentionally does
+  // nothing AND must NOT run the audio-unlock/dismiss path, so the briefing
+  // stays up. Kept here (not routed through onChoice) so GameScene's choice
+  // handling stays start/continue/restart only.
+  const handleQuit = () => {
+    /* inop placeholder — see comment above */
+  };
+
   const onTouchEnd = (e) => {
     // Only dismiss if the tap landed on a button
     const t = e.changedTouches && e.changedTouches[0];
@@ -259,11 +305,13 @@ export function showBriefingModal(scene, opts) {
     const choice = hitButton(t.clientX, t.clientY);
     if (!choice) return;
     e.preventDefault();
+    if (choice === "quit") return handleQuit();
     unlockAndDismiss(choice);
   };
   const onMouseDown = (e) => {
     const choice = hitButton(e.clientX, e.clientY);
     if (!choice) return;
+    if (choice === "quit") return handleQuit();
     unlockAndDismiss(choice);
   };
 

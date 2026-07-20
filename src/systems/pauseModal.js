@@ -18,6 +18,15 @@ export function showPauseModal(scene) {
   scene.paused = true;
   scene._pauseConfirmMode = null;
 
+  // Freeze all tweens + timer events so the world truly stops — GameScene's
+  // update() early-returns while paused, but Phaser keeps stepping tweens
+  // and timers on its own. Without this, the intro cutscene (all tween/
+  // timer driven) would keep playing behind the overlay, and in-game
+  // explosions/dust/ghosts would animate on. The pause modal itself uses
+  // neither tweens nor timers, so it's unaffected.
+  scene.tweens.pauseAll();
+  scene.time.paused = true;
+
   const build = () => buildPauseModal(scene);
   scene._pauseModalBuild = build;
   build();
@@ -26,6 +35,8 @@ export function showPauseModal(scene) {
 
 export function hidePauseModal(scene) {
   scene.paused = false;
+  scene.tweens.resumeAll();
+  scene.time.paused = false;
   destroyPauseModalItems(scene);
   if (scene._pauseModalBuild) {
     scene.scale.off("resize", scene._pauseModalBuild);
