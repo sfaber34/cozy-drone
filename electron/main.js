@@ -100,6 +100,10 @@ async function createWindow() {
     minHeight: 600,
     backgroundColor: "#000000",
     autoHideMenuBar: true,
+    // Ship in TRUE fullscreen (borderless, no title bar, covers the taskbar/
+    // dock) — this is a game. Dev stays windowed so DevTools + resizing work.
+    // F11 toggles it below so the player is never stuck.
+    fullscreen: !isDev,
     title: "Cozy Drone",
     webPreferences: {
       // The renderer runs untrusted-ish web content (the game bundle) — keep
@@ -116,6 +120,16 @@ async function createWindow() {
   win.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
     return { action: "deny" };
+  });
+
+  // F11 toggles true fullscreen ↔ windowed (standard game convention), so the
+  // player can drop out of fullscreen without quitting. The game doesn't use
+  // F11 for anything, so swallowing it here is safe.
+  win.webContents.on("before-input-event", (event, input) => {
+    if (input.type === "keyDown" && input.key === "F11") {
+      win.setFullScreen(!win.isFullScreen());
+      event.preventDefault();
+    }
   });
 
   if (isDev) {
