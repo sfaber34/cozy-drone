@@ -1132,13 +1132,18 @@ function tryDeferredWorldInit(scene) {
   // Desert props are scattered randomly across the whole map back in create(),
   // BEFORE the town's position is chosen here — so some land inside the town
   // and render on top of its streets/grass. Now that the town's final bounds
-  // are known, destroy any prop whose center falls inside them.
+  // are known, destroy any prop whose center falls inside them. The margin
+  // also clears props just OUTSIDE the footprint that would otherwise be
+  // partially covered by the perimeter road ringing the town.
+  const TOWN_PROP_CULL_MARGIN = 30;
   const townPiece = scene.setPieces.find((p) => p.type === "town");
   if (townPiece?.bounds) {
     const b = townPiece.bounds;
+    const mw = b.hw + TOWN_PROP_CULL_MARGIN;
+    const mh = b.hh + TOWN_PROP_CULL_MARGIN;
     for (let i = scene.desertProps.length - 1; i >= 0; i--) {
       const p = scene.desertProps[i];
-      if (Math.abs(p.x - b.cx) <= b.hw && Math.abs(p.y - b.cy) <= b.hh) {
+      if (Math.abs(p.x - b.cx) <= mw && Math.abs(p.y - b.cy) <= mh) {
         p.destroy();
         scene.desertProps.splice(i, 1);
       }
