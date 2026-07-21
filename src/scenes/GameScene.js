@@ -166,11 +166,17 @@ export class GameScene extends Phaser.Scene {
       "deadtree",
       "palmstump",
     ];
+    // Tracked so we can cull the ones that land inside the town's footprint
+    // once the town's final (deferred, randomized) position is known — see
+    // the cull in tryDeferredWorldInit. Skulls/rocks on town streets look wrong.
+    this.desertProps = [];
     for (let i = 0; i < 2500; i++) {
       const x = Math.random() * worldPxW;
       const y = Math.random() * worldPxH;
       const tex = desertProps[Math.floor(Math.random() * desertProps.length)];
-      this.add.image(x, y, tex).setScale(SCALE).setDepth(1);
+      this.desertProps.push(
+        this.add.image(x, y, tex).setScale(SCALE).setDepth(1),
+      );
     }
 
     // Initialize shared entity arrays early so damage systems + setpieces
@@ -1122,6 +1128,22 @@ function tryDeferredWorldInit(scene) {
     reserved,
   );
   scene.setPieces.push(...placed);
+
+  // Desert props are scattered randomly across the whole map back in create(),
+  // BEFORE the town's position is chosen here — so some land inside the town
+  // and render on top of its streets/grass. Now that the town's final bounds
+  // are known, destroy any prop whose center falls inside them.
+  const townPiece = scene.setPieces.find((p) => p.type === "town");
+  if (townPiece?.bounds) {
+    const b = townPiece.bounds;
+    for (let i = scene.desertProps.length - 1; i >= 0; i--) {
+      const p = scene.desertProps[i];
+      if (Math.abs(p.x - b.cx) <= b.hw && Math.abs(p.y - b.cy) <= b.hh) {
+        p.destroy();
+        scene.desertProps.splice(i, 1);
+      }
+    }
+  }
 
   // All buildings (airfield + town + set pieces) exist now and never move —
   // bucket them into the spatial grid so per-person building avoidance is
