@@ -40,7 +40,10 @@ import {
   consumeSkipBriefing,
 } from "../systems/saveSystem.js";
 import { loadSettings } from "../systems/settingsSystem.js";
-import { createBuildings, buildBuildingGrid } from "../systems/buildingSystem.js";
+import {
+  createBuildings,
+  buildBuildingGrid,
+} from "../systems/buildingSystem.js";
 import { createAnimals, updateAnimals } from "../systems/animalSystem.js";
 import { fireMissile, updateMissiles } from "../systems/missileSystem.js";
 import {
@@ -87,6 +90,14 @@ import {
   updateClusterBombs,
 } from "../systems/clusterBombSystem.js";
 
+// ── CAPTURE / TRAILER TOGGLE ──────────────────────────────────────────────
+// Set to a string to LOCK the world layout to one fixed seed, so every fresh
+// mission generates the exact same map (town/farm/oilfield positions, roads,
+// props, etc.). Used for recording consistent trailer footage in OBS.
+// Set back to null to restore the normal per-run random layout before shipping.
+// (Only affects a FRESH mission — a save still regenerates from its own seed.)
+const FIXED_WORLD_SEED = "cozy-drone-trailer3";
+
 export class GameScene extends Phaser.Scene {
   constructor() {
     super("Game");
@@ -129,7 +140,8 @@ export class GameScene extends Phaser.Scene {
     this._restoreDone = false;
     this._worldSeed = save
       ? save.seed
-      : `desert-${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
+      : FIXED_WORLD_SEED ||
+        `desert-${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
     const rng = new Phaser.Math.RandomDataGenerator([this._worldSeed]);
 
     // Patch the scene's text factory so every Text object auto-applies
@@ -593,7 +605,9 @@ export class GameScene extends Phaser.Scene {
   applyHudVisibility() {
     const active = !this.introPlaying;
     if (this.controlsText) {
-      this.controlsText.setVisible(active && this.showTooltips && !this.isMobile);
+      this.controlsText.setVisible(
+        active && this.showTooltips && !this.isMobile,
+      );
     }
     if (!this.isMobile) {
       setMinimapVisible(this, active && this.showMinimap);
@@ -1037,10 +1051,7 @@ function syncDroneShadow(scene) {
       SCALE * Phaser.Math.Clamp(1.2 - ds.altitude * 0.0003, 0.6, 1.2);
     scene.droneShadow.setScale(shadowScale);
     scene.dronePropShadow.setVisible(true);
-    scene.dronePropShadow.setPosition(
-      ds.x + shadowOffset,
-      ds.y + shadowOffset,
-    );
+    scene.dronePropShadow.setPosition(ds.x + shadowOffset, ds.y + shadowOffset);
     scene.dronePropShadow.setAngle(ds.angle);
     scene.dronePropShadow.setAlpha(scene.droneShadow.alpha);
     scene.dronePropShadow.setScale(shadowScale);
