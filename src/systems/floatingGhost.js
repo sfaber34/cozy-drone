@@ -1,5 +1,10 @@
 import Phaser from "phaser";
-import { SCALE, MOBILE_DIALOG_SCALE } from "../constants.js";
+import {
+  SCALE,
+  MOBILE_DIALOG_SCALE,
+  UI_FONT,
+  GHOST_TEXT_COLOR,
+} from "../constants.js";
 import { ghostLines } from "../dialog.js";
 import { tryRegisterGhostBubble } from "./ghostBubbleUtils.js";
 
@@ -33,9 +38,9 @@ export function spawnFloatingGhost(scene, cx, cy, angle) {
     const line = Phaser.Utils.Array.GetRandom(ghostLines);
     bubble = scene.add
       .text(x + 20, y - 20, line, {
-        fontFamily: "monospace",
+        fontFamily: UI_FONT,
         fontSize: "8px",
-        color: "#aaccff",
+        color: GHOST_TEXT_COLOR,
         backgroundColor: "#000000aa",
         padding: { x: 4, y: 3 },
       })

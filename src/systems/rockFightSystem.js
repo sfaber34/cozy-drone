@@ -16,6 +16,7 @@ import {
   ROCK_FIGHT_HIT_FLASH_DURATION, ROCK_FIGHT_HIT_KNOCKBACK,
   ROCK_FIGHT_IDLE_WAVE_INTERVAL_MIN, ROCK_FIGHT_IDLE_WAVE_INTERVAL_RANGE,
   ROCK_FIGHT_MIN_SPACING, ROCK_FIGHT_SPAWN_MAX_TRIES,
+  UI_FONT,
 } from "../constants.js";
 
 const GREETINGS = [
@@ -244,7 +245,7 @@ function hitPerson(scene, target) {
   target.hitFlashTimer = ROCK_FIGHT_HIT_FLASH_DURATION;
 
   const bubble = scene.add.text(target.sprite.x, target.sprite.y - 18, "OW!", {
-    fontFamily: "monospace", fontSize: "10px",
+    fontFamily: UI_FONT, fontSize: "10px",
     color: "#ff4444", backgroundColor: "#000000aa",
     padding: { x: 3, y: 2 },
   }).setOrigin(0.5, 1).setScale(SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1)).setDepth(14);

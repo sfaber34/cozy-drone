@@ -533,3 +533,26 @@ export const MOBILE_JOYSTICK_RADIUS = 65; // virtual joystick radius (px)
 export const MOBILE_BUTTON_RADIUS = 42; // fire/alt button radius (px)
 export const MOBILE_BUTTON_MARGIN = 18; // gap from screen edge and between buttons (px)
 export const MOBILE_DIALOG_SCALE = 1.6; // speech bubble / dialog scale multiplier on mobile
+
+// --- UI font ---
+// Single source of truth for every scene.add.text() fontFamily in the game.
+//
+// Was the generic "monospace", which each OS resolves differently: Menlo on
+// macOS, Courier New on Windows. Courier New has much thinner stems, and the
+// dialogs' 4px text stroke (strokeThickness centers on the glyph outline, so
+// half of it bites INWARD) closed the letterforms up — dialog copy was
+// unreadable on Windows while identical code looked fine on macOS. HUD and
+// world text escaped it because they carry a backgroundColor and no stroke.
+//
+// GameMono is JetBrains Mono, bundled at public/fonts/ and declared via
+// @font-face in index.html, so every platform rasterizes identical glyphs
+// with no network fetch. The generic fallbacks only apply if the bundled
+// file somehow fails to load.
+export const UI_FONT = '"GameMono", "Menlo", "Consolas", monospace';
+
+// Ghost speech-bubble text. Ghost bubbles sit on a translucent dark plate
+// (#000000aa) which lets the tan desert through, so a mid-tone fill washes
+// out against it — near-white is what actually reads. Kept faintly blue
+// rather than pure #fff so ghosts stay visually distinct from living
+// people, whose bubbles are black-on-white.
+export const GHOST_TEXT_COLOR = "#e8f1ff";

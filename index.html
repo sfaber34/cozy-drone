@@ -9,6 +9,22 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <title>Cozy Drone</title>
   <style>
+    /* Bundled UI font. Shipped as a local asset (public/fonts/) rather than
+       relying on the generic `monospace` family, which the OS resolves to a
+       different face on every platform — Menlo on macOS, Courier New on
+       Windows. Courier New's stems are thin enough that the dialogs' 4px
+       text stroke eats through them and the letterforms close up, which is
+       why dialog copy was unreadable on Windows and fine on macOS.
+       Bundling makes every platform rasterize identical glyphs.
+       JetBrains Mono, SIL OFL 1.1 — see fonts/JetBrainsMono-LICENSE.txt. */
+    @font-face {
+      font-family: "GameMono";
+      src: url("/fonts/jetbrains-mono-400.woff2") format("woff2");
+      font-weight: 400;
+      font-style: normal;
+      font-display: block;
+    }
+
     * {
       margin: 0;
       padding: 0;

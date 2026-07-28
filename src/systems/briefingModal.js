@@ -1,6 +1,7 @@
 import { getBrowserBottomInset } from "./viewportUtils.js";
 import { isDesktop, quitGame } from "./desktop.js";
 import { restartMission } from "./saveSystem.js";
+import { UI_FONT } from "../constants.js";
 
 // Briefing modal shown before gameplay starts.
 // Its primary job is to provide a user-gesture hook that reliably unlocks
@@ -90,7 +91,7 @@ export function showBriefingModal(scene, opts) {
 
       const cTitle = scene.add
         .text(w / 2, cTitleY, "ARE YOU SURE?", {
-          fontFamily: "monospace",
+          fontFamily: UI_FONT,
           fontSize: `${cTitleSize}px`,
           color: "#ffcc44",
           stroke: "#000",
@@ -106,7 +107,7 @@ export function showBriefingModal(scene, opts) {
           : "Quit the game?";
       const cBody = scene.add
         .text(w / 2, cTitleY + cTitleSize + 20, cBodyText, {
-          fontFamily: "monospace",
+          fontFamily: UI_FONT,
           fontSize: `${cBodySize}px`,
           color: "#dddddd",
           align: "center",
@@ -129,7 +130,7 @@ export function showBriefingModal(scene, opts) {
       items.push(
         scene.add
           .text(noX, cBtnY, "NO", {
-            fontFamily: "monospace",
+            fontFamily: UI_FONT,
             fontSize: `${cLabelSize}px`,
             color: "#ffffff",
           })
@@ -147,7 +148,7 @@ export function showBriefingModal(scene, opts) {
       items.push(
         scene.add
           .text(yesX, cBtnY, "YES", {
-            fontFamily: "monospace",
+            fontFamily: UI_FONT,
             fontSize: `${cLabelSize}px`,
             color: "#ffffff",
           })
@@ -170,7 +171,7 @@ export function showBriefingModal(scene, opts) {
     const titleY = Math.max(28, h * 0.08);
     const title = scene.add
       .text(w / 2, titleY, "MISSION BRIEFING", {
-        fontFamily: "monospace",
+        fontFamily: UI_FONT,
         fontSize: `${titleSize}px`,
         color: "#ff4444",
       })
@@ -200,7 +201,7 @@ export function showBriefingModal(scene, opts) {
     const bodyCenter = (titleBottom + (btnY - btnH / 2)) / 2;
     const body = scene.add
       .text(w / 2, bodyCenter, buildBriefingBody(scene), {
-        fontFamily: "monospace",
+        fontFamily: UI_FONT,
         fontSize: `${bodySize}px`,
         color: "#cccccc",
         align: "center",
@@ -220,7 +221,7 @@ export function showBriefingModal(scene, opts) {
     const labelSize = Math.max(14, Math.min(22, Math.round(narrow * 0.04)));
     const btnLabel = scene.add
       .text(w / 2, btnY, hasSave ? "CONTINUE MISSION" : "START MISSION", {
-        fontFamily: "monospace",
+        fontFamily: UI_FONT,
         fontSize: `${labelSize}px`,
         color: "#ffffff",
       })
@@ -241,7 +242,7 @@ export function showBriefingModal(scene, opts) {
       items.push(secBtn);
       const secLabel = scene.add
         .text(w / 2, secY, "RESTART MISSION", {
-          fontFamily: "monospace",
+          fontFamily: UI_FONT,
           fontSize: `${Math.max(12, Math.round(labelSize * 0.85))}px`,
           color: "#cccccc",
         })
@@ -270,7 +271,7 @@ export function showBriefingModal(scene, opts) {
       items.push(quitBtn);
       const quitLabel = scene.add
         .text(quitX, quitY, "QUIT GAME", {
-          fontFamily: "monospace",
+          fontFamily: UI_FONT,
           fontSize: `${Math.max(11, Math.round(labelSize * 0.7))}px`,
           color: "#ffffff",
         })

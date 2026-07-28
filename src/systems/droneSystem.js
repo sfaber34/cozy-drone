@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { SCALE, CRASH_SHAKE_DURATION, CRASH_SHAKE_INTENSITY } from "../constants.js";
+import { SCALE, CRASH_SHAKE_DURATION, CRASH_SHAKE_INTENSITY, UI_FONT } from "../constants.js";
 import { missileImpact } from "./missileSystem.js";
 
 export function isOnRunway(scene, x, y) {
@@ -32,7 +32,7 @@ export function crashDrone(scene) {
       scene.scale.height / 2,
       `DRONE DESTROYED\n\n${hint}`,
       {
-        fontFamily: "monospace",
+        fontFamily: UI_FONT,
         fontSize: "24px",
         color: "#f00",
         backgroundColor: "#000000cc",

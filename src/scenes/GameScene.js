@@ -21,6 +21,7 @@ import {
   INTRO_TARGET_RIGHT_PX,
   INTRO_ZOOM_MAX,
   INTRO_ZOOM_OUT_DURATION_MS,
+  UI_FONT,
 } from "../constants.js";
 import { createWater, WATER_BOUNDS } from "../systems/waterSystem.js";
 
@@ -386,7 +387,7 @@ export class GameScene extends Phaser.Scene {
     // --- HUD elements ---
     this.hudText = this.add
       .text(10, 10, "", {
-        fontFamily: "monospace",
+        fontFamily: UI_FONT,
         fontSize: "14px",
         color: "#0f0",
         backgroundColor: "#000000aa",
@@ -399,7 +400,7 @@ export class GameScene extends Phaser.Scene {
     // met VICTORY_KILL_THRESHOLD and is still in the air
     this.missionCompleteText = this.add
       .text(10, 0, "MISSION COMPLETE! Return to base!", {
-        fontFamily: "monospace",
+        fontFamily: UI_FONT,
         fontSize: "14px",
         color: "#ffee66",
         backgroundColor: "#000000cc",
@@ -421,7 +422,7 @@ export class GameScene extends Phaser.Scene {
         0,
         "WASD:turn/speed  E/Q:alt  1:MSL 2:GUN  Click:target  Space:fire",
         {
-          fontFamily: "monospace",
+          fontFamily: UI_FONT,
           fontSize: "11px",
           color: "#0f0",
           backgroundColor: "#000000aa",

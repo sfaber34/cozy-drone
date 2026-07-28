@@ -64,11 +64,47 @@ const config = {
   },
 };
 
-const game = new Phaser.Game(config);
+// Wait for the bundled UI font before booting Phaser.
+//
+// Phaser Text objects rasterize glyphs into an offscreen 2D canvas ONCE, at
+// creation time, then upload that bitmap as a WebGL texture. There's no
+// re-render when a webfont finishes loading — so any text created before
+// GameMono is ready is permanently baked in the fallback face. Blocking the
+// boot on document.fonts is the reliable fix; @font-face alone is not enough.
+//
+// Failures are non-fatal: a rejected load or a browser without the CSS Font
+// Loading API just boots on the UI_FONT fallback chain, same as before.
+function bootWhenFontReady(start) {
+  if (!document.fonts || !document.fonts.load) {
+    start();
+    return;
+  }
+  // Nominal size only — load() needs a size in the font shorthand, and any
+  // size pulls the same file. The game only ever uses the regular weight.
+  Promise.race([
+    document.fonts.load('16px "GameMono"'),
+    // Never let a stalled font load hold the game hostage.
+    new Promise((resolve) => setTimeout(resolve, 3000)),
+  ])
+    .catch(() => {})
+    .then(() => start());
+}
+
+let game;
+bootWhenFontReady(() => {
+  game = new Phaser.Game(config);
+  applyDisplaySize();
+  // Try to unlock audio context as early as possible
+  if (game.sound && game.sound.context) {
+    game.sound.context.resume();
+  }
+});
 
 // Apply the internal → CSS size split. Run on every resize / orientation
 // change so an orientation flip or browser-chrome hide/show re-syncs.
 function applyDisplaySize() {
+  // A resize can fire during the font wait, before Phaser exists.
+  if (!game) return;
   const { internalW, internalH, cssW, cssH } = computeSizes();
   // Resize Phaser's internal gameSize (where every `scale.width`/`scale.height`
   // read lives, and where the camera renders). Canvas CSS size is then forced
@@ -78,16 +114,10 @@ function applyDisplaySize() {
   game.canvas.style.height = cssH + 'px';
 }
 
-applyDisplaySize();
 window.addEventListener('resize', applyDisplaySize);
 window.addEventListener('orientationchange', applyDisplaySize);
 if (window.visualViewport) {
   // iOS/Android browser chrome show/hide fires here, not on plain resize.
   window.visualViewport.addEventListener('resize', applyDisplaySize);
-}
-
-// Try to unlock audio context as early as possible
-if (game.sound && game.sound.context) {
-  game.sound.context.resume();
 }
 

@@ -15,6 +15,7 @@ import {
 } from "./audioSystem.js";
 import { persistSettings } from "./settingsSystem.js";
 import { isDesktop, quitGame } from "./desktop.js";
+import { UI_FONT } from "../constants.js";
 
 const VOLUME_MIN = 0;
 const VOLUME_MAX = 1.5;
@@ -104,7 +105,7 @@ function buildMainView(scene, items, w, h, narrow, bottomSafe) {
   const titleY = Math.max(20, h * 0.05);
   const title = scene.add
     .text(w / 2, titleY, "PAUSED", {
-      fontFamily: "monospace",
+      fontFamily: UI_FONT,
       fontSize: `${titleSize}px`,
       color: "#66ccff",
       stroke: "#000",
@@ -279,7 +280,7 @@ function buildConfirmView(scene, items, w, h, narrow, bottomSafe) {
   const titleY = h * 0.35;
   const title = scene.add
     .text(w / 2, titleY, "ARE YOU SURE?", {
-      fontFamily: "monospace",
+      fontFamily: UI_FONT,
       fontSize: `${titleSize}px`,
       color: "#ffcc44",
       stroke: "#000",
@@ -291,7 +292,7 @@ function buildConfirmView(scene, items, w, h, narrow, bottomSafe) {
 
   const body = scene.add
     .text(w / 2, titleY + titleSize + 20, question, {
-      fontFamily: "monospace",
+      fontFamily: UI_FONT,
       fontSize: `${bodySize}px`,
       color: "#dddddd",
       align: "center",
@@ -366,7 +367,7 @@ function createButton(scene, items, opts) {
 
   const btnLabel = scene.add
     .text(x, y, label, {
-      fontFamily: "monospace",
+      fontFamily: UI_FONT,
       fontSize: `${labelSize}px`,
       color: "#ffffff",
     })
@@ -380,7 +381,7 @@ function createLabeledSlider(scene, items, opts) {
 
   const label = scene.add
     .text(x, y - labelSize - 6, labelText, {
-      fontFamily: "monospace",
+      fontFamily: UI_FONT,
       fontSize: `${labelSize}px`,
       color: "#ffffff",
     })
@@ -390,7 +391,7 @@ function createLabeledSlider(scene, items, opts) {
 
   const pctText = scene.add
     .text(x + width, y - labelSize - 6, `${Math.round(value * 100)}%`, {
-      fontFamily: "monospace",
+      fontFamily: UI_FONT,
       fontSize: `${labelSize}px`,
       color: "#66ccff",
     })
@@ -488,7 +489,7 @@ function createToggle(scene, items, opts) {
 
   const label = scene.add
     .text(x, y, labelText, {
-      fontFamily: "monospace",
+      fontFamily: UI_FONT,
       fontSize: `${labelSize}px`,
       color: "#ffffff",
     })
@@ -510,7 +511,7 @@ function createToggle(scene, items, opts) {
 
   const pillLabel = scene.add
     .text(pillX, y, state ? "ON" : "OFF", {
-      fontFamily: "monospace",
+      fontFamily: UI_FONT,
       fontSize: `${Math.max(12, Math.round(labelSize * 0.9))}px`,
       color: "#ffffff",
     })

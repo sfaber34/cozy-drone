@@ -10,6 +10,7 @@ import {
   MOBILE_BUTTON_RADIUS,
   MOBILE_BUTTON_MARGIN,
   MOBILE_ZOOM_FACTOR,
+  UI_FONT,
 } from "../constants.js";
 
 // Layout:
@@ -227,7 +228,7 @@ export class MobileControlsScene extends Phaser.Scene {
     const addLabel = (x, y, str) => {
       const t = this.add
         .text(x, y, str, {
-          fontFamily: "monospace",
+          fontFamily: UI_FONT,
           fontSize: labelSize,
           color: "#ffffff",
         })

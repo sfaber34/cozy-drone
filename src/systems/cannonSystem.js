@@ -11,6 +11,8 @@ import {
   CANNON_MUZZLE_SCALE_END_MIN, CANNON_MUZZLE_SCALE_END_RANGE,
   CANNON_MUZZLE_ALPHA, CANNON_MUZZLE_ALPHA_RANGE, CANNON_MUZZLE_DRIFT_SPREAD,
   EXPLOSION_VOLUME,
+  UI_FONT,
+  GHOST_TEXT_COLOR,
 } from "../constants.js";
 import { playSfxAt, playDeathSfxAt, playAnimalDeathSfxAt } from "./audioSystem.js";
 import { tryRegisterGhostBubble } from "./ghostBubbleUtils.js";
@@ -212,8 +214,8 @@ export function cannonImpact(scene, x, y) {
           const line = Phaser.Utils.Array.GetRandom(ghostLines);
           p.bubble = scene.add
             .text(p.sprite.x + 20, p.sprite.y - 20, line, {
-              fontFamily: "monospace", fontSize: "8px",
-              color: "#aaccff", backgroundColor: "#000000aa",
+              fontFamily: UI_FONT, fontSize: "8px",
+              color: GHOST_TEXT_COLOR, backgroundColor: "#000000aa",
               padding: { x: 4, y: 3 },
             })
             .setScale(SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1)).setDepth(14);
@@ -353,8 +355,8 @@ export function cannonImpact(scene, x, y) {
         if (tryRegisterGhostBubble(scene, bk.sprite.x, bk.sprite.y)) {
           const line = Phaser.Utils.Array.GetRandom(ghostLines);
           bk.bubble = scene.add.text(bk.sprite.x + 20, bk.sprite.y - 20, line, {
-            fontFamily: "monospace", fontSize: "8px",
-            color: "#aaccff", backgroundColor: "#000000aa",
+            fontFamily: UI_FONT, fontSize: "8px",
+            color: GHOST_TEXT_COLOR, backgroundColor: "#000000aa",
             padding: { x: 4, y: 3 },
           }).setScale(SCALE * 0.5 * (scene.isMobile ? MOBILE_DIALOG_SCALE : 1)).setDepth(14);
           scene.hudCam.ignore(bk.bubble);

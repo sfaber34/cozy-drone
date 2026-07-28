@@ -5,6 +5,8 @@ import {
   MISSILE_MAX_SPEED, MISSILE_ACCEL, MISSILE_MIN_SCALE,
   MISSILE_HIT_RADIUS, MISSILE_SMOKE_INTERVAL, MISSILE_SMOKE_OPACITY,
   SCREEN_SHAKE_DURATION, SCREEN_SHAKE_INTENSITY,
+  UI_FONT,
+  GHOST_TEXT_COLOR,
 } from "../constants.js";
 import { ghostLines } from "../dialog.js";
 import { playSfx, playSfxAt, playDeathSfxAt } from "./audioSystem.js";
@@ -431,9 +433,9 @@ export function missileImpact(scene, x, y) {
         const line = Phaser.Utils.Array.GetRandom(ghostLines);
         bk.bubble = scene.add
           .text(bk.sprite.x + 20, bk.sprite.y - 20, line, {
-            fontFamily: "monospace",
+            fontFamily: UI_FONT,
             fontSize: "8px",
-            color: "#aaccff",
+            color: GHOST_TEXT_COLOR,
             backgroundColor: "#000000aa",
             padding: { x: 4, y: 3 },
           })

@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { SCALE } from "../constants.js";
+import { SCALE, UI_FONT } from "../constants.js";
 import { introLines } from "../dialog.js";
 
 export function playIntroCutscene(scene) {
@@ -75,7 +75,7 @@ export function playIntroCutscene(scene) {
         introLines[Math.floor(Math.random() * introLines.length)];
       const bubble = scene.add
         .text(guyTargetX, guyTargetY - 20, introLine, {
-          fontFamily: "monospace",
+          fontFamily: UI_FONT,
           fontSize: "10px",
           color: "#000",
           backgroundColor: "#fff",

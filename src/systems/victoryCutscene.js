@@ -22,6 +22,7 @@ import {
   VICTORY_EXIT_STAGGER_MS,
   VICTORY_EXIT_JITTER_MS,
   VICTORY_DRONE_AVOID_RADIUS,
+  UI_FONT,
 } from "../constants.js";
 const EMOJIS = [
   "😀",
@@ -282,7 +283,7 @@ function showVictoryModal(scene) {
     const titleY = Math.max(28, h * 0.08);
     const title = scene.add
       .text(w / 2, titleY, "MISSION COMPLETE!!", {
-        fontFamily: "monospace",
+        fontFamily: UI_FONT,
         fontSize: `${titleSize}px`,
         color: "#ffee66",
         stroke: "#000",
@@ -320,7 +321,7 @@ function showVictoryModal(scene) {
     );
     const timeText = scene.add
       .text(w / 2, timeY, `MISSION TIME: ${elapsedStr}`, {
-        fontFamily: "monospace",
+        fontFamily: UI_FONT,
         fontSize: `${timeSize}px`,
         color: "#ffffff",
         stroke: "#000",
@@ -332,7 +333,7 @@ function showVictoryModal(scene) {
 
     const sub = scene.add
       .text(w / 2, subY, "YOU RULE!", {
-        fontFamily: "monospace",
+        fontFamily: UI_FONT,
         fontSize: `${subSize}px`,
         color: "#ff88cc",
         stroke: "#000",
@@ -348,7 +349,7 @@ function showVictoryModal(scene) {
         bodyY,
         "All hostiles eliminated.\nYou are the drone master!",
         {
-          fontFamily: "monospace",
+          fontFamily: UI_FONT,
           fontSize: `${bodySize}px`,
           color: "#cccccc",
           align: "center",
@@ -372,7 +373,7 @@ function showVictoryModal(scene) {
     const labelSize = Math.max(14, Math.min(22, Math.round(narrow * 0.04)));
     const btnLabel = scene.add
       .text(w / 2, btnY, "RESTART MISSION", {
-        fontFamily: "monospace",
+        fontFamily: UI_FONT,
         fontSize: `${labelSize}px`,
         color: "#ffffff",
       })

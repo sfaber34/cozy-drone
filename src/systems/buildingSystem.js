@@ -3,6 +3,8 @@ import {
   SCALE, MOBILE_DIALOG_SCALE,
   BUILDING_HP_SMALL, BUILDING_HP_MEDIUM, BUILDING_HP_LARGE,
   BUILDING_RADIUS_SMALL, BUILDING_RADIUS_MEDIUM, BUILDING_RADIUS_LARGE,
+  UI_FONT,
+  GHOST_TEXT_COLOR,
 } from "../constants.js";
 import { buildingGhostLines } from "../dialog.js";
 import { playDeathSfxAt } from "./audioSystem.js";
@@ -172,9 +174,9 @@ export function killPeopleInBuilding(scene, building) {
       const line = Phaser.Utils.Array.GetRandom(buildingGhostLines);
       p.bubble = scene.add
         .text(p.sprite.x + 20, p.sprite.y - 20, line, {
-          fontFamily: "monospace",
+          fontFamily: UI_FONT,
           fontSize: "8px",
-          color: "#aaccff",
+          color: GHOST_TEXT_COLOR,
           backgroundColor: "#000000aa",
           padding: { x: 4, y: 3 },
         })
