@@ -1,0 +1,59 @@
+// SteamPipe build script for Cozy Drone (Windows depot).
+//
+// Lives in the repo rather than the SDK's tools/ContentBuilder/scripts/ folder
+// so it's version-controlled and survives re-downloading or deleting the SDK.
+// run_app_build accepts an absolute path, so its location doesn't matter --
+// but that means EVERY path below must be absolute too, since relative paths
+// would resolve against the SDK, not this file.
+//
+// Upload (squeeg_studios is the Steam account with publish rights on this app):
+//   cd /Users/spencerfaber/dev/steamworks/sdk/tools/ContentBuilder/builder_osx
+//   ./steamcmd.sh +login squeeg_studios \
+//     +run_app_build /Users/spencerfaber/dev/cozy-drone/steam/app_build_4950510.vdf +quit
+
+"appbuild"
+{
+	"appid"		"4950510"
+	"desc"		"Cozy Drone 1.0.0 - Windows"
+
+	// Upload logs + the chunk cache that makes later uploads delta-patch
+	// instead of re-sending 440 MB. Keep it OUT of the repo (see .gitignore).
+	"buildoutput"	"/Users/spencerfaber/dev/cozy-drone/steam/output/"
+
+	// The packaged game, unflattened. Points INSIDE win-unpacked so that
+	// "Cozy Drone.exe" lands at the install root rather than one level down
+	// in a win-unpacked/ subfolder. Regenerate with:
+	//   rm -rf release && npm run build && npx electron-builder --win dir --x64
+	"contentroot"	"/Users/spencerfaber/dev/cozy-drone/release/win-unpacked/"
+
+	// Empty = upload the build but don't put it on any branch. Set it live
+	// from the Steamworks web UI instead, where you can see what you're doing.
+	"setlive"	""
+
+	// 1 = DRY RUN. Validates the file mapping and writes a manifest of what
+	// WOULD upload, without transferring anything. Set to 0 for the real
+	// upload once the preview manifest looks right.
+	"preview"	"0"
+
+	"depots"
+	{
+		// Confirmed 2026-07-28: a preview build against this ID succeeded,
+		// which means the depot exists and is assigned to app 4950510.
+		"4950511"
+		{
+			"FileMapping"
+			{
+				// "*" recursive from contentroot -> "." flattens the contents
+				// of win-unpacked to the depot root.
+				"LocalPath"	"*"
+				"DepotPath"	"."
+				"recursive"	"1"
+			}
+
+			// Finder drops these into any folder you browse, including the
+			// packaged output AFTER electron-builder has finished -- so this
+			// is the only place they can be caught.
+			"FileExclusion"	"*.DS_Store"
+		}
+	}
+}

@@ -1,3 +1,6 @@
 .vercel
 node_modules
 release
+
+# SteamPipe upload logs + chunk cache
+steam/output
