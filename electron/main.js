@@ -52,6 +52,23 @@ const MIME = {
   ".txt": "text/plain; charset=utf-8",
 };
 
+// Render at true native resolution, ignoring the OS display-scaling setting
+// (Windows defaults to 125%/150% on most laptops). Must be set before 'ready'.
+//
+// Why: main.js sizes the canvas backing store in CSS pixels and forces the
+// canvas CSS size to match, so there's exactly 1 backing pixel per CSS pixel
+// and devicePixelRatio is never consulted. The browser then upscales that
+// canvas to physical pixels with nearest-neighbor (image-rendering: pixelated).
+// At an integer dPR — 2.0 on a Retina Mac, 1.0 at Windows 100% — that's clean
+// pixel doubling. At a FRACTIONAL dPR (1.25 / 1.5) it duplicates some pixel
+// rows/columns and not others: the sprite art survives (it's blocky anyway),
+// but antialiased text glyphs get uneven stroke weights and read as blurry.
+// Forcing scale factor 1 makes the backing store map 1:1 to physical pixels,
+// so nothing is resampled. Safe for layout because the UI derives its sizes
+// from Math.min(w, h), so it scales up with the larger native dimensions.
+app.commandLine.appendSwitch("force-device-scale-factor", "1");
+app.commandLine.appendSwitch("high-dpi-support", "1");
+
 // Must be called before app 'ready'. Harmless in dev (the scheme is unused).
 // standard: proper origin + relative-URL resolution. secure: treated as a
 // secure context (localStorage, etc.). supportFetchAPI: the game fetch()es
