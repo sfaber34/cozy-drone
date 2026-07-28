@@ -1,7 +1,7 @@
 [
-  { "file": "chickenDeath5.mp3",   "volume": 2.0 },
+  { "file": "chickenDeath5.mp3",   "volume": 2.1 },
   { "file": "chickenDeath6.mp3",   "volume": 1.1 },
-  { "file": "chickenDeath7.mp3",   "volume": 1.1 },
+  { "file": "chickenDeath7.mp3",   "volume": 1.4 },
   { "file": "chickenDeath8.mp3",   "volume": 1.1 },
   { "file": "chickenDeath9_dan.mp3",   "volume": 1.4 },
   { "file": "chickenDeath10_dan.mp3",   "volume": 1.4 },
@@ -13,5 +13,4 @@
   { "file": "chickenDeath16_dan.mp3",   "volume": 1.4 },
   { "file": "chickenDeath17_dan.mp3",   "volume": 1.6 },
   { "file": "chickenDeath18_dan.mp3",   "volume": 1.4 }
-  
 ]
