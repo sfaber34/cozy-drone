@@ -98,6 +98,12 @@ import {
 // (Only affects a FRESH mission — a save still regenerates from its own seed.)
 const FIXED_WORLD_SEED = "cozy-drone-trailer3";
 
+// When true, hides ALL HUD overlays for clean trailer footage: the ALT/SPD/
+// FREEDOMS block, the controls hint, the mission-complete banner, and the
+// minimap. The aiming reticle stays (it reads as gameplay, not chrome). Set
+// back to false before shipping — the HUD carries mission-completion context.
+const HIDE_HUD_FOR_CAPTURE = true;
+
 export class GameScene extends Phaser.Scene {
   constructor() {
     super("Game");
@@ -603,7 +609,7 @@ export class GameScene extends Phaser.Scene {
   // (on-screen controls replace them); the minimap on mobile is owned by
   // its own "M" button, so the persisted flag applies on desktop only.
   applyHudVisibility() {
-    const active = !this.introPlaying;
+    const active = !this.introPlaying && !HIDE_HUD_FOR_CAPTURE;
     if (this.controlsText) {
       this.controlsText.setVisible(
         active && this.showTooltips && !this.isMobile,
@@ -969,7 +975,8 @@ export class GameScene extends Phaser.Scene {
     // --- HUD ---
     // Always visible during play (revealed once the intro cutscene ends) —
     // it carries mission-completion context, so it is not toggleable.
-    if (!this.hudText.visible) this.hudText.setVisible(true);
+    const showHud = !HIDE_HUD_FOR_CAPTURE;
+    if (this.hudText.visible !== showHud) this.hudText.setVisible(showHud);
     const spdDisplay = Math.round(speedKnots);
     // const lastSfx = this.lastDeathSfxName ?? "--";
     // const lastAnimalSfx = this.lastAnimalDeathSfxName ?? "--";
@@ -993,7 +1000,7 @@ export class GameScene extends Phaser.Scene {
     // cutscene).
     const missionReady = this.kills >= this.totalPeople && !this.victoryActive;
     if (this.missionCompleteText) {
-      this.missionCompleteText.setVisible(missionReady);
+      this.missionCompleteText.setVisible(missionReady && !HIDE_HUD_FOR_CAPTURE);
       // Anchor directly under the main HUD block
       const hudBottom = this.hudText.y + this.hudText.height;
       this.missionCompleteText.setPosition(10, hudBottom + 4);

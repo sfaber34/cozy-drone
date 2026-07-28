@@ -405,15 +405,40 @@ export function playAnimalDeathSfxAt(scene, type, x, y) {
   });
 }
 
+// ── CAPTURE / TRAILER TOGGLE ─────────────────────────────────────────────────
+// Latch the engine PITCH to its 75-knot value once the drone first reaches
+// 75 knots, so trailer clips recorded at different cruising speeds all share
+// the same engine pitch. Volume still tracks real speed. The latch resets when
+// the drone fully stops, so each takeoff re-latches. Set false before shipping.
+const LATCH_ENGINE_PITCH_FOR_CAPTURE = true;
+// Completely silence the drone engine for trailer capture (added back in post).
+// Other SFX (explosions, deaths, etc.) are unaffected. Set false before shipping.
+const MUTE_ENGINE_FOR_CAPTURE = true;
+const LATCH_KNOTS = 75;
+const KNOTS_PER_SPEED = 0.5; // knots = ds.speed * 0.5 (mirrors the GameScene HUD)
+
 export function updateEngineSound(scene, ds, delta) {
   if (scene.engineA && scene.engineB) {
     const speedFrac = ds.speed / ds.maxSpeed;
-    const targetRate = ENGINE_RATE_MIN + speedFrac * ENGINE_RATE_RANGE;
+    // See LATCH_ENGINE_PITCH_FOR_CAPTURE above: once the drone first reaches
+    // 75 knots, freeze BOTH pitch (rate) and volume at the 75-knot value so
+    // trailer clips at different cruising speeds sound identical. Below that
+    // (or when unlatched) both still track the live speedFrac.
+    let effFrac = speedFrac;
+    if (LATCH_ENGINE_PITCH_FOR_CAPTURE) {
+      if (ds.speed * KNOTS_PER_SPEED >= LATCH_KNOTS) {
+        scene._enginePitchLatched = true;
+      }
+      if (scene._enginePitchLatched) {
+        effFrac = LATCH_KNOTS / KNOTS_PER_SPEED / ds.maxSpeed;
+      }
+    }
+    const targetRate = ENGINE_RATE_MIN + effFrac * ENGINE_RATE_RANGE;
     const targetVol =
-      ds.speed > 0
-        ? (ENGINE_VOLUME_MIN + speedFrac * ENGINE_VOLUME_RANGE) *
-          scene.sfxVolumeMult
-        : 0;
+      MUTE_ENGINE_FOR_CAPTURE || ds.speed === 0
+        ? 0
+        : (ENGINE_VOLUME_MIN + effFrac * ENGINE_VOLUME_RANGE) *
+          scene.sfxVolumeMult;
     const fade = scene.engineCrossfade;
 
     if (ds.speed > 0 && !scene.engineA.isPlaying && !scene.engineB.isPlaying) {
@@ -455,6 +480,7 @@ export function updateEngineSound(scene, ds, delta) {
       if (scene.engineA.isPlaying) scene.engineA.stop();
       if (scene.engineB.isPlaying) scene.engineB.stop();
       scene.engineActive = null;
+      scene._enginePitchLatched = false; // re-latch on the next takeoff
     }
   }
 }

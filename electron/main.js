@@ -19,9 +19,24 @@
 //      and loads audio at runtime; a privileged custom scheme supports fetch.
 //   4. We set Content-Type explicitly, so ES-module scripts and audio serve
 //      with the right MIME (file:// mime guessing is unreliable).
-const { app, BrowserWindow, protocol, shell, ipcMain } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  protocol,
+  shell,
+  ipcMain,
+  screen,
+} = require("electron");
 const fs = require("fs");
 const path = require("path");
+
+// ── CAPTURE / TRAILER TOGGLE ────────────────────────────────────────────────
+// When true, the packaged app opens a FRAMELESS, fixed-size 16:9 window (the
+// largest 16:9 that fits the screen) instead of true fullscreen — so OBS can
+// window-capture a clean, correctly-proportioned 16:9 frame for the Steam
+// trailer: no title bar, no rounded corners, no 16:10 MacBook letterboxing.
+// Set back to false before shipping so the real release launches fullscreen.
+const CAPTURE_MODE = true;
 
 // Dev when running unpackaged without the explicit --serve flag. --serve
 // forces the prod (app://) path on source, for previewing the packaged
@@ -93,17 +108,9 @@ function registerAppProtocol() {
 }
 
 async function createWindow() {
-  const win = new BrowserWindow({
-    width: 1280,
-    height: 800,
-    minWidth: 800,
-    minHeight: 600,
+  const common = {
     backgroundColor: "#000000",
     autoHideMenuBar: true,
-    // Ship in TRUE fullscreen (borderless, no title bar, covers the taskbar/
-    // dock) — this is a game. Dev stays windowed so DevTools + resizing work.
-    // F11 toggles it below so the player is never stuck.
-    fullscreen: !isDev,
     title: "Cozy Drone",
     webPreferences: {
       // The renderer runs untrusted-ish web content (the game bundle) — keep
@@ -113,7 +120,79 @@ async function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
     },
-  });
+  };
+
+  let win;
+  if (!isDev && CAPTURE_MODE) {
+    // Target EXACTLY 1920x1080 (the Steam trailer resolution) as the CONTENT
+    // box, so OBS window-captures a native-res 16:9 frame. Caveat: these are
+    // LOGICAL points — a window can't be bigger than the display it's on. So
+    // we place it on a display whose work area actually holds 1920x1080 pts,
+    // preferring the LARGEST such display (typically the external monitor, not
+    // the laptop's built-in). On a Retina display OBS still captures at 2x
+    // (3840x2160) and downscales, which is fine. If NO display has that much
+    // logical room, fall back to the largest 16:9 that fits the primary
+    // display so the window still opens fully on-screen (see note to user).
+    const TARGET_W = 1920;
+    const TARGET_H = 1080;
+    const fits = screen
+      .getAllDisplays()
+      .filter(
+        (d) =>
+          d.workAreaSize.width >= TARGET_W && d.workAreaSize.height >= TARGET_H,
+      )
+      .sort(
+        (a, b) =>
+          b.workAreaSize.width * b.workAreaSize.height -
+          a.workAreaSize.width * a.workAreaSize.height,
+      );
+
+    let w, h;
+    let wa;
+    if (fits.length > 0) {
+      w = TARGET_W;
+      h = TARGET_H;
+      wa = fits[0].workArea;
+    } else {
+      wa = screen.getPrimaryDisplay().workArea;
+      w = wa.width;
+      h = Math.round((w * 9) / 16);
+      if (h > wa.height) {
+        h = wa.height;
+        w = Math.round((h * 16) / 9);
+      }
+    }
+    // Center on the chosen display (getAllDisplays coords are global, so this
+    // also moves the window onto the external monitor when that's the fit).
+    const x = Math.round(wa.x + (wa.width - w) / 2);
+    const y = Math.round(wa.y + (wa.height - h) / 2);
+
+    win = new BrowserWindow({
+      ...common,
+      width: w,
+      height: h,
+      x,
+      y,
+      useContentSize: true, // w/h size the web content → canvas is exactly 16:9
+      frame: false, // no title bar
+      roundedCorners: false, // square corners (macOS) so OBS captures clean edges
+      resizable: false,
+      maximizable: false,
+      fullscreenable: false,
+    });
+  } else {
+    win = new BrowserWindow({
+      ...common,
+      width: 1280,
+      height: 800,
+      minWidth: 800,
+      minHeight: 600,
+      // Ship in TRUE fullscreen (borderless, no title bar, covers the taskbar/
+      // dock) — this is a game. Dev stays windowed so DevTools + resizing work.
+      // F11 toggles it below so the player is never stuck.
+      fullscreen: !isDev,
+    });
+  }
 
   // Any external link (e.g. the vibej.am widget) opens in the OS browser,
   // never inside the game window.
